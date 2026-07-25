@@ -79,7 +79,7 @@ public class FeedFilterPreferenceCategory extends ConditionalPreferenceCategory 
         ));
         addPreference(new TogglePreference(
                 context,
-                "Hide verified accounts", "Hide posts from accounts with a verified badge. News and other institution accounts are kept.",
+                "Hide verified accounts", "Hide posts from accounts with a verified badge, except news and other institutions.",
                 Settings.HIDE_VERIFIED_ACCOUNTS
         ));
         addPreference(new RangeValuePreference(
