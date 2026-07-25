@@ -1,3 +1,20 @@
+# [0.8.0](https://github.com/hxreborn/tiktok-patches-for-morphe/compare/v0.7.0...v0.8.0) (2026-07-25)
+
+
+### Bug Fixes
+
+* **downloads:** default video path to Movies/TikTok ([10227c1](https://github.com/hxreborn/tiktok-patches-for-morphe/commit/10227c1a9793180cf95252efea3991ff4850c62d))
+* **downloads:** keep working across TikTok builds ([b4d5804](https://github.com/hxreborn/tiktok-patches-for-morphe/commit/b4d5804f30faff05c9e02a20ff30bbf65d225011))
+* **navigation:** keep tab controls across TikTok builds ([206912a](https://github.com/hxreborn/tiktok-patches-for-morphe/commit/206912a264e11df9d50c09d01717be423c4af9f4))
+
+
+### Features
+
+* **feedfilter:** hide friend-recommendation posts ([2d99209](https://github.com/hxreborn/tiktok-patches-for-morphe/commit/2d9920965a1255980e379eff08bb4c8c6c2475f7))
+* **feedfilter:** hide paid partnership posts ([d446d8a](https://github.com/hxreborn/tiktok-patches-for-morphe/commit/d446d8a05f364a5bac5d34fce69df2c0a21b8a25))
+* **feedfilter:** hide posts from verified accounts ([f8b831c](https://github.com/hxreborn/tiktok-patches-for-morphe/commit/f8b831cc24759bd0321891201993a07e3c6b0e66))
+* **feedfilter:** hide promotional content posts ([f9e9015](https://github.com/hxreborn/tiktok-patches-for-morphe/commit/f9e90150fa96678a6467995d1e7911ceb29a0061))
+
 ## [0.7.1-dev.2](https://github.com/hxreborn/tiktok-patches-for-morphe/compare/v0.7.1-dev.1...v0.7.1-dev.2) (2026-07-20)
 
 
