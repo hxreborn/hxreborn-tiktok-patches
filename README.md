@@ -32,14 +32,14 @@ Everything from [icysymmetra's upstream](https://github.com/icysymmetra/tiktok-p
 - Disable AI-generated posts
 - Hide paid partnership and promotional content posts
 - Hide friend-recommendation posts
-- Hide posts from verified accounts, keeping news and institution accounts
+- Hide posts from verified accounts, except news and institutions
 - Disable telemetry, ByteDance/AppsFlyer/Firebase
 - Hide the in-feed playlist bar
 - Hide the floating promotional event badge, e.g. FIFA World Cup
 - Separate image and video download folders
 
-Which accounts count as institutions is TikTok's call. Outlets tagged that way stay in the feed, and
-every other verified account is hidden, including smaller news outlets.
+TikTok decides which accounts count as institutions, and those stay in your feed. The filter hides
+every other verified account, even smaller news outlets.
 
 <br>
 
