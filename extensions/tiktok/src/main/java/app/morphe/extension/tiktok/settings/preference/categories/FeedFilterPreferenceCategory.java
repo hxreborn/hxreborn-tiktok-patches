@@ -72,6 +72,11 @@ public class FeedFilterPreferenceCategory extends ConditionalPreferenceCategory 
                 "Hide paid partnerships", "Hide posts labeled as a paid partnership or promotional content from feed.",
                 Settings.HIDE_PAID_PARTNERSHIP
         ));
+        addPreference(new TogglePreference(
+                context,
+                "Hide friend recommendations", "Hide friend-recommendation posts from feed.",
+                Settings.HIDE_FRIEND_RECOMMENDATIONS
+        ));
         addPreference(new RangeValuePreference(
                 context,
                 "Min/Max views", "The minimum or maximum views of a video to show.",

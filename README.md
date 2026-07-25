@@ -31,6 +31,7 @@ Everything from [icysymmetra's upstream](https://github.com/icysymmetra/tiktok-p
 
 - Disable AI-generated posts
 - Hide paid partnership and promotional content posts
+- Hide friend-recommendation posts
 - Disable telemetry, ByteDance/AppsFlyer/Firebase
 - Hide the in-feed playlist bar
 - Hide the floating promotional event badge, e.g. FIFA World Cup
