@@ -77,6 +77,11 @@ public class FeedFilterPreferenceCategory extends ConditionalPreferenceCategory 
                 "Hide friend recommendations", "Hide friend-recommendation posts from feed.",
                 Settings.HIDE_FRIEND_RECOMMENDATIONS
         ));
+        addPreference(new TogglePreference(
+                context,
+                "Hide verified accounts", "Hide posts from accounts with a verified badge. News and other institution accounts are kept.",
+                Settings.HIDE_VERIFIED_ACCOUNTS
+        ));
         addPreference(new RangeValuePreference(
                 context,
                 "Min/Max views", "The minimum or maximum views of a video to show.",

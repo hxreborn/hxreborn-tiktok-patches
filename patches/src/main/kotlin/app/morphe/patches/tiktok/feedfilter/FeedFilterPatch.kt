@@ -22,7 +22,7 @@ private const val EVENT_BADGE_FILTER_CLASS_DESCRIPTOR = "Lapp/morphe/extension/t
 @Suppress("unused")
 val feedFilterPatch = bytecodePatch(
     name = "Feed filter",
-    description = "Removes ads, livestreams, stories, image videos, the playlist bar below videos, the floating promotional event badge, AI-generated posts, paid partnership and promotional content posts, friend-recommendation posts and videos with a specific amount of views or likes from the feed. (Supports TikTok 43.8.3.)",
+    description = "Removes ads, livestreams, stories, image videos, the playlist bar below videos, the floating promotional event badge, AI-generated posts, paid partnership and promotional content posts, friend-recommendation posts, posts from verified accounts and videos with a specific amount of views or likes from the feed. (Supports TikTok 43.8.3.)",
     default = true,
 ) {
     dependsOn(
