@@ -5,6 +5,7 @@
 
 package com.ss.android.ugc.aweme.feed.model;
 
+import com.ss.android.ugc.aweme.commerce.AwemeCommerceStruct;
 import com.ss.android.ugc.aweme.feed.AIGCInfo;
 
 import java.util.List;
@@ -60,6 +61,10 @@ public class Aweme {
     }
 
     public AIGCInfo getAigcInfo() {
+        throw new UnsupportedOperationException("Stub");
+    }
+
+    public AwemeCommerceStruct getCommerceVideoAuthInfo() {
         throw new UnsupportedOperationException("Stub");
     }
 }

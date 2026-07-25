@@ -67,6 +67,11 @@ public class FeedFilterPreferenceCategory extends ConditionalPreferenceCategory 
                 "Hide AI-generated content", "Hide posts labeled as AI-generated from feed.",
                 Settings.HIDE_AI_GENERATED
         ));
+        addPreference(new TogglePreference(
+                context,
+                "Hide paid partnerships", "Hide posts labeled as a paid partnership from feed.",
+                Settings.HIDE_PAID_PARTNERSHIP
+        ));
         addPreference(new RangeValuePreference(
                 context,
                 "Min/Max views", "The minimum or maximum views of a video to show.",
