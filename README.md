@@ -38,8 +38,8 @@ Everything from [icysymmetra's upstream](https://github.com/icysymmetra/tiktok-p
 - Hide the floating promotional event badge, e.g. FIFA World Cup
 - Separate image and video download folders
 
-Verified filtering follows TikTok's own account classification, so outlets it marks as institutions
-stay in the feed while smaller ones it marks as ordinary verified accounts do not.
+Which accounts count as institutions is TikTok's call. Outlets tagged that way stay in the feed, and
+every other verified account is hidden, including smaller news outlets.
 
 <br>
 
