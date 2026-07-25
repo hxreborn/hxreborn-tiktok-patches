@@ -30,7 +30,8 @@ Or try a prebuilt APK (at your own risk): [hxreborn/Morphe-AutoBuilds](https://g
 Everything from [icysymmetra's upstream](https://github.com/icysymmetra/tiktok-patches-for-morphe), plus:
 
 - Disable AI-generated posts
-- Hide paid partnership posts
+- Hide paid partnership and promotional content posts
+- Hide friend-recommendation posts
 - Disable telemetry, ByteDance/AppsFlyer/Firebase
 - Hide the in-feed playlist bar
 - Hide the floating promotional event badge, e.g. FIFA World Cup

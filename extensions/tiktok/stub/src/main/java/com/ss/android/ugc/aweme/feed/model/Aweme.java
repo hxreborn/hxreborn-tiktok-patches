@@ -67,5 +67,9 @@ public class Aweme {
     public AwemeCommerceStruct getCommerceVideoAuthInfo() {
         throw new UnsupportedOperationException("Stub");
     }
+
+    public AwemeRelationRecommendModel getRelationRecommendInfo() {
+        throw new UnsupportedOperationException("Stub");
+    }
 }
 
