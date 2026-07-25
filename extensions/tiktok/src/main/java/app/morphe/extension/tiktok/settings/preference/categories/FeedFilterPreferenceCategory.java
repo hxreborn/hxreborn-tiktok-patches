@@ -69,7 +69,7 @@ public class FeedFilterPreferenceCategory extends ConditionalPreferenceCategory 
         ));
         addPreference(new TogglePreference(
                 context,
-                "Hide paid partnerships", "Hide posts labeled as a paid partnership from feed.",
+                "Hide paid partnerships", "Hide posts labeled as a paid partnership or promotional content from feed.",
                 Settings.HIDE_PAID_PARTNERSHIP
         ));
         addPreference(new RangeValuePreference(

@@ -10,6 +10,10 @@ public class AwemeCommerceStruct {
         throw new UnsupportedOperationException("Stub");
     }
 
+    public boolean isBrandOrganicContent() {
+        throw new UnsupportedOperationException("Stub");
+    }
+
     /**
      * @return the branded content disclosure text shown under the video, empty when there is none
      */
