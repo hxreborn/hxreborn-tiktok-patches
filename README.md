@@ -29,11 +29,17 @@ Or try a prebuilt APK (at your own risk): [hxreborn/Morphe-AutoBuilds](https://g
 
 Everything from [icysymmetra's upstream](https://github.com/icysymmetra/tiktok-patches-for-morphe), plus:
 
-- Disable AI-generated posts
+- Hide AI-generated posts
+- Hide paid partnership and promotional content posts
+- Hide friend-recommendation posts
+- Hide posts from verified accounts
 - Disable telemetry, ByteDance/AppsFlyer/Firebase
 - Hide the in-feed playlist bar
 - Hide the floating promotional event badge, e.g. FIFA World Cup
 - Separate image and video download folders
+
+TikTok decides which accounts count as institutions. Major news outlets usually carry that tag and
+stay in your feed, but some do not and get hidden like any other verified account.
 
 <br>
 

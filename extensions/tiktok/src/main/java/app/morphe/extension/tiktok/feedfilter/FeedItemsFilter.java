@@ -27,7 +27,10 @@ public final class FeedItemsFilter {
         new ViewCountFilter(),
         new LikeCountFilter(),
         new ShopFilter(),
-        new AigcFilter()
+        new AigcFilter(),
+        new PaidPartnershipFilter(),
+        new FriendRecommendationFilter(),
+        new VerifiedAccountFilter()
     );
 
     private static final int MAX_NULL_ITEMS_LOGS = 3;
@@ -232,6 +235,9 @@ public final class FeedItemsFilter {
                 + " hide_story=" + Settings.HIDE_STORY.get()
                 + " hide_image=" + Settings.HIDE_IMAGE.get()
                 + " hide_ai_generated=" + Settings.HIDE_AI_GENERATED.get()
+                + " hide_paid_partnership=" + Settings.HIDE_PAID_PARTNERSHIP.get()
+                + " hide_friend_recommendations=" + Settings.HIDE_FRIEND_RECOMMENDATIONS.get()
+                + " hide_verified_accounts=" + Settings.HIDE_VERIFIED_ACCOUNTS.get()
                 + " min_max_views=\"" + Settings.MIN_MAX_VIEWS.get() + "\""
                 + " min_max_likes=\"" + Settings.MIN_MAX_LIKES.get() + "\""
         );

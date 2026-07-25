@@ -67,6 +67,21 @@ public class FeedFilterPreferenceCategory extends ConditionalPreferenceCategory 
                 "Hide AI-generated content", "Hide posts labeled as AI-generated from feed.",
                 Settings.HIDE_AI_GENERATED
         ));
+        addPreference(new TogglePreference(
+                context,
+                "Hide paid partnerships", "Hide posts labeled as a paid partnership or promotional content from feed.",
+                Settings.HIDE_PAID_PARTNERSHIP
+        ));
+        addPreference(new TogglePreference(
+                context,
+                "Hide friend recommendations", "Hide friend-recommendation posts from feed.",
+                Settings.HIDE_FRIEND_RECOMMENDATIONS
+        ));
+        addPreference(new TogglePreference(
+                context,
+                "Hide verified accounts", "Hide posts from accounts with a verified badge, except news and other institutions.",
+                Settings.HIDE_VERIFIED_ACCOUNTS
+        ));
         addPreference(new RangeValuePreference(
                 context,
                 "Min/Max views", "The minimum or maximum views of a video to show.",

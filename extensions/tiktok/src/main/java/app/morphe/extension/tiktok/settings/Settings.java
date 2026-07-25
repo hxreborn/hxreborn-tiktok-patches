@@ -26,6 +26,9 @@ public class Settings extends BaseSettings {
     public static final BooleanSetting HIDE_PLAYLIST_BAR = new BooleanSetting("hide_playlist_bar", FALSE, true);
     public static final BooleanSetting HIDE_EVENT_BADGE = new BooleanSetting("hide_event_badge", FALSE, true);
     public static final BooleanSetting HIDE_AI_GENERATED = new BooleanSetting("hide_ai_generated", FALSE, true);
+    public static final BooleanSetting HIDE_PAID_PARTNERSHIP = new BooleanSetting("hide_paid_partnership", FALSE, true);
+    public static final BooleanSetting HIDE_FRIEND_RECOMMENDATIONS = new BooleanSetting("hide_friend_recommendations", FALSE, true);
+    public static final BooleanSetting HIDE_VERIFIED_ACCOUNTS = new BooleanSetting("hide_verified_accounts", FALSE, true);
     public static final StringSetting MIN_MAX_VIEWS = new StringSetting("min_max_views", "0-" + Long.MAX_VALUE, true);
     public static final StringSetting MIN_MAX_LIKES = new StringSetting("min_max_likes", "0-" + Long.MAX_VALUE, true);
     public static final BooleanSetting FEED_NAVIGATION = new BooleanSetting("feed_navigation", FALSE, true);
@@ -68,7 +71,7 @@ public class Settings extends BaseSettings {
     );
     public static final BooleanSetting HIDE_TAKO_AI = new BooleanSetting("hide_tako_ai", FALSE, true);
     public static final BooleanSetting COMMENT_BATCH_TRANSLATION = new BooleanSetting("comment_batch_translation", FALSE);
-    public static final StringSetting DOWNLOAD_PATH = new StringSetting("down_path", "Videos/TikTok");
+    public static final StringSetting DOWNLOAD_PATH = new StringSetting("down_path", "Movies/TikTok");
     public static final StringSetting IMAGE_DOWNLOAD_PATH = new StringSetting("image_down_path", "Pictures/TikTok");
     public static final BooleanSetting DOWNLOAD_WATERMARK = new BooleanSetting("down_watermark", TRUE);
     public static final BooleanSetting CUSTOM_OFFLINE_VIDEOS = new BooleanSetting("custom_offline_videos", FALSE, true);
