@@ -17,12 +17,11 @@ import com.android.tools.smali.dexlib2.iface.instruction.OneRegisterInstruction
 private const val EXTENSION_CLASS_DESCRIPTOR = "Lapp/morphe/extension/tiktok/feedfilter/FeedItemsFilter;"
 private const val TAKO_AI_FILTER_CLASS_DESCRIPTOR = "Lapp/morphe/extension/tiktok/feedfilter/TakoAiFilter;"
 private const val PLAYLIST_BAR_FILTER_CLASS_DESCRIPTOR = "Lapp/morphe/extension/tiktok/feedfilter/PlaylistBarFilter;"
-private const val EVENT_BADGE_FILTER_CLASS_DESCRIPTOR = "Lapp/morphe/extension/tiktok/feedfilter/EventBadgeFilter;"
 
 @Suppress("unused")
 val feedFilterPatch = bytecodePatch(
     name = "Feed filter",
-    description = "Removes ads, livestreams, stories, image videos, the playlist bar below videos, the floating promotional event badge, AI-generated posts, paid partnership and promotional content posts, friend-recommendation posts, posts from verified accounts and videos with a specific amount of views or likes from the feed. (Supports TikTok 43.8.3.)",
+    description = "Hides feed ads, TikTok Shop items, livestreams, stories, photo posts, the playlist bar, AI-generated posts, paid partnership and promotional content, friend recommendations, posts from verified accounts, and videos outside configured view or like ranges.",
     default = true,
 ) {
     dependsOn(
@@ -105,19 +104,6 @@ val feedFilterPatch = bytecodePatch(
                 const/4 v0, 0x0
                 return v0
                 :morphe_show_playlist_bar
-                nop
-            """,
-        )
-
-        // Skip attaching the promotional event badge to the feed
-        SpecActTouchpointAttachFingerprint.methodOrNull?.addInstructions(
-            0,
-            """
-                invoke-static {}, $EVENT_BADGE_FILTER_CLASS_DESCRIPTOR->shouldHide()Z
-                move-result v0
-                if-eqz v0, :morphe_attach_event_badge
-                return-void
-                :morphe_attach_event_badge
                 nop
             """,
         )

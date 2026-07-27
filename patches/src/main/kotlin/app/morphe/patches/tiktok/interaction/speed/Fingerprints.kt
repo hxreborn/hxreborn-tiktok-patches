@@ -22,3 +22,17 @@ internal object SetSpeedFingerprint : Fingerprint(
     },
 )
 
+internal object LongPressSpeedUpEnableFingerprint : Fingerprint(
+    name = "<clinit>",
+    returnType = "V",
+    parameters = emptyList(),
+    strings = listOf("long_press_speed_up_enable"),
+)
+
+internal object LongPressSpeedUpLockFingerprint : Fingerprint(
+    name = "invoke",
+    returnType = "Ljava/lang/Object;",
+    parameters = emptyList(),
+    strings = listOf("long_press_speed_up_lock"),
+)
+

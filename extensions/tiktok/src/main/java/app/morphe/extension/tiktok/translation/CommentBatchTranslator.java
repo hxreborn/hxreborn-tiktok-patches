@@ -1,14 +1,20 @@
 package app.morphe.extension.tiktok.translation;
 
+import android.content.Context;
+import android.content.res.Configuration;
+import android.os.Build;
+import android.os.LocaleList;
 import android.view.View;
 
 import app.morphe.extension.shared.Logger;
+import app.morphe.extension.shared.Utils;
 import app.morphe.extension.shared.settings.BaseSettings;
 import app.morphe.extension.tiktok.settings.Settings;
 
 import java.lang.ref.WeakReference;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
+import java.lang.reflect.Modifier;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
@@ -154,24 +160,27 @@ public final class CommentBatchTranslator {
             return;
         }
 
+        String effectiveRequestKey = batch.requestKey + ":language-policy:" + currentLanguagePolicyKey();
+
         try {
             synchronized (LOCK) {
-                if (requestedLoadedBatchKeys.contains(batch.requestKey)) {
+                if (requestedLoadedBatchKeys.contains(effectiveRequestKey)) {
                     return;
                 }
             }
 
-            Method method = batch.nativeManagerClass.getDeclaredMethod(
-                    "LJFF",
-                    List.class,
-                    batch.context.getClass(),
-                    boolean.class
-            );
+            Method method = findNativeBatchMethod(batch.nativeManagerClass, batch.context.getClass());
+            if (method == null) {
+                throw new NoSuchMethodException(
+                        batch.nativeManagerClass.getName() + ".LJFF(List, "
+                                + batch.context.getClass().getName() + ", boolean)"
+                );
+            }
             method.setAccessible(true);
             method.invoke(null, batch.comments, batch.context, false);
 
             synchronized (LOCK) {
-                requestedLoadedBatchKeys.add(batch.requestKey);
+                requestedLoadedBatchKeys.add(effectiveRequestKey);
                 while (requestedLoadedBatchKeys.size() > MAX_REQUESTED_BATCH_KEYS) {
                     Iterator<String> iterator = requestedLoadedBatchKeys.iterator();
                     if (!iterator.hasNext()) break;
@@ -182,11 +191,30 @@ public final class CommentBatchTranslator {
 
             Logger.printInfo(() -> "[Morphe CommentBatchTranslator] requested"
                     + " size=" + batch.comments.size()
-                    + " requestKey=" + batch.requestKey
+                    + " requestKey=" + effectiveRequestKey
                     + " aid=" + value(readFieldQuiet(batch.context, "LIZIZ")));
         } catch (Throwable ex) {
             Logger.printException(() -> "[Morphe CommentBatchTranslator] native request failed", ex);
         }
+    }
+
+    private static Method findNativeBatchMethod(Class<?> managerClass, Class<?> contextClass) {
+        Class<?> current = managerClass;
+        while (current != null) {
+            for (Method method : current.getDeclaredMethods()) {
+                if (!"LJFF".equals(method.getName()) || !Modifier.isStatic(method.getModifiers())) continue;
+
+                Class<?>[] parameters = method.getParameterTypes();
+                if (parameters.length != 3) continue;
+                if (!parameters[0].isAssignableFrom(ArrayList.class)
+                        && !parameters[0].isAssignableFrom(List.class)) continue;
+                if (!parameters[1].isAssignableFrom(contextClass)) continue;
+                if (parameters[2] != boolean.class && parameters[2] != Boolean.class) continue;
+                return method;
+            }
+            current = current.getSuperclass();
+        }
+        return null;
     }
 
     private static Batch buildLoadedBatch(Object anchor, boolean allowVisibleFallback) {
@@ -211,7 +239,7 @@ public final class CommentBatchTranslator {
                     if (comment == null) continue;
                     if (!matchesAid(anchorAid, invokeStringQuiet(comment, "getAwemeId"))) continue;
                     if (isTranslated(comment)) continue;
-                    if (isDefaultLanguage(comment)) continue;
+                    if (shouldSkipTranslation(comment)) continue;
 
                     String cid = invokeStringQuiet(comment, "getCid");
                     if (pending != null && cid != null && pending.contains(cid)) continue;
@@ -244,7 +272,7 @@ public final class CommentBatchTranslator {
 
             Object comment = entry.comment.get();
             if (comment == null || isTranslated(comment)) continue;
-            if (isDefaultLanguage(comment)) continue;
+            if (shouldSkipTranslation(comment)) continue;
             if (!matchesAid(anchorAid, invokeStringQuiet(comment, "getAwemeId"))) continue;
 
             String cid = invokeStringQuiet(comment, "getCid");
@@ -317,12 +345,44 @@ public final class CommentBatchTranslator {
         return "true".equalsIgnoreCase(translated);
     }
 
-    private static boolean isDefaultLanguage(Object comment) {
+    private static boolean shouldSkipTranslation(Object comment) {
         String commentLanguage = primaryLanguageTag(invokeStringQuiet(comment, "getCommentLanguage"));
         if (isBlank(commentLanguage)) return false;
 
-        String defaultLanguage = primaryLanguageTag(Locale.getDefault().getLanguage());
-        return !isBlank(defaultLanguage) && commentLanguage.equals(defaultLanguage);
+        String appLanguage = currentAppLanguage();
+        if (!isBlank(appLanguage) && commentLanguage.equals(appLanguage)) return true;
+
+        String excluded = Settings.COMMENT_TRANSLATION_EXCLUDED_LANGUAGES.get();
+        if (isBlank(excluded)) return false;
+        for (String language : excluded.split("[,;\\s]+")) {
+            if (commentLanguage.equals(primaryLanguageTag(language))) return true;
+        }
+        return false;
+    }
+
+    private static String currentAppLanguage() {
+        Context context = Utils.getContext();
+        if (context != null) {
+            Configuration configuration = context.getResources().getConfiguration();
+            Locale locale;
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+                LocaleList locales = configuration.getLocales();
+                locale = locales.isEmpty() ? null : locales.get(0);
+            } else {
+                locale = configuration.locale;
+            }
+            if (locale != null) {
+                String language = primaryLanguageTag(locale.toLanguageTag());
+                if (!isBlank(language)) return language;
+            }
+        }
+        return primaryLanguageTag(Locale.getDefault().toLanguageTag());
+    }
+
+    private static String currentLanguagePolicyKey() {
+        String appLanguage = currentAppLanguage();
+        String excluded = Settings.COMMENT_TRANSLATION_EXCLUDED_LANGUAGES.get();
+        return value(appLanguage) + ":" + value(excluded).trim().toLowerCase(Locale.ROOT);
     }
 
     private static String primaryLanguageTag(String language) {

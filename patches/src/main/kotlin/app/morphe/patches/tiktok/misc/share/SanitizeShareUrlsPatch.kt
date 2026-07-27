@@ -1,3 +1,7 @@
+/*
+ * Forked from:
+ * https://gitlab.com/ReVanced/revanced-patches/-/blob/main/patches/src/main/kotlin/app/revanced/patches/tiktok/misc/share/SanitizeShareUrlsPatch.kt
+ */
 package app.morphe.patches.tiktok.misc.share
 
 import app.morphe.patches.shared.compat.AppCompatibilities
@@ -10,7 +14,7 @@ private const val EXTENSION_CLASS_DESCRIPTOR = "Lapp/morphe/extension/tiktok/sha
 @Suppress("unused")
 val sanitizeShareUrlsPatch = bytecodePatch(
     name = "Sanitize sharing links",
-    description = "Removes tracking parameters from shared links. (Supports TikTok 43.8.3.)",
+    description = "Removes tracking parameters from TikTok links before they are shared.",
     default = true,
 ) {
     dependsOn(sharedExtensionPatch)

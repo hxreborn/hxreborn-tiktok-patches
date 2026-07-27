@@ -40,7 +40,7 @@ private val clipboardTextHelperFingerprint = Fingerprint(
 @Suppress("unused")
 val copyCommentsWithoutUsernamePatch = bytecodePatch(
     name = "Copy comments without username",
-    description = "Copies only the comment text when copying TikTok comments. (Supports TikTok 43.8.3.)",
+    description = "Copies only the comment text without including the creator's username.",
     default = true,
 ) {
     dependsOn(sharedExtensionPatch)

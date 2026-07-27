@@ -21,7 +21,7 @@ import com.android.tools.smali.dexlib2.iface.reference.MethodReference
 @Suppress("unused")
 val playbackSpeedPatch = bytecodePatch(
     name = "Playback speed",
-    description = "Enables the playback speed option for all videos and retains the speed configurations in between videos. (Supports TikTok 43.8.3.)",
+    description = "Enables playback-speed controls for all videos and remembers the selected speed between videos.",
     default = true,
 ) {
     dependsOn(sharedExtensionPatch)

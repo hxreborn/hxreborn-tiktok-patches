@@ -17,7 +17,7 @@ import com.android.tools.smali.dexlib2.iface.instruction.TwoRegisterInstruction
 @Suppress("unused")
 val rememberClearDisplayPatch = bytecodePatch(
     name = "Remember clear display",
-    description = "Remembers the clear display configurations in between videos. (Supports TikTok 43.8.3.)",
+    description = "Remembers TikTok's clear-display state between videos.",
     default = true,
 ) {
     compatibleWith(*AppCompatibilities.tiktok4383())

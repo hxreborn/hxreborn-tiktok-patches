@@ -33,7 +33,7 @@ private const val STICKER_EXTENSION_CLASS_DESCRIPTOR = "Lapp/morphe/extension/ti
 @Suppress("unused")
 val downloadsPatch = bytecodePatch(
     name = "Downloads",
-    description = "Downloads videos and images without watermark, saves comment stickers/images, and adds download-related controls. (Supports TikTok 43.8.3.)",
+    description = "Adds watermark-free video and photo downloads, comment sticker saving, and configurable download-folder controls.",
     default = true,
 ) {
     dependsOn(sharedExtensionPatch)

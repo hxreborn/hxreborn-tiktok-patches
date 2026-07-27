@@ -21,7 +21,7 @@ private const val EXTENSION_CLASS_DESCRIPTOR = "Lapp/morphe/extension/tiktok/set
 @Suppress("unused")
 val settingsPatch = bytecodePatch(
     name = "Settings",
-    description = "Adds Morphe settings to TikTok. Supports TikTok 43.8.3.",
+    description = "Adds the Morphe settings screen inside TikTok.",
     default = true,
 ) {
     dependsOn(sharedExtensionPatch)

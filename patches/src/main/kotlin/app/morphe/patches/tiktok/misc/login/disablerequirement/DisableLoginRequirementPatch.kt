@@ -11,7 +11,7 @@ import app.morphe.patcher.patch.bytecodePatch
 @Suppress("unused")
 val disableLoginRequirementPatch = bytecodePatch(
     name = "Disable login requirement",
-    description = "Disables mandatory login for TikTok. (Supports TikTok 43.8.3.)",
+    description = "Removes TikTok's mandatory login gate from supported flows.",
     default = true,
 ) {
     compatibleWith(*AppCompatibilities.tiktok4383())

@@ -17,7 +17,7 @@ import app.morphe.extension.tiktok.settings.preference.TogglePreference;
 public class ExtensionPreferenceCategory extends ConditionalPreferenceCategory {
     public ExtensionPreferenceCategory(Context context, PreferenceScreen screen) {
         super(context, screen);
-        setTitle("Miscellaneous");
+        setTitle("App behavior");
     }
 
     @Override
@@ -33,6 +33,14 @@ public class ExtensionPreferenceCategory extends ConditionalPreferenceCategory {
                 "Remove tracking parameters from shared links.",
                 BaseSettings.SANITIZE_SHARING_LINKS
         ));
+        if (SettingsStatus.externalBrowserEnabled) {
+            addPreference(new TogglePreference(
+                    context,
+                    "Open external links directly",
+                    "Open profile and story website links in your system browser instead of TikTok's in-app browser.",
+                    Settings.OPEN_EXTERNAL_LINKS
+            ));
+        }
 
         addPreference(new TogglePreference(
                 context,
@@ -40,6 +48,14 @@ public class ExtensionPreferenceCategory extends ConditionalPreferenceCategory {
                 "Show the native seekbar on videos where TikTok would normally hide it.",
                 Settings.SHOW_SEEKBAR
         ));
+        if (SettingsStatus.longPressSpeedLockEnabled) {
+            addPreference(new TogglePreference(
+                    context,
+                    "Enable hold-and-slide 2x lock",
+                    "Use TikTok's native hold, slide down, and release gesture to lock 2x speed.",
+                    Settings.ENABLE_LONG_PRESS_SPEED_LOCK
+            ));
+        }
 
         if (SettingsStatus.disableTelemetryEnabled) {
             addPreference(new TogglePreference(

@@ -26,6 +26,8 @@ import app.morphe.extension.tiktok.settings.preference.categories.DownloadsPrefe
 import app.morphe.extension.tiktok.settings.preference.categories.ExtensionPreferenceCategory;
 import app.morphe.extension.tiktok.settings.preference.categories.FeedFilterPreferenceCategory;
 import app.morphe.extension.tiktok.settings.preference.categories.FeedNavigationPreferenceCategory;
+import app.morphe.extension.tiktok.settings.preference.categories.FeatureGateLabPreferenceCategory;
+import app.morphe.extension.tiktok.settings.preference.categories.InterfacePreferenceCategory;
 import app.morphe.extension.tiktok.settings.preference.categories.SimSpoofPreferenceCategory;
 
 @SuppressWarnings("deprecation")
@@ -93,6 +95,13 @@ public class TikTokPreferenceFragment extends AbstractPreferenceFragment {
             } else {
                 Setting.privateSetValueFromString(setting, tabSelectionPref.getValue());
             }
+        } else if (pref instanceof LanguageSelectionPreference) {
+            LanguageSelectionPreference languagePreference = (LanguageSelectionPreference) pref;
+            if (applySettingToPreference) {
+                languagePreference.setValue(setting.get().toString());
+            } else {
+                Setting.privateSetValueFromString(setting, languagePreference.getValue());
+            }
         } else {
             super.syncSettingWithPreference(pref, setting, applySettingToPreference);
         }
@@ -112,6 +121,9 @@ public class TikTokPreferenceFragment extends AbstractPreferenceFragment {
         }
         if (pref instanceof TabSelectionPreference) {
             return defaultValue.equals(((TabSelectionPreference) pref).getValue());
+        }
+        if (pref instanceof LanguageSelectionPreference) {
+            return defaultValue.equals(((LanguageSelectionPreference) pref).getValue());
         }
 
         return super.prefIsSetToDefault(pref, setting);
@@ -137,10 +149,12 @@ public class TikTokPreferenceFragment extends AbstractPreferenceFragment {
         // Custom categories reference app specific Settings class.
         new FeedFilterPreferenceCategory(context, preferenceScreen);
         new FeedNavigationPreferenceCategory(context, preferenceScreen);
+        new InterfacePreferenceCategory(context, preferenceScreen);
         new CommentsPreferenceCategory(context, preferenceScreen);
         new DownloadsPreferenceCategory(context, preferenceScreen);
         new SimSpoofPreferenceCategory(context, preferenceScreen);
         new ExtensionPreferenceCategory(context, preferenceScreen);
+        new FeatureGateLabPreferenceCategory(context, preferenceScreen);
         new DebugPreferenceCategory(context, preferenceScreen);
     }
 
