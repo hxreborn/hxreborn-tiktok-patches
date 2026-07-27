@@ -7,6 +7,7 @@
   <a href="https://github.com/hxreborn/tiktok-patches-for-morphe/releases/latest"><img alt="release" src="https://img.shields.io/github/v/release/hxreborn/tiktok-patches-for-morphe?style=flat-square&color=ff0050&label=release" /></a>
   <a href="https://github.com/hxreborn/tiktok-patches-for-morphe/commits/main"><img alt="commits since release" src="https://img.shields.io/github/commits-since/hxreborn/tiktok-patches-for-morphe/latest?style=flat-square&color=00b894&label=since%20release" /></a>
   <a href="LICENSE"><img alt="license" src="https://img.shields.io/badge/license-GPLv3-blue?style=flat-square" /></a>
+  <a href="https://morphe.software/add-source?github=hxreborn/tiktok-patches-for-morphe"><img alt="add source" src="https://img.shields.io/badge/Morphe-Add%20Source-00a8ff?style=flat-square" /></a>
 </p>
 
 # TikTok Patches for Morphe
@@ -19,7 +20,7 @@ Personal TikTok patches for [Morphe](https://github.com/MorpheApp/morphe-cli), b
 
 ## Install
 
-On the device where Morphe is installed: <a href="https://morphe.software/add-source?github=hxreborn/tiktok-patches-for-morphe"><img alt="Add to Morphe" src="https://img.shields.io/badge/Morphe-Add%20Source-00A8FF?style=for-the-badge"></a>, or paste the repo URL as a source: `https://github.com/hxreborn/tiktok-patches-for-morphe`.
+On the device where Morphe is installed: [add to Morphe](https://morphe.software/add-source?github=hxreborn/tiktok-patches-for-morphe), or paste the repo URL as a source: `https://github.com/hxreborn/tiktok-patches-for-morphe`.
 
 Or try a prebuilt APK (at your own risk): [hxreborn/Morphe-AutoBuilds](https://github.com/hxreborn/Morphe-AutoBuilds/releases/latest).
 
