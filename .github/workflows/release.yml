@@ -51,6 +51,14 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
+      - name: Rewrite release notes with author attribution
+        if: steps.release.outputs.new_release_published == 'true'
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          npx git-cliff --config .github/cliff.toml --latest --strip all > /tmp/notes.md
+          gh release edit "${{ steps.release.outputs.new_release_git_tag }}" --notes-file /tmp/notes.md
+
       - name: Attest
         if: steps.release.outputs.new_release_published == 'true'
         uses: actions/attest-build-provenance@v3
