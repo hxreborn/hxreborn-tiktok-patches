@@ -1,3 +1,22 @@
+# [0.9.0](https://github.com/hxreborn/tiktok-patches-for-morphe/compare/v0.8.0...v0.9.0) (2026-07-27)
+
+
+### Features
+
+* **tiktok:** add feature gate lab and UI suppressors ([72bf32a](https://github.com/hxreborn/tiktok-patches-for-morphe/commit/72bf32aa6991257ace0bab91d3a8767617cbd802))
+* **tiktok:** add translation language exclusions ([8f60185](https://github.com/hxreborn/tiktok-patches-for-morphe/commit/8f60185434a3cbb13653438a6561e2d7fc45f4dd))
+* **tiktok:** enable Feature Gate Lab by default ([a164b70](https://github.com/hxreborn/tiktok-patches-for-morphe/commit/a164b70cf046a738d3b0a817a57b1fedf515ef2e))
+* **tiktok:** enable hold-and-slide 2x lock ([a2fd626](https://github.com/hxreborn/tiktok-patches-for-morphe/commit/a2fd626ecb1fb116461b760445128bfdd8980f29))
+* **tiktok:** improve feature gate lab search ([ffc19de](https://github.com/hxreborn/tiktok-patches-for-morphe/commit/ffc19dece888a6ef814d20401d0bc4b9ba93858d))
+* **tiktok:** port external browser patch from lyyako ([7a517c2](https://github.com/hxreborn/tiktok-patches-for-morphe/commit/7a517c218a35508ac4f284450ff6d6c4d3ea05d8))
+* **tiktok:** port publish date patch from lyyako ([1b6c386](https://github.com/hxreborn/tiktok-patches-for-morphe/commit/1b6c386611239c39242bc813fca9614c8de3d3d1))
+* **tiktok:** redesign support row ([cc39469](https://github.com/hxreborn/tiktok-patches-for-morphe/commit/cc39469c98eabc0ccdea40fc423e94639c34703f))
+
+
+### Reverts
+
+* **feedfilter:** restore event badge hook over upstream promo patch ([5e0de5c](https://github.com/hxreborn/tiktok-patches-for-morphe/commit/5e0de5c6bf6161c1d0d72b9985fb4830de260342))
+
 # [0.8.0](https://github.com/hxreborn/tiktok-patches-for-morphe/compare/v0.7.0...v0.8.0) (2026-07-25)
 
 
