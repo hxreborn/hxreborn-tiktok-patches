@@ -19,7 +19,7 @@ Personal TikTok patches for [Morphe](https://github.com/MorpheApp/morphe-cli), b
 
 ## Install
 
-On the device where Morphe is installed: [add to Morphe](https://morphe.software/add-source?github=hxreborn/tiktok-patches-for-morphe), or paste the repo URL as a source: `https://github.com/hxreborn/tiktok-patches-for-morphe`.
+On the device where Morphe is installed: <a href="https://morphe.software/add-source?github=hxreborn/tiktok-patches-for-morphe"><img alt="Add to Morphe" src="https://img.shields.io/badge/Morphe-Add%20Source-00A8FF?style=for-the-badge"></a>, or paste the repo URL as a source: `https://github.com/hxreborn/tiktok-patches-for-morphe`.
 
 Or try a prebuilt APK (at your own risk): [hxreborn/Morphe-AutoBuilds](https://github.com/hxreborn/Morphe-AutoBuilds/releases/latest).
 
