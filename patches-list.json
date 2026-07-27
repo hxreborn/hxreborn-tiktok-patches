@@ -199,7 +199,7 @@
     },
     {
       "name": "Feed filter",
-      "description": "Hides feed ads, TikTok Shop items, livestreams, stories, photo posts, the playlist bar, AI-generated posts, paid partnership and promotional content, friend recommendations, posts from verified accounts, and videos outside configured view or like ranges.",
+      "description": "Hides feed ads, TikTok Shop items, livestreams, stories, photo posts, the playlist bar, the floating event badge, AI-generated posts, paid partnership and promotional content, friend recommendations, posts from verified accounts, and videos outside configured view or like ranges.",
       "use": true,
       "dependencies": [
         "BytecodePatch"

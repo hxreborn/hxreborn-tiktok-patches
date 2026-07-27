@@ -16,10 +16,6 @@ public final class FeatureControls {
         return Settings.HIDE_CAPTCHA_POPUPS.get();
     }
 
-    public static Object filterNormalPendant(Object pendant) {
-        return Settings.HIDE_HOMEPAGE_COIN.get() ? null : pendant;
-    }
-
     public static boolean overrideLongPressSpeedUpEnabled(boolean enabled) {
         return Settings.ENABLE_LONG_PRESS_SPEED_LOCK.get() || enabled;
     }

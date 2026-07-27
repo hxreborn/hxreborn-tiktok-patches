@@ -14,7 +14,6 @@ public class SettingsStatus {
     public static boolean simSpoofEnabled = false;
     public static boolean disableTelemetryEnabled = false;
     public static boolean captchaPopupSuppressionEnabled = false;
-    public static boolean promotionalBannersEnabled = false;
     public static boolean longPressSpeedLockEnabled = false;
     public static boolean externalBrowserEnabled = false;
     public static boolean alwaysShowPublishDateEnabled = false;
@@ -45,10 +44,6 @@ public class SettingsStatus {
 
     public static void enableCaptchaPopupSuppression() {
         captchaPopupSuppressionEnabled = true;
-    }
-
-    public static void enablePromotionalBanners() {
-        promotionalBannersEnabled = true;
     }
 
     public static void enableLongPressSpeedLock() {

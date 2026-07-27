@@ -21,20 +21,11 @@ public final class InterfacePreferenceCategory extends ConditionalPreferenceCate
     @Override
     public boolean getSettingsStatus() {
         return SettingsStatus.captchaPopupSuppressionEnabled
-                || SettingsStatus.promotionalBannersEnabled
                 || SettingsStatus.alwaysShowPublishDateEnabled;
     }
 
     @Override
     public void addPreferences(Context context) {
-        if (SettingsStatus.promotionalBannersEnabled) {
-            addPreference(new TogglePreference(
-                    context,
-                    "Hide floating promotions",
-                    "Hide floating promotion badges, coins, and timer banners on the homepage.",
-                    Settings.HIDE_HOMEPAGE_COIN
-            ));
-        }
         if (SettingsStatus.captchaPopupSuppressionEnabled) {
             addPreference(new TogglePreference(
                     context,

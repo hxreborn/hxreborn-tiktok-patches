@@ -24,12 +24,12 @@ public class Settings extends BaseSettings {
     public static final BooleanSetting HIDE_STORY = new BooleanSetting("hide_story", FALSE, true);
     public static final BooleanSetting HIDE_IMAGE = new BooleanSetting("hide_image", FALSE, true);
     public static final BooleanSetting HIDE_PLAYLIST_BAR = new BooleanSetting("hide_playlist_bar", FALSE, true);
+    public static final BooleanSetting HIDE_EVENT_BADGE = new BooleanSetting("hide_event_badge", FALSE, true);
     public static final BooleanSetting HIDE_AI_GENERATED = new BooleanSetting("hide_ai_generated", FALSE, true);
     public static final BooleanSetting HIDE_PAID_PARTNERSHIP = new BooleanSetting("hide_paid_partnership", FALSE, true);
     public static final BooleanSetting HIDE_FRIEND_RECOMMENDATIONS = new BooleanSetting("hide_friend_recommendations", FALSE, true);
     public static final BooleanSetting HIDE_VERIFIED_ACCOUNTS = new BooleanSetting("hide_verified_accounts", FALSE, true);
     public static final BooleanSetting HIDE_CAPTCHA_POPUPS = new BooleanSetting("hide_captcha_popups", TRUE, true);
-    public static final BooleanSetting HIDE_HOMEPAGE_COIN = new BooleanSetting("hide_homepage_coin", FALSE, true);
     public static final StringSetting MIN_MAX_VIEWS = new StringSetting("min_max_views", "0-" + Long.MAX_VALUE, true);
     public static final StringSetting MIN_MAX_LIKES = new StringSetting("min_max_likes", "0-" + Long.MAX_VALUE, true);
     public static final BooleanSetting FEED_NAVIGATION = new BooleanSetting("feed_navigation", FALSE, true);

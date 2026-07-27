@@ -37,11 +37,10 @@ Or try a prebuilt APK (at your own risk): [hxreborn/Morphe-AutoBuilds](https://g
 | `Downloads` | Adds watermark-free video and photo downloads, comment sticker saving, and configurable download-folder controls. |
 | `Enable Open Debug` | Repurposes TikTok's hidden Open Debug row as the entry point for Morphe settings. Required for the settings menu to appear. |
 | `Feature Gate Lab` | Adds a searchable menu for viewing and overriding supported TikTok feature flags and configuration values. Client-side overrides cannot bypass server enforcement. |
-| `Feed filter` | Hides feed ads, TikTok Shop items, livestreams, stories, photo posts, the playlist bar, AI-generated posts, paid partnership and promotional content, friend recommendations, posts from verified accounts\*, and videos outside configured view or like ranges. |
+| `Feed filter` | Hides feed ads, TikTok Shop items, livestreams, stories, photo posts, the playlist bar, the floating event badge, AI-generated posts, paid partnership and promotional content, friend recommendations, posts from verified accounts\*, and videos outside configured view or like ranges. |
 | `Feed tab navigation` | Controls which loaded top and bottom navigation tabs remain visible, blocks newly added tabs when requested, and can hide the Tako AI bubble. |
 | `Fix Google login` | Restores Google account sign-in after patching. |
 | `Hide CAPTCHA popups` | Prevents client-side verification puzzle dialogs from opening, including those shown while browsing LIVE. It does not bypass server-side checks. |
-| `Hide floating promotions` | Removes floating promotional badges, coin icons, and timer banners from the Home feed. |
 | `Hold-and-slide 2x lock` | Enables TikTok's native hold, slide down, and release gesture for locking playback at 2x speed. |
 | `Open external links directly` | Opens profile and story website links in the system browser instead of TikTok's in-app browser. |
 | `Playback speed` | Enables playback-speed controls for all videos and remembers the selected speed between videos. |
@@ -60,6 +59,7 @@ This fork adds, on top of [icysymmetra's upstream](https://github.com/icysymmetr
 - Hide posts from verified accounts\*
 - Disable telemetry, ByteDance/AppsFlyer/Firebase
 - Hide the in-feed playlist bar
+- Hide the floating promotional event badge, e.g. FIFA World Cup
 - Separate image and video download folders
 
 \*TikTok decides which accounts count as institutions. Major news outlets usually carry that tag and
