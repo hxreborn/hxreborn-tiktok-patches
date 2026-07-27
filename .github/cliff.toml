@@ -59,28 +59,13 @@ protect_breaking_commits = true
 commit_preprocessors = [
   { pattern = '\((\w+\s)?#([0-9]+)\)', replace = "" },
 ]
+# Mirrors semantic-release's angular preset: only feat, fix, perf and revert reach the notes.
 commit_parsers = [
   { message = "^feat", group = "<!-- 00 -->Features" },
-  { message = "^[fF]ix", group = "<!-- 01 -->Bug Fixes" },
+  { message = "^fix", group = "<!-- 01 -->Bug Fixes" },
   { message = "^perf", group = "<!-- 02 -->Performance Improvements" },
-  { message = "^security", group = "<!-- 03 -->Security" },
-  { body = ".*[Ss]ecurity", group = "<!-- 03 -->Security" },
-  { message = "^refactor", group = "<!-- 04 -->Refactor" },
-  { message = "^[Rr]evert", group = "<!-- 05 -->Reverts" },
-  { message = '^(build|chore)\(deps(-dev)?\)', group = "<!-- 08 -->Dependencies" },
-  { message = "^doc", skip = true },
-  { message = "^style", skip = true },
-  { message = '^build(\(\w+\))?:\s*(bump|align|prepare|v?\d+\.\d+)', skip = true },
-  { message = "^build", group = "<!-- 09 -->Build" },
-  { message = "^ci", skip = true },
-  { message = "^test", group = "<!-- 11 -->Tests" },
-  # Mute release/changelog noise only
-  { message = '^chore\(release\)', skip = true },
-  { message = '^chore:\s*([Rr]elease|prepare|bump|align|v?\d+\.\d+)', skip = true },
-  { message = '^release:\s*(bump|prepare|v?\d+\.\d+)', skip = true },
-  { message = '^chore\(changelog\)', skip = true },
-  # Catch-all
-  { message = ".*", group = "<!-- 99 -->Miscellaneous" },
+  { message = "^revert", group = "<!-- 03 -->Reverts" },
+  { message = ".*", skip = true },
 ]
 filter_commits = false
 tag_pattern = "v[0-9]*"
