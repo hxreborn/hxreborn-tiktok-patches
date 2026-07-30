@@ -22,8 +22,6 @@ val showSeekbarPatch = bytecodePatch(
     compatibleWith(*AppCompatibilities.tiktok4383())
 
     execute {
-        // This target is TikTok's story predicate. Do not call another method in
-        // the same utility class here: LIZIZ(Aweme) calls this method on 43.8.3.
         ShouldShowProgressBarFingerprint.method.addInstructions(
             0,
             """
