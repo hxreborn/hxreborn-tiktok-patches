@@ -1,3 +1,10 @@
+## [0.9.1](https://github.com/hxreborn/tiktok-patches-for-morphe/compare/v0.9.0...v0.9.1) (2026-07-30)
+
+
+### Bug Fixes
+
+* **tiktok:** prevent seekbar recursion on stories ([9d2c0bc](https://github.com/hxreborn/tiktok-patches-for-morphe/commit/9d2c0bc823ce661b385fff12945ac5c2ace0223f))
+
 # [0.9.0](https://github.com/hxreborn/tiktok-patches-for-morphe/compare/v0.8.0...v0.9.0) (2026-07-27)
 
 
