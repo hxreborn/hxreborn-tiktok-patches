@@ -22,22 +22,16 @@ val showSeekbarPatch = bytecodePatch(
     compatibleWith(*AppCompatibilities.tiktok4383())
 
     execute {
-        val targetClass = VanillaLongFilterFingerprint.method.definingClass
-        val targetMethodName = VanillaLongFilterFingerprint.method.name
-
         ShouldShowProgressBarFingerprint.method.addInstructions(
             0,
             """
-                if-eqz p0, :show_seekbar_not_video
+                if-eqz p0, :show_seekbar_original
                 invoke-static {}, $EXTENSION_CLASS_DESCRIPTOR->isEnabled()Z
                 move-result v0
-                if-eqz v0, :show_seekbar_not_video
-                invoke-static {p0}, ${targetClass}->${targetMethodName}(Lcom/ss/android/ugc/aweme/feed/model/Aweme;)Z
-                move-result v0
+                if-eqz v0, :show_seekbar_original
+                const/4 v0, 0x1
                 return v0
-                :show_seekbar_not_video
-                const/4 v0, 0x0
-                return v0
+                :show_seekbar_original
             """,
         )
 
