@@ -4,6 +4,8 @@ import static app.morphe.extension.shared.StringRef.str;
 
 import android.content.Context;
 
+import android.content.SharedPreferences;
+
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
@@ -15,6 +17,7 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
+import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.Map;
 import java.util.Objects;
 
@@ -145,7 +148,7 @@ public abstract class Setting<T> {
      * All settings that were instantiated.
      * When a new setting is created, it is automatically added to this list.
      */
-    private static final List<Setting<?>> SETTINGS = new ArrayList<>();
+    private static final List<Setting<?>> SETTINGS = new CopyOnWriteArrayList<>();
 
     /**
      * Map of setting path to setting object.
@@ -156,6 +159,16 @@ public abstract class Setting<T> {
      * Preference all instances are saved to.
      */
     public static final SharedPrefCategory preferences = new SharedPrefCategory("morphe_prefs");
+
+    /**
+     * Re-reads every setting from storage. Settings constructed before the app context existed hold their
+     * default, so this must run once the context is available or those values stay wrong for the process.
+     */
+    public static void reloadAllFromPreferences() {
+        for (Setting<?> setting : SETTINGS) {
+            setting.load();
+        }
+    }
 
     @Nullable
     public static Setting<?> getSettingFromPath(String str) {
@@ -282,7 +295,8 @@ public abstract class Setting<T> {
     @SuppressWarnings({"unchecked", "rawtypes"})
     public static void migrateFromOldPreferences(SharedPrefCategory oldPrefs, Setting setting) {
         String settingKey = setting.key;
-        if (!oldPrefs.preferences.contains(settingKey)) {
+        SharedPreferences oldPreferences = oldPrefs.preferences();
+        if (oldPreferences == null || !oldPreferences.contains(settingKey)) {
             return; // Nothing to do.
         }
 
@@ -301,11 +315,11 @@ public abstract class Setting<T> {
         } else {
             Logger.printException(() -> "Unknown setting: " + setting);
             // Remove otherwise it'll show a toast on every launch.
-            oldPrefs.preferences.edit().remove(settingKey).apply();
+            oldPreferences.edit().remove(settingKey).apply();
             return;
         }
 
-        oldPrefs.preferences.edit().remove(settingKey).apply(); // Remove the old setting.
+        oldPreferences.edit().remove(settingKey).apply(); // Remove the old setting.
         if (migratedValue.equals(newValue)) {
             Logger.printDebug(() -> "Value does not need migrating: " + settingKey);
             return; // Old value is already equal to the new setting value.
