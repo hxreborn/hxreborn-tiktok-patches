@@ -80,8 +80,6 @@ val disableTelemetryPatch = bytecodePatch(
         )
 
         listOf(
-            AppLogInitFingerprint,
-            AppLogStartFingerprint,
             AppLogOnEventFingerprint,
             AppLogOnEventV3StringFingerprint,
             AppLogOnEventV3JsonFingerprint,
