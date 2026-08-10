@@ -1,3 +1,37 @@
+# [0.10.0-dev.1](https://github.com/hxreborn/tiktok-patches-for-morphe/compare/v0.9.1...v0.10.0-dev.1) (2026-08-10)
+
+
+### Bug Fixes
+
+* **build:** select current bundle for patch catalog ([69bd1e9](https://github.com/hxreborn/tiktok-patches-for-morphe/commit/69bd1e93194825b7af567e8456de4f29831fd9a8))
+* **morphe:** support patching on older Android versions ([01463a0](https://github.com/hxreborn/tiktok-patches-for-morphe/commit/01463a04e2a64a2a1400391778576779cfb2b211)), closes [#85](https://github.com/hxreborn/tiktok-patches-for-morphe/issues/85)
+* **tiktok:** filter following ads at cached feed reads ([13d74f0](https://github.com/hxreborn/tiktok-patches-for-morphe/commit/13d74f00b1d076aa22b7a4ab8bbe92bfaf2c4b6b))
+* **tiktok:** filter late following feed ads ([a232cba](https://github.com/hxreborn/tiktok-patches-for-morphe/commit/a232cbaeb3725f0c1361d20a99e9a6fd31a0be53))
+* **tiktok:** hook native video looping boundary ([2721f01](https://github.com/hxreborn/tiktok-patches-for-morphe/commit/2721f010b670842f9776b2afb34486de418f29d9))
+* **tiktok:** preserve account verification CAPTCHA flows ([dd35d89](https://github.com/hxreborn/tiktok-patches-for-morphe/commit/dd35d8948b002f0d098ed1f83a3f64cddc5f7904))
+* **tiktok:** preserve native download addresses ([61da3c6](https://github.com/hxreborn/tiktok-patches-for-morphe/commit/61da3c6413ed75cdb04f5eb1cb4b7292dfd06089))
+* **tiktok:** repair automatic comment translation ([636ef64](https://github.com/hxreborn/tiktok-patches-for-morphe/commit/636ef648c18be2610c6ee48beed7270e37ffce41))
+* **tiktok:** reset completed video resume state ([100cab5](https://github.com/hxreborn/tiktok-patches-for-morphe/commit/100cab58fc178f360c2e727308e161e3e3e2f9ad))
+* **tiktok:** skip same-language automatic translations ([3415710](https://github.com/hxreborn/tiktok-patches-for-morphe/commit/3415710facfc60db19943599112b9bc47cf82647))
+* **tiktok:** use native video loop control ([f508adb](https://github.com/hxreborn/tiktok-patches-for-morphe/commit/f508adbdbf6229e7a993a42616ed00cc0feadcd2))
+
+
+### Features
+
+* **feedfilter:** adapt hiding AI-generated posts to TikTok 46.2.3 ([4d31a23](https://github.com/hxreborn/tiktok-patches-for-morphe/commit/4d31a230b44b0790c9292ad76f50bfa1f3fae68b))
+* **patches:** retarget the bundle to TikTok 46.2.3 ([6495c15](https://github.com/hxreborn/tiktok-patches-for-morphe/commit/6495c15e8aad0c7124b9ac1434cb147dbe12de70))
+* **settings:** load settings safely when TikTok reads them before init ([f731841](https://github.com/hxreborn/tiktok-patches-for-morphe/commit/f731841cb628ddbcc24a7cd25f40faa178b61018))
+* **settings:** rename the in-app settings entry to Morphe patches ([f267269](https://github.com/hxreborn/tiktok-patches-for-morphe/commit/f267269e80733ca155d2a586e0eceda3ed50a59a))
+* **telemetry:** adapt disabling analytics to TikTok 46.2.3 ([56a335c](https://github.com/hxreborn/tiktok-patches-for-morphe/commit/56a335ce780de6da2d03d2b6dd8b00b98f22e26c))
+* **tiktok:** add native search and seekbar controls ([c36bfaf](https://github.com/hxreborn/tiktok-patches-for-morphe/commit/c36bfaf51d6e8d30fbef6e5c6ba99bfdeae283e2))
+* **tiktok:** add playback completion controls ([9a51c2f](https://github.com/hxreborn/tiktok-patches-for-morphe/commit/9a51c2f614145250177600144abd61eb30cf0841))
+* **tiktok:** add quick-action controls ([fe29a24](https://github.com/hxreborn/tiktok-patches-for-morphe/commit/fe29a249e42620d53dc6224c347c74aadc291c08))
+* **tiktok:** port core patches to TikTok 46.2.3 ([2c52b6a](https://github.com/hxreborn/tiktok-patches-for-morphe/commit/2c52b6aa1362a3a9ccbcdd8dad2e16ec4b9a06cc))
+* **tiktok:** port Feature Gate Lab to TikTok 46.2.3 ([4bdbdee](https://github.com/hxreborn/tiktok-patches-for-morphe/commit/4bdbdeed1649bdc6177ea6a2c62bd2d9300ac8d6))
+* **tiktok:** redesign patch settings navigation ([a479bdb](https://github.com/hxreborn/tiktok-patches-for-morphe/commit/a479bdb09a4e01584f9d683cdfda1c65d3ab6dff))
+* **tiktok:** restore download templates and sticker formats ([91d158c](https://github.com/hxreborn/tiktok-patches-for-morphe/commit/91d158ca3da1126a2d2ca9f4c2330e81d3ea96f9))
+* **tiktok:** separate optional diagnostics from settings entry ([aad18c3](https://github.com/hxreborn/tiktok-patches-for-morphe/commit/aad18c3e4b301366685174b0faa5a23a8a2850de))
+
 ## [0.9.1](https://github.com/hxreborn/tiktok-patches-for-morphe/compare/v0.9.0...v0.9.1) (2026-07-30)
 
 
