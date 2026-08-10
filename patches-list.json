@@ -673,7 +673,7 @@
     },
     {
       "name": "Settings",
-      "description": "Adds the Metra patches settings menu to TikTok. Supports TikTok 46.2.3.",
+      "description": "Adds the Morphe patches settings menu to TikTok.",
       "use": true,
       "dependencies": [
         "BytecodePatch"
