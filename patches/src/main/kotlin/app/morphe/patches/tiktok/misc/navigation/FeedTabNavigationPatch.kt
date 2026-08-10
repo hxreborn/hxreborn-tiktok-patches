@@ -19,7 +19,7 @@ val feedTabNavigationPatch = bytecodePatch(
 ) {
     dependsOn(sharedExtensionPatch)
 
-    compatibleWith(*AppCompatibilities.tiktok4383())
+    compatibleWith(*AppCompatibilities.tiktok4623())
 
     execute {
         SettingsStatusLoadFingerprint.method.addInstruction(
@@ -27,7 +27,7 @@ val feedTabNavigationPatch = bytecodePatch(
             "invoke-static {}, Lapp/morphe/extension/tiktok/settings/SettingsStatus;->enableFeedNavigation()V",
         )
 
-        HomeTabAbilityListFingerprint.method.let { method ->
+        TopTabModelListFingerprint.method.let { method ->
             val returnIndices = method.implementation!!.instructions.withIndex()
                 .filter { it.value.opcode == Opcode.RETURN_OBJECT }
                 .map { it.index }
@@ -37,19 +37,28 @@ val feedTabNavigationPatch = bytecodePatch(
                 method.addInstructions(
                     returnIndex,
                     """
-                        invoke-static {v$register, p1}, $EXTENSION_CLASS_DESCRIPTOR->filterTopTabs(Ljava/util/List;Z)Ljava/util/List;
+                        invoke-static {v$register}, $EXTENSION_CLASS_DESCRIPTOR->filterTopTabs(Ljava/util/List;)Ljava/util/List;
                         move-result-object v$register
                     """,
                 )
             }
         }
 
-        BottomTabBuildListFingerprint.method.addInstructions(
-            0,
-            """
-                invoke-static/range {p1 .. p1}, $EXTENSION_CLASS_DESCRIPTOR->filterBottomTabs(Ljava/util/List;)Ljava/util/List;
-                move-result-object p1
-            """,
-        )
+        BottomTabModelListFingerprint.method.let { method ->
+            val returnIndices = method.implementation!!.instructions.withIndex()
+                .filter { it.value.opcode == Opcode.RETURN_OBJECT }
+                .map { it.index }
+
+            returnIndices.asReversed().forEach { returnIndex ->
+                val register = (method.implementation!!.instructions[returnIndex] as OneRegisterInstruction).registerA
+                method.addInstructions(
+                    returnIndex,
+                    """
+                        invoke-static {v$register}, $EXTENSION_CLASS_DESCRIPTOR->filterBottomTabs(Ljava/util/List;)Ljava/util/List;
+                        move-result-object v$register
+                    """,
+                )
+            }
+        }
     }
 }

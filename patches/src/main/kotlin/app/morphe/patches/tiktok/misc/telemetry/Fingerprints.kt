@@ -15,24 +15,6 @@ private const val MONITOR_CRASH_DESCRIPTOR = "Lcom/bytedance/crash/MonitorCrash;
 
 private val publicStaticAccessFlags = listOf(AccessFlags.PUBLIC, AccessFlags.STATIC)
 
-internal object AppLogInitFingerprint : Fingerprint(
-    definingClass = APP_LOG_DESCRIPTOR,
-    name = "init",
-    accessFlags = publicStaticAccessFlags,
-    returnType = "V",
-    custom = { method, _ ->
-        method.parameterTypes.size == 2 && method.parameterTypes.first() == "Landroid/content/Context;"
-    },
-)
-
-internal object AppLogStartFingerprint : Fingerprint(
-    definingClass = APP_LOG_DESCRIPTOR,
-    name = "start",
-    accessFlags = publicStaticAccessFlags,
-    returnType = "V",
-    parameters = emptyList(),
-)
-
 internal object AppLogOnEventFingerprint : Fingerprint(
     definingClass = APP_LOG_DESCRIPTOR,
     name = "onEvent",

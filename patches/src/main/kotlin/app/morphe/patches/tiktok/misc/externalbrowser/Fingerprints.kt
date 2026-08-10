@@ -1,7 +1,7 @@
 /*
  * Thanks to lyyako for the original implementation and help with this patch.
  *
- * TikTok 43.8.3 adaptation:
+ * Originally adapted for TikTok 43.8.3; ported to TikTok 46.2.3:
  * https://github.com/icysymmetra/tiktok-patches-for-morphe
  */
 package app.morphe.patches.tiktok.misc.externalbrowser

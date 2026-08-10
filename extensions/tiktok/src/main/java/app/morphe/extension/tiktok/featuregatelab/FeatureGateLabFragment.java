@@ -62,11 +62,16 @@ import app.morphe.extension.tiktok.settings.preference.SettingsUi;
 public final class FeatureGateLabFragment extends Fragment {
     private static final String[] VIEW_LABELS = {"Loaded", "All actionable", "Overrides"};
     private static final String[] FILTER_LABELS = {"All", "Boolean", "Enabled", "Disabled", "Unloaded"};
-    private static final String[] SOURCE_LABELS = {"All", "App AB", "Live", "Activity"};
+    private static final String[] SOURCE_LABELS = {
+            "All", "App AB", "Config", "Player", "Live", "Media", "Activity"
+    };
     private static final String[] SOURCE_MANAGERS = {
             null,
             FeatureGateLabStore.MANAGER_ABMOCK,
+            FeatureGateLabStore.MANAGER_SETTINGS_MANAGER,
+            FeatureGateLabStore.MANAGER_PLAYER_CONFIG,
             FeatureGateLabStore.MANAGER_LIVE,
+            FeatureGateLabStore.MANAGER_VE_CONFIG,
             FeatureGateLabStore.MANAGER_PIA_ACTIVITY_CENTER
     };
     private static final long SEARCH_DELAY_MS = 160;
@@ -355,7 +360,21 @@ public final class FeatureGateLabFragment extends Fragment {
 
         updateControls();
         load(false);
+        root.post(this::showMigrationNoticeIfNeeded);
         return root;
+    }
+
+    private void showMigrationNoticeIfNeeded() {
+        Activity activity = getActivity();
+        if (activity == null || activity.isFinishing() || !FeatureGateLabStore.consumeMigrationNotice()) {
+            return;
+        }
+        AlertDialog dialog = new AlertDialog.Builder(activity)
+                .setTitle("Review saved overrides")
+                .setMessage("Overrides saved for an older TikTok version were kept but disabled. Review their values before enabling them on TikTok 46.2.3.")
+                .setPositiveButton("Review", null)
+                .create();
+        showStyled(dialog);
     }
 
     @Override
@@ -688,7 +707,7 @@ public final class FeatureGateLabFragment extends Fragment {
                     .addCategory(Intent.CATEGORY_OPENABLE)
                     .setType("application/gzip")
                     .putExtra(Intent.EXTRA_TITLE,
-                            "tiktok-43.8.3-loaded-feature-gates-" + timestamp + ".json.gz");
+                            "tiktok-46.2.3-loaded-feature-gates-" + timestamp + ".json.gz");
             startActivityForResult(intent, REQUEST_EXPORT_LOADED);
         } catch (Throwable throwable) {
             Utils.showToastLong("Could not open the export file picker");
@@ -854,6 +873,10 @@ public final class FeatureGateLabFragment extends Fragment {
         root.put("exported_at_ms", System.currentTimeMillis());
         root.put("entry_count", rules.length());
         root.put("rules", rules);
+        JSONArray settingsManagerObservations =
+                FeatureGateLabRuntime.settingsManagerObservationsJson();
+        root.put("settings_manager_observation_count", settingsManagerObservations.length());
+        root.put("settings_manager_observations", settingsManagerObservations);
 
         ByteArrayOutputStream bytes = new ByteArrayOutputStream();
         try (GZIPOutputStream gzip = new GZIPOutputStream(bytes)) {

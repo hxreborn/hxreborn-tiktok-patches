@@ -14,13 +14,10 @@ val fixGoogleLoginPatch = bytecodePatch(
     description = "Restores Google account sign-in after patching.",
     default = true,
 ) {
-    compatibleWith(*AppCompatibilities.tiktok4383())
+    compatibleWith(*AppCompatibilities.tiktok4623())
 
     execute {
-        listOf(
-            GoogleOneTapAuthAvailableFingerprint.method,
-            GoogleAuthAvailableFingerprint.method,
-        ).forEach { method ->
+        listOf(GoogleAuthAvailableFingerprint.method).forEach { method ->
             method.addInstructions(
                 0,
                 """

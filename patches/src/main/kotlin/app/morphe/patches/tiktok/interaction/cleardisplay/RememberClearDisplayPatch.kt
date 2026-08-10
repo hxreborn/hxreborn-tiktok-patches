@@ -6,9 +6,12 @@ package app.morphe.patches.tiktok.interaction.cleardisplay
 
 import app.morphe.patches.shared.compat.AppCompatibilities
 import app.morphe.patcher.extensions.InstructionExtensions.addInstructions
+import app.morphe.patcher.extensions.InstructionExtensions.addInstructionsWithLabels
 import app.morphe.patcher.extensions.InstructionExtensions.getInstruction
 import app.morphe.patcher.patch.bytecodePatch
+import app.morphe.patcher.util.smali.ExternalLabel
 import app.morphe.patches.tiktok.shared.OnRenderFirstFrameFingerprint
+import app.morphe.util.findInstructionIndicesReversedOrThrow
 import app.morphe.util.indexOfFirstInstructionOrThrow
 import app.morphe.util.returnEarly
 import com.android.tools.smali.dexlib2.Opcode
@@ -20,10 +23,10 @@ val rememberClearDisplayPatch = bytecodePatch(
     description = "Remembers TikTok's clear-display state between videos.",
     default = true,
 ) {
-    compatibleWith(*AppCompatibilities.tiktok4383())
+    compatibleWith(*AppCompatibilities.tiktok4623())
 
     execute {
-        // Prevent excessive logging (can cause instability on 43.8.3).
+        // Prevent excessive logging in high-frequency feed paths.
         ClearModeLogCoreFingerprint.methodOrNull?.returnEarly()
         ClearModeLogStateFingerprint.methodOrNull?.returnEarly()
         ClearModeLogPlaytimeFingerprint.methodOrNull?.returnEarly()
@@ -39,26 +42,29 @@ val rememberClearDisplayPatch = bytecodePatch(
             )
 
             val clearDisplayEventClass = method.parameters[0].type
-            OnRenderFirstFrameFingerprint.method.addInstructions(
-                0,
-                """
-                    invoke-static {}, Lapp/morphe/extension/tiktok/cleardisplay/RememberClearDisplayPatch;->getClearDisplayState()Z
-                    move-result v1
+            OnRenderFirstFrameFingerprint.method.apply {
+                val returnIndex = findInstructionIndicesReversedOrThrow {
+                    opcode == Opcode.RETURN_VOID
+                }.first()
+                addInstructionsWithLabels(
+                    returnIndex,
+                    """
+                        invoke-static {}, Lapp/morphe/extension/tiktok/cleardisplay/RememberClearDisplayPatch;->getClearDisplayState()Z
+                        move-result v0
 
-                    if-eqz v1, :clear_display_disabled
+                        if-eqz v0, :morphe_clear_display_return
 
-                    const/4 v2, 0x0
-                    const-string v3, ""
-                    const-string v4, "long_press"
+                        const/4 v1, 0x0
+                        const-string v2, ""
+                        const-string p1, "long_press"
 
-                    new-instance v0, $clearDisplayEventClass
-                    invoke-direct {v0, v1, v2, v3, v4}, $clearDisplayEventClass-><init>(ZILjava/lang/String;Ljava/lang/String;)V
-                    invoke-virtual {v0}, $clearDisplayEventClass->post()Lcom/ss/android/ugc/governance/eventbus/IEvent;
-
-                    :clear_display_disabled
-                    nop
-                """,
-            )
+                        new-instance p0, $clearDisplayEventClass
+                        invoke-direct {p0, v0, v1, v2, p1}, $clearDisplayEventClass-><init>(ZILjava/lang/String;Ljava/lang/String;)V
+                        invoke-virtual {p0}, $clearDisplayEventClass->post()Lcom/ss/android/ugc/governance/eventbus/IEvent;
+                    """,
+                    ExternalLabel("morphe_clear_display_return", getInstruction(returnIndex)),
+                )
+            }
         }
     }
 }

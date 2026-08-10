@@ -1,7 +1,7 @@
 /*
  * Thanks to lyyako for the original implementation and help with this patch.
  *
- * TikTok 43.8.3 adaptation:
+ * Originally adapted for TikTok 43.8.3; ported to TikTok 46.2.3:
  * https://github.com/icysymmetra/tiktok-patches-for-morphe
  */
 package app.morphe.patches.tiktok.interaction.publishdate
@@ -30,7 +30,7 @@ val alwaysShowPublishDatePatch = bytecodePatch(
 ) {
     dependsOn(sharedExtensionPatch)
 
-    compatibleWith(*AppCompatibilities.tiktok4383())
+    compatibleWith(*AppCompatibilities.tiktok4623())
 
     execute {
         SettingsStatusLoadFingerprint.method.addInstruction(
@@ -70,8 +70,8 @@ private fun app.morphe.patcher.util.proxy.mutableTypes.MutableMethod.showPostTim
         .filter { (index, _) -> getInstruction(index + 1).opcode == Opcode.MOVE_RESULT }
         .map { it.index }
 
-    check(gateCallIndices.size == 4) {
-        "Expected four video author post-time visibility gates, found ${gateCallIndices.size}"
+    check(gateCallIndices.size == 5) {
+        "Expected five video author post-time visibility gates, found ${gateCallIndices.size}"
     }
 
     gateCallIndices.asReversed().forEach { index ->

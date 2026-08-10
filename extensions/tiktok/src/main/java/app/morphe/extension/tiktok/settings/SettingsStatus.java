@@ -10,13 +10,22 @@ public class SettingsStatus {
     public static boolean feedFilterEnabled = false;
     public static boolean feedNavigationEnabled = false;
     public static boolean commentTranslationEnabled = false;
+    public static boolean hideCommentQuickReactionsEnabled = false;
+    public static boolean copyCommentsWithoutUsernameEnabled = false;
     public static boolean downloadEnabled = false;
     public static boolean simSpoofEnabled = false;
     public static boolean disableTelemetryEnabled = false;
     public static boolean captchaPopupSuppressionEnabled = false;
     public static boolean longPressSpeedLockEnabled = false;
+    public static boolean disableLongPressQuickShareEnabled = false;
+    public static boolean nonPersonalizedSearchEnabled = false;
+    public static boolean liveSearchEnabled = false;
+    public static boolean seekbarThumbnailEnabled = false;
+    public static boolean stopVideoLoopingEnabled = false;
+    public static boolean resumeVideoAfterScrollEnabled = false;
     public static boolean externalBrowserEnabled = false;
     public static boolean alwaysShowPublishDateEnabled = false;
+    public static boolean diagnosticsEnabled = false;
 
     public static void enableFeedFilter() {
         feedFilterEnabled = true;
@@ -28,6 +37,14 @@ public class SettingsStatus {
 
     public static void enableCommentTranslation() {
         commentTranslationEnabled = true;
+    }
+
+    public static void enableHideCommentQuickReactions() {
+        hideCommentQuickReactionsEnabled = true;
+    }
+
+    public static void enableCopyCommentsWithoutUsername() {
+        copyCommentsWithoutUsernameEnabled = true;
     }
 
     public static void enableDownload() {
@@ -50,12 +67,40 @@ public class SettingsStatus {
         longPressSpeedLockEnabled = true;
     }
 
+    public static void enableDisableLongPressQuickShare() {
+        disableLongPressQuickShareEnabled = true;
+    }
+
+    public static void enableNonPersonalizedSearch() {
+        nonPersonalizedSearchEnabled = true;
+    }
+
+    public static void enableLiveSearch() {
+        liveSearchEnabled = true;
+    }
+
+    public static void enableSeekbarThumbnail() {
+        seekbarThumbnailEnabled = true;
+    }
+
+    public static void enableStopVideoLooping() {
+        stopVideoLoopingEnabled = true;
+    }
+
+    public static void enableResumeVideoAfterScroll() {
+        resumeVideoAfterScrollEnabled = true;
+    }
+
     public static void enableExternalBrowser() {
         externalBrowserEnabled = true;
     }
 
     public static void enableAlwaysShowPublishDate() {
         alwaysShowPublishDateEnabled = true;
+    }
+
+    public static void enableDiagnostics() {
+        diagnosticsEnabled = true;
     }
 
     public static void load() {

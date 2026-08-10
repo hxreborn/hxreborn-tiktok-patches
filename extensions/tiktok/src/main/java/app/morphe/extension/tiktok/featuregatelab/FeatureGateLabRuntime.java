@@ -8,12 +8,14 @@ import android.net.Uri;
 import android.util.Log;
 
 import org.json.JSONObject;
+import org.json.JSONArray;
 
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
+import java.lang.reflect.Type;
 
 public final class FeatureGateLabRuntime {
     private static final String TAG = "MorpheFeatureGateLab";
@@ -22,6 +24,8 @@ public final class FeatureGateLabRuntime {
     private static final Set<String> triggered = Collections.newSetFromMap(new ConcurrentHashMap<>());
     private static final Map<String, String> firstCallers = new ConcurrentHashMap<>();
     private static final Map<String, String> originalValues = new ConcurrentHashMap<>();
+    private static final Map<String, String> structuredFailures = new ConcurrentHashMap<>();
+    private static final Map<String, Object> observedPlayerValues = new ConcurrentHashMap<>();
 
     private FeatureGateLabRuntime() {
     }
@@ -38,12 +42,14 @@ public final class FeatureGateLabRuntime {
         triggered.remove(ruleId);
         firstCallers.remove(ruleId);
         originalValues.remove(ruleId);
+        structuredFailures.remove(ruleId);
     }
 
     public static void clearTriggered() {
         triggered.clear();
         firstCallers.clear();
         originalValues.clear();
+        structuredFailures.clear();
     }
 
     public static boolean isTriggered(String manager, String key, String type) {
@@ -56,6 +62,10 @@ public final class FeatureGateLabRuntime {
 
     public static String originalValue(String manager, String key, String type) {
         return originalValues.get(FeatureGateLabStore.idFor(manager, key, type));
+    }
+
+    public static String structuredFailure(String manager, String key, String type) {
+        return structuredFailures.get(FeatureGateLabStore.idFor(manager, key, type));
     }
 
     public static String runtimeRuleState(String manager, String key, String type) {
@@ -138,6 +148,10 @@ public final class FeatureGateLabRuntime {
 
     public static long overrideLiveLong(String key, long original) {
         return overrideLongFor(FeatureGateLabStore.MANAGER_LIVE, key, original);
+    }
+
+    public static long overrideVeLong(String key, long original) {
+        return overrideLongFor(FeatureGateLabStore.MANAGER_VE_CONFIG, key, original);
     }
 
     private static long overrideLongFor(String manager, String key, long original) {
@@ -245,6 +259,201 @@ public final class FeatureGateLabRuntime {
         return forced;
     }
 
+    public static Object overridePlayerValue(String key, Type declaredType, Object original) {
+        String type = scalarTypeOf(declaredType, original);
+        if (type == null || key == null) {
+            return original;
+        }
+        if (original != null) {
+            observedPlayerValues.putIfAbsent(key, original);
+        }
+        FeatureGateLabStore.Rule rule = activeRule(
+                FeatureGateLabStore.MANAGER_PLAYER_CONFIG,
+                key,
+                type
+        );
+        if (rule == null) {
+            return original;
+        }
+        Object forced = parsePlayerScalar(rule, declaredType);
+        if (forced == null) {
+            return original;
+        }
+        markTriggered(rule, original == null ? "null" : String.valueOf(original), String.valueOf(forced));
+        return forced;
+    }
+
+    public static Map<String, Object> playerObservedValues() {
+        return new HashMap<>(observedPlayerValues);
+    }
+
+    public static Object observeSettingsObjectWithoutDefault(
+            String key,
+            Class<?> requestedClass,
+            Object returnedValue
+    ) {
+        Object observed = SettingsManagerObservationRecorder.observeWithoutDefault(
+                key,
+                requestedClass,
+                returnedValue
+        );
+        return overrideSettingsObject(key, requestedClass, null, observed);
+    }
+
+    public static Object observeSettingsObject(
+            String key,
+            Class<?> requestedClass,
+            Object defaultValue,
+            Object returnedValue
+    ) {
+        Object observed = SettingsManagerObservationRecorder.observeWithDefault(
+                key,
+                requestedClass,
+                defaultValue,
+                returnedValue
+        );
+        return overrideSettingsObject(key, requestedClass, defaultValue, observed);
+    }
+
+    public static Object observeLiveSettingsObject(
+            String key,
+            Object defaultValue,
+            Object returnedValue
+    ) {
+        Class<?> requestedClass = classForValue(defaultValue, returnedValue);
+        if (requestedClass == null) {
+            return returnedValue;
+        }
+        Object observed = SettingsManagerObservationRecorder.observeLiveWithDefault(
+                key,
+                requestedClass,
+                defaultValue,
+                returnedValue,
+                "(Ljava/lang/String;Ljava/lang/Object;)Ljava/lang/Object;"
+        );
+        return overrideStructuredObject(
+                FeatureGateLabStore.MANAGER_LIVE,
+                key,
+                requestedClass,
+                defaultValue,
+                observed
+        );
+    }
+
+    public static Object observeLiveSettingsClassObject(
+            Class<?> requestedClass,
+            Object returnedValue
+    ) {
+        if (requestedClass == null) {
+            return returnedValue;
+        }
+        String key = liveValueForClass("getKey", requestedClass);
+        Object defaultValue = liveObjectForClass("getDefaultValue", requestedClass);
+        if (key == null || key.isEmpty()) {
+            return returnedValue;
+        }
+        Object observed = SettingsManagerObservationRecorder.observeLiveWithDefault(
+                key,
+                requestedClass,
+                defaultValue,
+                returnedValue,
+                "(Ljava/lang/Class;)Ljava/lang/Object;"
+        );
+        return overrideStructuredObject(
+                FeatureGateLabStore.MANAGER_LIVE,
+                key,
+                requestedClass,
+                defaultValue,
+                observed
+        );
+    }
+
+    public static JSONArray settingsManagerObservationsJson() {
+        return SettingsManagerObservationRecorder.exportJson();
+    }
+
+    public static int settingsManagerObservationCount() {
+        return SettingsManagerObservationRecorder.size();
+    }
+
+    private static Object overrideSettingsObject(
+            String key,
+            Class<?> requestedClass,
+            Object defaultValue,
+            Object original
+    ) {
+        return overrideStructuredObject(
+                FeatureGateLabStore.MANAGER_SETTINGS_MANAGER,
+                key,
+                requestedClass,
+                defaultValue,
+                original
+        );
+    }
+
+    private static Object overrideStructuredObject(
+            String manager,
+            String key,
+            Class<?> requestedClass,
+            Object defaultValue,
+            Object original
+    ) {
+        FeatureGateLabStore.Rule rule = activeRule(
+                manager,
+                key,
+                "OBJECT"
+        );
+        if (rule == null) {
+            return original;
+        }
+        StructuredConfigController.ApplyResult result = StructuredConfigController.apply(
+                requestedClass,
+                defaultValue,
+                original,
+                rule.value
+        );
+        if (!result.applied) {
+            structuredFailures.put(rule.id, result.error);
+            return original;
+        }
+        structuredFailures.remove(rule.id);
+        markTriggered(
+                rule,
+                SettingsManagerObservationRecorder.serializeText(original),
+                result.fieldCount + " structured field" + (result.fieldCount == 1 ? "" : "s")
+        );
+        return result.value;
+    }
+
+    private static Class<?> classForValue(Object defaultValue, Object returnedValue) {
+        if (defaultValue != null) {
+            return defaultValue.getClass();
+        }
+        return returnedValue == null ? null : returnedValue.getClass();
+    }
+
+    private static String liveValueForClass(String methodName, Class<?> requestedClass) {
+        Object value = liveObjectForClass(methodName, requestedClass);
+        return value == null ? null : String.valueOf(value);
+    }
+
+    private static Object liveObjectForClass(String methodName, Class<?> requestedClass) {
+        try {
+            Class<?> dataCenter = Class.forName(
+                    "com.bytedance.android.live_settings.DataCenter",
+                    false,
+                    FeatureGateLabRuntime.class.getClassLoader()
+            );
+            return dataCenter.getMethod(methodName, Class.class).invoke(null, requestedClass);
+        } catch (Throwable ignored) {
+            return null;
+        }
+    }
+
+    public static boolean wasPlayerObserved(String key) {
+        return key != null && observedPlayerValues.containsKey(key);
+    }
+
     public static String transformActivityCenterSchema(String schema) {
         if (schema == null || !schema.contains("activity_center")) {
             return schema;
@@ -348,6 +557,20 @@ public final class FeatureGateLabRuntime {
         }
     }
 
+    private static Object parsePlayerScalar(FeatureGateLabStore.Rule rule, Type declaredType) {
+        Object parsed = parseBoxedScalar(rule);
+        if (parsed == null) {
+            return null;
+        }
+        if ((declaredType == Short.TYPE || declaredType == Short.class) && parsed instanceof Integer) {
+            int value = ((Integer) parsed).intValue();
+            return value >= Short.MIN_VALUE && value <= Short.MAX_VALUE
+                    ? Short.valueOf((short) value)
+                    : null;
+        }
+        return parsed;
+    }
+
     private static String scalarTypeOf(Object value) {
         if (value instanceof Boolean) return "BOOLEAN";
         if (value instanceof Integer) return "INT";
@@ -355,6 +578,21 @@ public final class FeatureGateLabRuntime {
         if (value instanceof Float) return "FLOAT";
         if (value instanceof Double) return "DOUBLE";
         if (value instanceof String) return "STRING";
+        return null;
+    }
+
+    private static String scalarTypeOf(Type declaredType, Object value) {
+        String runtimeType = scalarTypeOf(value);
+        if (runtimeType != null) {
+            return runtimeType;
+        }
+        if (declaredType == Boolean.TYPE || declaredType == Boolean.class) return "BOOLEAN";
+        if (declaredType == Short.TYPE || declaredType == Short.class
+                || declaredType == Integer.TYPE || declaredType == Integer.class) return "INT";
+        if (declaredType == Long.TYPE || declaredType == Long.class) return "LONG";
+        if (declaredType == Float.TYPE || declaredType == Float.class) return "FLOAT";
+        if (declaredType == Double.TYPE || declaredType == Double.class) return "DOUBLE";
+        if (declaredType == String.class) return "STRING";
         return null;
     }
 
@@ -487,7 +725,8 @@ public final class FeatureGateLabRuntime {
                     || className.equals("X.0b13")
                     || className.equals("com.bytedance.ies.abmock.SettingsManager")
                     || className.equals("com.bytedance.android.live_settings.SettingsManager")
-                    || className.equals("com.ss.android.vesdk.VEConfigCenter")) {
+                    || className.equals("com.ss.android.vesdk.VEConfigCenter")
+                    || className.equals("com.ss.android.ugc.aweme.video.simplayer.PlayerSettingServiceImpl")) {
                 continue;
             }
             return className + "#" + frame.getMethodName();

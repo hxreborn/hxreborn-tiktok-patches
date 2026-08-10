@@ -18,6 +18,15 @@ internal object AdPersonalizationActivityOnCreateFingerprint : Fingerprint(
     },
 )
 
+internal object AdPersonalizationActivityOnBackPressedFingerprint : Fingerprint(
+    custom = { method, classDef ->
+        classDef.endsWith("/AdPersonalizationActivity;") &&
+            method.name == "onBackPressed" &&
+            method.parameterTypes.isEmpty() &&
+            method.returnType == "V"
+    },
+)
+
 internal object SettingsEntryFingerprint : Fingerprint(
     strings = listOf("pls pass item or extends the EventUnit"),
 )
@@ -35,11 +44,22 @@ internal object SettingsStatusLoadFingerprint : Fingerprint(
     },
 )
 
+internal object NpthExtentTaskInitFingerprint : Fingerprint(
+    custom = { method, classDef ->
+        classDef.endsWith("/NpthExtentTask;") &&
+            method.name == "LIZ" &&
+            method.returnType == "V"
+    },
+)
+
 internal object SettingsComposeRowsFingerprint : Fingerprint(
     custom = { method, classDef ->
         classDef.endsWith("/SettingsComposeRvmpFragment;") &&
-            method.name == "XN" &&
-            method.parameterTypes.size == 8
+            method.returnType == "V" &&
+            (
+                (method.name == "XN" && method.parameterTypes.size == 8) ||
+                    (method.name == "ER" && method.parameterTypes.size == 11)
+            )
     },
 )
 
