@@ -5,7 +5,6 @@ on:
   push:
     branches:
       - main
-      - dev
 
 jobs:
   release:
@@ -58,18 +57,8 @@ jobs:
         run: |
           set -euo pipefail
           tag='${{ steps.release.outputs.new_release_git_tag }}'
-          case "$tag" in
-            *-*)
-              # Prerelease: compare against the previous tag on any channel.
-              prev=$(git describe --tags --abbrev=0 "$tag^")
-              npx git-cliff --config .github/cliff.toml "$prev..$tag" --strip all > /tmp/notes.md
-              ;;
-            *)
-              # Stable: skip the prereleases this cut already contains, or the range is empty.
-              prev=$(git describe --tags --abbrev=0 --exclude='*-*' "$tag^")
-              npx git-cliff --config .github/cliff.toml "$prev..$tag" --ignore-tags '.*-.*' --strip all > /tmp/notes.md
-              ;;
-          esac
+          prev=$(git describe --tags --abbrev=0 --exclude='*-*' "$tag^")
+          npx git-cliff --config .github/cliff.toml "$prev..$tag" --ignore-tags '.*-.*' --strip all > /tmp/notes.md
           if ! grep -q '^- ' /tmp/notes.md; then
             echo "::error::Release notes for $tag are empty (range $prev..$tag)."
             exit 1

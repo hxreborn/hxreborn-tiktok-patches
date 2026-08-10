@@ -2,7 +2,7 @@ name: Dependabot auto-merge
 
 # Squash-merges a Dependabot PR only after "Build pull request" succeeds for it.
 # Uses workflow_run (not --auto) so no branch protection is needed, which would
-# otherwise block semantic-release's direct [skip ci] commits to dev.
+# otherwise block semantic-release's direct [skip ci] commits to main.
 on:
   workflow_run:
     workflows: ["Build pull request"]
