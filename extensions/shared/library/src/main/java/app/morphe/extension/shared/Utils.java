@@ -58,6 +58,7 @@ import java.util.regex.Pattern;
 import app.morphe.extension.shared.settings.AppLanguage;
 import app.morphe.extension.shared.settings.BaseSettings;
 import app.morphe.extension.shared.settings.BooleanSetting;
+import app.morphe.extension.shared.settings.Setting;
 import app.morphe.extension.shared.settings.preference.MorpheAboutPreference;
 import app.morphe.extension.shared.ui.Dim;
 
@@ -404,6 +405,7 @@ public class Utils {
         Logger.printInfo(() -> "Set context: " + appContext);
         // Must initially set context to check the app language.
         context = appContext;
+        Setting.reloadAllFromPreferences();
 
         // Set activity if not already set.
         if (appContext instanceof Activity activity && getActivity() == null) {

@@ -20,10 +20,12 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.zip.GZIPInputStream;
@@ -91,10 +93,15 @@ public final class FeatureGateCatalog {
 
     private static List<Entry> readStaticCatalog() throws Exception {
         List<Entry> result = new ArrayList<>(
-                GeneratedFeatureGateCatalog.ENTRY_COUNT + GeneratedVeFeatureGateCatalog.ENTRY_COUNT
+                GeneratedFeatureGateCatalog.ENTRY_COUNT
+                        + GeneratedPlayerFeatureGateCatalog.ENTRY_COUNT
+                        + GeneratedVeFeatureGateCatalog.ENTRY_COUNT
+                        + GeneratedSettingsManagerCatalog.ENTRY_COUNT
         );
         appendStaticCatalog(result, GeneratedFeatureGateCatalog.GZIP_BASE64);
+        appendStaticCatalog(result, GeneratedPlayerFeatureGateCatalog.GZIP_BASE64);
         appendStaticCatalog(result, GeneratedVeFeatureGateCatalog.GZIP_BASE64);
+        appendStructuredStaticCatalog(result, GeneratedSettingsManagerCatalog.GZIP_BASE64);
         return result;
     }
 
@@ -136,11 +143,57 @@ public final class FeatureGateCatalog {
         }
     }
 
+    private static void appendStructuredStaticCatalog(
+            List<Entry> result,
+            String[] chunks
+    ) throws Exception {
+        StringBuilder encoded = new StringBuilder();
+        for (String chunk : chunks) {
+            encoded.append(chunk);
+        }
+        byte[] compressed = Base64.decode(encoded.toString(), Base64.DEFAULT);
+        try (BufferedReader reader = new BufferedReader(new InputStreamReader(
+                new GZIPInputStream(new ByteArrayInputStream(compressed)),
+                StandardCharsets.UTF_8))) {
+            String line;
+            while ((line = reader.readLine()) != null) {
+                String[] fields = line.split("\\t", -1);
+                if (fields.length != 6) {
+                    continue;
+                }
+                if (!StructuredConfigController.hasActionableFields(fields[1])) {
+                    continue;
+                }
+                result.add(new Entry(
+                        fields[0],
+                        titleFor(fields[0]),
+                        FeatureGateLabStore.MANAGER_SETTINGS_MANAGER,
+                        "OBJECT",
+                        true,
+                        "generated_registry".equals(fields[5]),
+                        Collections.singletonList(fields[2]),
+                        Collections.emptyList(),
+                        Collections.emptyList(),
+                        "",
+                        fields[3] + " in " + fields[4],
+                        false,
+                        null,
+                        null,
+                        fields[1]
+                ));
+            }
+        }
+    }
+
     private static Map<String, Map<String, Object>> readCurrentKevaMaps() {
         Map<String, Map<String, Object>> result = new HashMap<>();
         result.put(
                 FeatureGateLabStore.MANAGER_ABMOCK,
                 readKevaMapSafely("libra_config_center_repo")
+        );
+        result.put(
+                FeatureGateLabStore.MANAGER_PLAYER_CONFIG,
+                FeatureGateLabRuntime.playerObservedValues()
         );
         result.put(
                 FeatureGateLabStore.MANAGER_LIVE,
@@ -227,6 +280,10 @@ public final class FeatureGateCatalog {
         for (Map.Entry<String, Map<String, Object>> source : remaining.entrySet()) {
             String manager = source.getKey();
             for (Map.Entry<String, Object> item : source.getValue().entrySet()) {
+                if (FeatureGateLabStore.MANAGER_PLAYER_CONFIG.equals(manager)
+                        && !FeatureGateLabRuntime.wasPlayerObserved(item.getKey())) {
+                    continue;
+                }
                 String dynamicType = runtimeType(item.getValue());
                 boolean actionable = FeatureGateLabStore.supportsOverride(manager, dynamicType);
                 if (!actionable) {
@@ -253,6 +310,7 @@ public final class FeatureGateCatalog {
                 loaded++;
             }
         }
+        loaded += mergeStructuredObservations(result, byIdentity);
         result.sort(Comparator.comparing(entry -> entry.title.toLowerCase(Locale.ROOT)));
         return new Snapshot(
                 Collections.unmodifiableList(result),
@@ -261,6 +319,70 @@ public final class FeatureGateCatalog {
                 System.currentTimeMillis(),
                 catalogComplete
         );
+    }
+
+    private static int mergeStructuredObservations(
+            List<Entry> result,
+            Map<String, Entry> byIdentity
+    ) {
+        JSONArray observations = SettingsManagerObservationRecorder.exportJson();
+        Set<String> loadedKeys = new HashSet<>();
+        int loaded = 0;
+        for (int index = 0; index < observations.length(); index++) {
+            org.json.JSONObject observation = observations.optJSONObject(index);
+            if (observation == null || !observation.optBoolean("actionable", false)) {
+                continue;
+            }
+            String key = observation.optString("key", "");
+            String requestedClass = observation.optString("requested_class", "");
+            if (key.isEmpty() || requestedClass.isEmpty() || !loadedKeys.add(key)) {
+                continue;
+            }
+            String manager = observation.optString(
+                    "manager",
+                    FeatureGateLabStore.MANAGER_SETTINGS_MANAGER
+            );
+            String identity = manager + "\n" + key;
+            Object current = observation.opt("current_value");
+            Object defaultValue = observation.opt("default_value");
+            List<String> defaults = new ArrayList<>();
+            if (defaultValue != null && defaultValue != org.json.JSONObject.NULL) {
+                defaults.add(String.valueOf(defaultValue));
+            }
+            Entry existing = byIdentity.get(identity);
+            Entry merged = new Entry(
+                    key,
+                    existing == null ? titleFor(key) : existing.title,
+                    manager,
+                    "OBJECT",
+                    true,
+                    existing != null && existing.registered,
+                    defaults.isEmpty() && existing != null ? existing.defaults : defaults,
+                    Collections.emptyList(),
+                    Collections.emptyList(),
+                    "",
+                    observation.optString("caller", "runtime getter")
+                            + " / "
+                            + observation.optString("settings_manager_method_descriptor", ""),
+                    true,
+                    current == null || current == org.json.JSONObject.NULL
+                            ? "null"
+                            : String.valueOf(current),
+                    "OBJECT",
+                    requestedClass
+            );
+            if (existing == null) {
+                result.add(merged);
+            } else {
+                int existingIndex = result.indexOf(existing);
+                if (existingIndex >= 0) {
+                    result.set(existingIndex, merged);
+                }
+            }
+            byIdentity.put(identity, merged);
+            loaded++;
+        }
+        return loaded;
     }
 
     private static List<String> jsonValues(String text) throws Exception {
@@ -356,6 +478,7 @@ public final class FeatureGateCatalog {
         public final boolean loaded;
         public final String currentValue;
         public final String currentType;
+        public final String requestedClass;
 
         Entry(
                 String key,
@@ -373,6 +496,29 @@ public final class FeatureGateCatalog {
                 String currentValue,
                 String currentType
         ) {
+            this(
+                    key, title, manager, type, actionable, registered, defaults, historical, researched,
+                    description, proof, loaded, currentValue, currentType, null
+            );
+        }
+
+        Entry(
+                String key,
+                String title,
+                String manager,
+                String type,
+                boolean actionable,
+                boolean registered,
+                List<String> defaults,
+                List<String> historical,
+                List<String> researched,
+                String description,
+                String proof,
+                boolean loaded,
+                String currentValue,
+                String currentType,
+                String requestedClass
+        ) {
             this.key = key;
             this.title = title;
             this.searchText = (key + "\n" + title).toLowerCase(Locale.ROOT);
@@ -388,12 +534,14 @@ public final class FeatureGateCatalog {
             this.loaded = loaded;
             this.currentValue = currentValue;
             this.currentType = currentType;
+            this.requestedClass = requestedClass;
         }
 
         Entry withCurrent(boolean loaded, Object value) {
             return new Entry(
                     key, title, manager, type, actionable, registered, defaults, historical, researched,
-                    description, proof, loaded, loaded ? valueText(value) : null, loaded ? runtimeType(value) : null
+                    description, proof, loaded, loaded ? valueText(value) : null, loaded ? runtimeType(value) : null,
+                    requestedClass
             );
         }
 
@@ -419,16 +567,20 @@ public final class FeatureGateCatalog {
 
         public String sourceName() {
             if (FeatureGateLabStore.MANAGER_PIA_ACTIVITY_CENTER.equals(manager)) return "Activity Center";
+            if (FeatureGateLabStore.MANAGER_PLAYER_CONFIG.equals(manager)) return "Player Config";
             if (FeatureGateLabStore.MANAGER_LIVE.equals(manager)) return "Live Settings";
             if (FeatureGateLabStore.MANAGER_VE_CONFIG.equals(manager)) return "Media Config";
+            if (FeatureGateLabStore.MANAGER_SETTINGS_MANAGER.equals(manager)) return "Structured Config";
             if (FeatureGateLabStore.MANAGER_ABMOCK.equals(manager)) return "App AB";
             return manager;
         }
 
         public String shortSourceName() {
             if (FeatureGateLabStore.MANAGER_PIA_ACTIVITY_CENTER.equals(manager)) return "PIA";
+            if (FeatureGateLabStore.MANAGER_PLAYER_CONFIG.equals(manager)) return "PLAYER";
             if (FeatureGateLabStore.MANAGER_LIVE.equals(manager)) return "LIVE";
             if (FeatureGateLabStore.MANAGER_VE_CONFIG.equals(manager)) return "VE";
+            if (FeatureGateLabStore.MANAGER_SETTINGS_MANAGER.equals(manager)) return "CONFIG";
             if (FeatureGateLabStore.MANAGER_ABMOCK.equals(manager)) return "AB";
             return manager.toUpperCase(Locale.ROOT);
         }

@@ -9,6 +9,7 @@ import android.app.Fragment;
 import android.content.Context;
 import android.graphics.Typeface;
 import android.os.Bundle;
+import android.text.InputType;
 import android.text.TextUtils;
 import android.view.Gravity;
 import android.view.View;
@@ -21,6 +22,9 @@ import android.widget.ScrollView;
 import android.widget.Spinner;
 import android.widget.Switch;
 import android.widget.TextView;
+
+import org.json.JSONArray;
+import org.json.JSONObject;
 
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
@@ -47,9 +51,11 @@ public final class FeatureGateDetailFragment extends Fragment {
     private Switch force;
     private Switch booleanValue;
     private TextView reset;
+    private TextView saveObject;
     private LinearLayout technicalDetails;
     private TextView technicalToggle;
     private List<ValueOption> options;
+    private final List<ObjectFieldEditor> objectEditors = new ArrayList<>();
     private boolean suppress;
     private int lastConcreteSelection;
 
@@ -131,9 +137,11 @@ public final class FeatureGateDetailFragment extends Fragment {
 
         addSectionTitle(content, "Current state");
         addInfo(content, "Loaded for this account", entry.loaded ? "Yes" : "No");
-        addInfo(content, "TikTok cached value", entry.loaded
-                ? entry.currentValue + " (" + entry.currentType + ")"
-                : "Not present in the current cache");
+        addInfo(content, "TikTok cached value", "OBJECT".equals(entry.type)
+                ? (entry.loaded ? "Structured value observed" : "Not requested in this process yet")
+                : (entry.loaded
+                        ? entry.currentValue + " (" + entry.currentType + ")"
+                        : "Not present in the current cache"));
         effectiveValue = addInfo(content, "Effective getter result", effectiveValueText());
         TextView cacheNote = FeatureGateLabUi.label(
                 context,
@@ -160,7 +168,32 @@ public final class FeatureGateDetailFragment extends Fragment {
 
         boolean editable = FeatureGateLabStore.masterEnabled();
         boolean booleanEntry = "BOOLEAN".equals(entry.type);
-        if (booleanEntry) {
+        boolean objectEntry = "OBJECT".equals(entry.type);
+        if (objectEntry) {
+            LinearLayout forceRow = settingRow(
+                    context,
+                    "Override this configuration",
+                    "Return a copied object with the selected fields changed"
+            );
+            force = new Switch(context);
+            forceRow.addView(force, new LinearLayout.LayoutParams(
+                    ViewGroup.LayoutParams.WRAP_CONTENT,
+                    FeatureGateLabUi.dp(context, 48)
+            ));
+            content.addView(forceRow, FeatureGateLabUi.matchWrap());
+            addObjectEditors(content, editable);
+            saveObject = FeatureGateLabUi.text(
+                    context,
+                    "Save field values",
+                    14,
+                    SettingsUi.ACCENT,
+                    Typeface.BOLD
+            );
+            saveObject.setGravity(Gravity.END | Gravity.CENTER_VERTICAL);
+            saveObject.setPadding(0, FeatureGateLabUi.dp(context, 10), 0, FeatureGateLabUi.dp(context, 10));
+            saveObject.setEnabled(editable);
+            content.addView(saveObject, FeatureGateLabUi.matchWrap());
+        } else if (booleanEntry) {
             LinearLayout valueRow = settingRow(
                     context,
                     "Forced result",
@@ -213,7 +246,7 @@ public final class FeatureGateDetailFragment extends Fragment {
         }
 
         suppress = true;
-        if (!booleanEntry) {
+        if (!booleanEntry && !objectEntry) {
             int selected = selectedIndex(options, rule == null ? bestInitialValue(entry) : rule.value);
             values.setSelection(selected);
             lastConcreteSelection = selected;
@@ -250,7 +283,7 @@ public final class FeatureGateDetailFragment extends Fragment {
             });
         }
 
-        if (force != null) {
+        if (force != null && !objectEntry) {
             force.setOnCheckedChangeListener((button, enabled) -> {
                 if (suppress || !FeatureGateLabStore.masterEnabled()) return;
                 ValueOption selectedOption = options.get(values.getSelectedItemPosition());
@@ -263,6 +296,18 @@ public final class FeatureGateDetailFragment extends Fragment {
                 }
                 persist(selectedOption.value, enabled);
             });
+        }
+
+        if (force != null && objectEntry) {
+            force.setOnCheckedChangeListener((button, enabled) -> {
+                if (suppress || !FeatureGateLabStore.masterEnabled()) return;
+                String value = rule == null ? objectPatchText() : rule.value;
+                persist(value, enabled);
+            });
+        }
+
+        if (saveObject != null) {
+            saveObject.setOnClickListener(view -> persist(objectPatchText(), force.isChecked()));
         }
 
         reset.setOnClickListener(view -> resetRule());
@@ -318,7 +363,7 @@ public final class FeatureGateDetailFragment extends Fragment {
         if (force != null) force.setChecked(false);
         if (booleanValue != null) {
             booleanValue.setChecked(Boolean.parseBoolean(bestInitialValue(entry)));
-        } else {
+        } else if (values != null) {
             values.setSelection(selectedIndex(options, bestInitialValue(entry)));
         }
         suppress = false;
@@ -432,7 +477,10 @@ public final class FeatureGateDetailFragment extends Fragment {
             return;
         }
         boolean triggered = FeatureGateLabRuntime.isTriggered(entry.manager, entry.key, entry.type);
-        status.setText(triggered ? "Getter requested" : "Getter not requested yet");
+        String failure = FeatureGateLabRuntime.structuredFailure(entry.manager, entry.key, entry.type);
+        status.setText(failure != null
+                ? "Getter requested, override rejected: " + failure
+                : (triggered ? "Getter requested" : "Getter not requested yet"));
         status.setTextColor(triggered ? SettingsUi.ACCENT : FeatureGateLabUi.warningColor(getActivity()));
         if (effectiveValue != null) effectiveValue.setText(effectiveValueText());
     }
@@ -442,6 +490,11 @@ public final class FeatureGateDetailFragment extends Fragment {
         FeatureGateLabStore.Rule currentRule = FeatureGateLabStore.rule(entry.manager, entry.key, entry.type);
         if (FeatureGateLabStore.masterEnabled() && currentRule != null && currentRule.enabled) {
             boolean triggered = FeatureGateLabRuntime.isTriggered(entry.manager, entry.key, entry.type);
+            if ("OBJECT".equals(entry.type)) {
+                int fields = structuredFieldCount(currentRule.value);
+                return fields + " field" + (fields == 1 ? "" : "s")
+                        + (triggered ? " overridden" : " will be overridden when requested");
+            }
             return currentRule.value + (triggered
                     ? " (override returned)"
                     : " (will be returned when requested)");
@@ -449,6 +502,205 @@ public final class FeatureGateDetailFragment extends Fragment {
         return entry.loaded
                 ? entry.currentValue + " (TikTok value)"
                 : "No current value; no active override";
+    }
+
+    private void addObjectEditors(LinearLayout root, boolean editable) {
+        JSONObject values = structuredBaseValue();
+        JSONArray fieldNames = StructuredConfigController.actionableFields(entry.requestedClass);
+        if (fieldNames.length() == 0) {
+            TextView unavailable = FeatureGateLabUi.label(
+                    root.getContext(),
+                    "This configuration has no fields that can be copied and changed safely on this build."
+            );
+            unavailable.setTextColor(FeatureGateLabUi.warningColor(root.getContext()));
+            root.addView(unavailable, FeatureGateLabUi.matchWrap());
+            return;
+        }
+
+        TextView explanation = FeatureGateLabUi.label(
+                root.getContext(),
+                "Only fields that can be type-checked and applied to a copied configuration object are shown."
+        );
+        LinearLayout.LayoutParams explanationParams = FeatureGateLabUi.matchWrap();
+        explanationParams.setMargins(0, FeatureGateLabUi.dp(root.getContext(), 6), 0, 0);
+        root.addView(explanation, explanationParams);
+
+        for (int index = 0; index < fieldNames.length(); index++) {
+            String fieldName = fieldNames.optString(index, "");
+            String kind = StructuredConfigController.fieldKind(entry.requestedClass, fieldName);
+            if (fieldName.isEmpty() || "UNSUPPORTED".equals(kind)) {
+                continue;
+            }
+            Object value = values.opt(fieldName);
+            LinearLayout fieldRoot = new LinearLayout(root.getContext());
+            fieldRoot.setOrientation(LinearLayout.VERTICAL);
+            LinearLayout.LayoutParams fieldParams = FeatureGateLabUi.matchWrap();
+            fieldParams.setMargins(0, FeatureGateLabUi.dp(root.getContext(), 12), 0, 0);
+
+            TextView title = FeatureGateLabUi.body(root.getContext(), titleForField(fieldName));
+            fieldRoot.addView(title, FeatureGateLabUi.matchWrap());
+            TextView rawName = FeatureGateLabUi.label(root.getContext(), fieldName + " / " + kind.toLowerCase(Locale.ROOT));
+            fieldRoot.addView(rawName, FeatureGateLabUi.matchWrap());
+
+            if ("BOOLEAN".equals(kind)) {
+                Switch toggle = new Switch(root.getContext());
+                toggle.setChecked(value instanceof Boolean
+                        ? (Boolean) value
+                        : Boolean.parseBoolean(String.valueOf(value)));
+                toggle.setEnabled(editable);
+                fieldRoot.addView(toggle, new LinearLayout.LayoutParams(
+                        ViewGroup.LayoutParams.WRAP_CONTENT,
+                        FeatureGateLabUi.dp(root.getContext(), 48)
+                ));
+                objectEditors.add(ObjectFieldEditor.toggle(fieldName, kind, toggle));
+            } else {
+                EditText input = new EditText(root.getContext());
+                input.setEnabled(editable);
+                input.setText(editorText(value, kind));
+                input.setHint(kind.startsWith("LIST_")
+                        ? "One value per line"
+                        : ("JSON".equals(kind) ? "Advanced JSON value" : "Value"));
+                input.setSingleLine(!kind.startsWith("LIST_") && !"JSON".equals(kind));
+                input.setInputType(inputTypeFor(kind));
+                input.setMinimumHeight(FeatureGateLabUi.dp(
+                        root.getContext(),
+                        kind.startsWith("LIST_") || "JSON".equals(kind) ? 96 : 48
+                ));
+                SettingsUi.styleEditText(input);
+                fieldRoot.addView(input, FeatureGateLabUi.matchWrap());
+                objectEditors.add(ObjectFieldEditor.input(fieldName, kind, input));
+            }
+            root.addView(fieldRoot, fieldParams);
+        }
+    }
+
+    private JSONObject structuredBaseValue() {
+        boolean rootArray = StructuredConfigController.isRootArray(entry.requestedClass);
+        JSONObject result = parseStructuredValue(
+                entry.loaded ? entry.currentValue : null,
+                rootArray
+        );
+        if (result == null && !entry.defaults.isEmpty()) {
+            result = parseStructuredValue(entry.defaults.get(0), rootArray);
+        }
+        if (result == null) {
+            result = new JSONObject();
+        }
+        if (result.length() <= 2) {
+            JSONObject generatedDefault = StructuredConfigController.defaultValue(entry.requestedClass);
+            if (generatedDefault != null) {
+                result = generatedDefault;
+            }
+        }
+        if (rule != null) {
+            JSONObject selected = parseObject(rule.value);
+            if (selected != null) {
+                java.util.Iterator<String> names = selected.keys();
+                while (names.hasNext()) {
+                    String name = names.next();
+                    try {
+                        result.put(name, selected.opt(name));
+                    } catch (Throwable ignored) {
+                    }
+                }
+            }
+        }
+        return result;
+    }
+
+    private static JSONObject parseStructuredValue(String text, boolean rootArray) {
+        JSONObject object = parseObject(text);
+        if (object != null || !rootArray || text == null || text.isEmpty()) {
+            return object;
+        }
+        try {
+            JSONObject result = new JSONObject();
+            result.put("$value", new JSONArray(text));
+            return result;
+        } catch (Throwable ignored) {
+            return null;
+        }
+    }
+
+    private String objectPatchText() {
+        JSONObject result = new JSONObject();
+        try {
+            for (ObjectFieldEditor editor : objectEditors) {
+                result.put(editor.name, editor.value());
+            }
+        } catch (Throwable throwable) {
+            Utils.showToastLong("Invalid field value: " + String.valueOf(throwable.getMessage()));
+            return "{}";
+        }
+        return result.toString();
+    }
+
+    private static JSONObject parseObject(String text) {
+        if (text == null || text.isEmpty() || "null".equals(text)) {
+            return null;
+        }
+        try {
+            return new JSONObject(text);
+        } catch (Throwable ignored) {
+            return null;
+        }
+    }
+
+    private static int structuredFieldCount(String text) {
+        JSONObject object = parseObject(text);
+        return object == null ? 0 : object.length();
+    }
+
+    private static String editorText(Object value, String kind) {
+        if (value == null || value == JSONObject.NULL) {
+            return "";
+        }
+        if (!kind.startsWith("LIST_") || !(value instanceof JSONArray)) {
+            if ("JSON".equals(kind) && value instanceof JSONObject) {
+                return value.toString();
+            }
+            if ("JSON".equals(kind) && value instanceof JSONArray) {
+                return value.toString();
+            }
+            return String.valueOf(value);
+        }
+        JSONArray array = (JSONArray) value;
+        StringBuilder result = new StringBuilder();
+        for (int index = 0; index < array.length(); index++) {
+            if (result.length() > 0) result.append('\n');
+            result.append(String.valueOf(array.opt(index)));
+        }
+        return result.toString();
+    }
+
+    private static int inputTypeFor(String kind) {
+        if ("INT".equals(kind) || "LONG".equals(kind)) {
+            return InputType.TYPE_CLASS_NUMBER | InputType.TYPE_NUMBER_FLAG_SIGNED;
+        }
+        if ("FLOAT".equals(kind) || "DOUBLE".equals(kind)) {
+            return InputType.TYPE_CLASS_NUMBER
+                    | InputType.TYPE_NUMBER_FLAG_SIGNED
+                    | InputType.TYPE_NUMBER_FLAG_DECIMAL;
+        }
+        if (kind.startsWith("LIST_") || "JSON".equals(kind)) {
+            return InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_FLAG_MULTI_LINE;
+        }
+        return InputType.TYPE_CLASS_TEXT;
+    }
+
+    private static String titleForField(String fieldName) {
+        if ("$value".equals(fieldName)) {
+            return "Value";
+        }
+        StringBuilder result = new StringBuilder();
+        String normalized = fieldName.replace('-', '_').replace('.', '_');
+        for (String word : normalized.split("_+")) {
+            if (word.isEmpty()) continue;
+            if (result.length() > 0) result.append(' ');
+            result.append(Character.toUpperCase(word.charAt(0)));
+            if (word.length() > 1) result.append(word.substring(1));
+        }
+        return result.length() == 0 ? fieldName : result.toString();
     }
 
     private void addTechnicalDetails(LinearLayout root) {
@@ -574,6 +826,87 @@ public final class FeatureGateDetailFragment extends Fragment {
             result.append(value);
         }
         return result.toString();
+    }
+
+    private static final class ObjectFieldEditor {
+        final String name;
+        final String kind;
+        final Switch toggle;
+        final EditText input;
+
+        private ObjectFieldEditor(String name, String kind, Switch toggle, EditText input) {
+            this.name = name;
+            this.kind = kind;
+            this.toggle = toggle;
+            this.input = input;
+        }
+
+        static ObjectFieldEditor toggle(String name, String kind, Switch toggle) {
+            return new ObjectFieldEditor(name, kind, toggle, null);
+        }
+
+        static ObjectFieldEditor input(String name, String kind, EditText input) {
+            return new ObjectFieldEditor(name, kind, null, input);
+        }
+
+        Object value() {
+            if (toggle != null) {
+                return toggle.isChecked();
+            }
+            String text = input == null ? "" : input.getText().toString();
+            if (kind.startsWith("LIST_")) {
+                String elementKind = kind.substring("LIST_".length());
+                JSONArray result = new JSONArray();
+                for (String line : text.split("\\r?\\n")) {
+                    String item = line.trim();
+                    if (!item.isEmpty()) {
+                        result.put(scalarValue(elementKind, item));
+                    }
+                }
+                return result;
+            }
+            if ("JSON".equals(kind)) {
+                String trimmed = text.trim();
+                try {
+                    if (trimmed.startsWith("{")) {
+                        return new JSONObject(trimmed);
+                    }
+                    if (trimmed.startsWith("[")) {
+                        return new JSONArray(trimmed);
+                    }
+                } catch (Throwable throwable) {
+                    throw new IllegalArgumentException("invalid JSON");
+                }
+                throw new IllegalArgumentException("expected a JSON object or array");
+            }
+            return scalarValue(kind, text.trim());
+        }
+
+        private static Object scalarValue(String kind, String text) {
+            switch (kind) {
+                case "BOOLEAN":
+                    if (!"true".equalsIgnoreCase(text) && !"false".equalsIgnoreCase(text)) {
+                        throw new IllegalArgumentException("expected true or false");
+                    }
+                    return Boolean.valueOf(text);
+                case "INT":
+                    return Integer.valueOf(text);
+                case "LONG":
+                    return Long.valueOf(text);
+                case "FLOAT": {
+                    float value = Float.parseFloat(text);
+                    if (!Float.isFinite(value)) throw new IllegalArgumentException("number must be finite");
+                    return value;
+                }
+                case "DOUBLE": {
+                    double value = Double.parseDouble(text);
+                    if (!Double.isFinite(value)) throw new IllegalArgumentException("number must be finite");
+                    return value;
+                }
+                default:
+                    return text;
+            }
+        }
     }
 
     private static final class ValueOption {

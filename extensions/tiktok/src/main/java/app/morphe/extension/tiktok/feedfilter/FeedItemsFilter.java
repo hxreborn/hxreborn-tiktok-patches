@@ -76,11 +76,20 @@ public final class FeedItemsFilter {
             feedItemList,
             feedItemList.items,
             container -> (container instanceof Aweme) ? (Aweme) container : null,
-            verbose
+            verbose,
+            true
         );
     }
 
     public static void filter(FollowFeedList followFeedList) {
+        filterFollowFeedList(followFeedList, true);
+    }
+
+    public static void filterFinal(FollowFeedList followFeedList) {
+        filterFollowFeedList(followFeedList, false);
+    }
+
+    private static void filterFollowFeedList(FollowFeedList followFeedList, boolean allowRecentSkip) {
         boolean verbose = BaseSettings.DEBUG.get();
 
         if (followFeedList == null || followFeedList.mItems == null) {
@@ -99,7 +108,8 @@ public final class FeedItemsFilter {
             followFeedList,
             followFeedList.mItems,
             container -> (container instanceof FollowFeed) ? ((FollowFeed) container).aweme : null,
-            verbose
+            verbose,
+            allowRecentSkip
         );
     }
 
@@ -108,7 +118,8 @@ public final class FeedItemsFilter {
         Object owner,
         List list,
         AwemeExtractor extractor,
-        boolean verbose
+        boolean verbose,
+        boolean allowRecentSkip
     ) {
         if (list == null) return;
 
@@ -121,14 +132,21 @@ public final class FeedItemsFilter {
         int callId = probeEnabled ? filterCallProbeCount.incrementAndGet() : 0;
         long startNs = probeEnabled ? System.nanoTime() : 0;
         int ownerId = probeEnabled ? System.identityHashCode(owner) : 0;
-        int listId = probeEnabled ? System.identityHashCode(list) : 0;
+        int listId = System.identityHashCode(list);
         String beforeSample = probeEnabled ? sampleAids(list, extractor) : "";
         int initialSize = list.size();
         if (probeEnabled) {
             recordProbeCall(listId, filterMask);
         }
 
-        if (shouldSkipRecentlyProcessedList(listId, beforeFingerprint, filterMask, callId, source, probeEnabled)) {
+        if (allowRecentSkip && shouldSkipRecentlyProcessedList(
+            listId,
+            beforeFingerprint,
+            filterMask,
+            callId,
+            source,
+            probeEnabled
+        )) {
             return;
         }
 
@@ -269,6 +287,7 @@ public final class FeedItemsFilter {
             return "[Morphe TikTok FeedFilter] item"
                 + " aid=" + item.getAid()
                 + " ad=" + item.isAd()
+                + " softAd=" + item.isSoftAd()
                 + " promo=" + item.isWithPromotionalMusic()
                 + " liveEvidence=" + LiveFilter.getLiveEvidence(item)
                 + " story=" + item.getIsTikTokStory()

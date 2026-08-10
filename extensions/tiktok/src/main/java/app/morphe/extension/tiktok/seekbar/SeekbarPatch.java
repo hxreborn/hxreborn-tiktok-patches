@@ -26,4 +26,9 @@ public final class SeekbarPatch {
         }
         return 0;
     }
+
+    public static int overrideThumbnailGate(String key, int value) {
+        if (!"seekbar_show_thumbnail_when_drag".equals(key)) return value;
+        return Settings.SHOW_SEEKBAR_THUMBNAIL.get() ? 1 : value;
+    }
 }

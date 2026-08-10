@@ -32,6 +32,6 @@ public class AigcFilter implements IFilter {
             return false;
         }
 
-        return aigcInfo.getCreateByAI() || aigcInfo.getAIGCLabelType() != 0;
+        return aigcInfo.createByAI || aigcInfo.getAIGCLabelType() != 0;
     }
 }

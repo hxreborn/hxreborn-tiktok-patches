@@ -20,7 +20,9 @@ internal object GetEnterFromFingerprint : Fingerprint(
 )
 
 internal object OnRenderFirstFrameFingerprint : Fingerprint(
-    definingClass = "/BaseListFragmentPanel;",
-    strings = listOf("method_enable_viewpager_preload_duration"),
+    definingClass = "/feed/controller/PlayerController;",
+    name = "onRenderFirstFrame",
+    returnType = "V",
+    parameters = listOf("LX/0pb0;"),
 )
 

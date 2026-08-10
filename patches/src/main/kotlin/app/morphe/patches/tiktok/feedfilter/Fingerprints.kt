@@ -5,7 +5,9 @@
 package app.morphe.patches.tiktok.feedfilter
 
 import app.morphe.patcher.Fingerprint
+import app.morphe.util.getReference
 import com.android.tools.smali.dexlib2.AccessFlags
+import com.android.tools.smali.dexlib2.iface.reference.MethodReference
 
 internal object FeedItemListGetItemsFingerprint : Fingerprint(
     accessFlags = listOf(AccessFlags.PUBLIC),
@@ -25,6 +27,14 @@ internal object FollowFeedFingerprint : Fingerprint(
     },
 )
 
+internal object FollowFeedListGetItemsFingerprint : Fingerprint(
+    definingClass = "Lcom/ss/android/ugc/aweme/follow/presenter/FollowFeedList;",
+    name = "getItems",
+    accessFlags = listOf(AccessFlags.PUBLIC),
+    returnType = "Ljava/util/List;",
+    parameters = emptyList(),
+)
+
 internal object PlaylistBottomBarAvailableFingerprint : Fingerprint(
     definingClass = "/InteractPlayListBottomBarAssem;",
     returnType = "Z",
@@ -39,14 +49,34 @@ internal object SpecActTouchpointAttachFingerprint : Fingerprint(
 
 internal object TakoAiFeedButtonSetVisibleFingerprint : Fingerprint(
     definingClass = "/feed/assem/tikbot/TakoAssem;",
-    name = "rn",
+    name = "bq",
     returnType = "V",
     parameters = listOf("Z"),
 )
 
+internal object FollowFeedPresenterPostProcessFingerprint : Fingerprint(
+    returnType = "V",
+    parameters = listOf("Lcom/ss/android/ugc/aweme/follow/presenter/FollowFeedList;"),
+    custom = { method, _ ->
+        val references = method.implementation?.instructions
+            ?.mapNotNull { it.getReference<MethodReference>() }
+            ?: emptyList()
+        references.any {
+            it.definingClass == "Lcom/ss/android/ugc/aweme/feed/model/Aweme;" &&
+                it.name == "isAd"
+        } && references.any {
+            it.definingClass == "Lcom/ss/android/ugc/aweme/follow/presenter/FollowFeedList;" &&
+                it.name == "setItems"
+        } && references.any {
+            it.definingClass == "Lcom/ss/android/ugc/aweme/follow/presenter/FollowFeedList;" &&
+                it.name == "setInsertedResults"
+        }
+    },
+)
+
 internal object TakoAiFeedButtonBindFingerprint : Fingerprint(
     definingClass = "/feed/assem/tikbot/TakoAssem;",
-    name = "rm",
+    name = "onViewCreated",
     returnType = "V",
     parameters = listOf("Landroid/view/View;"),
 )

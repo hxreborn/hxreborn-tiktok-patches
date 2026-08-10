@@ -20,17 +20,32 @@ import app.morphe.extension.shared.Utils;
  * which is required if using {@link PreferenceFragment}.
  * <p>
  * If saved numbers will not be used with a preference fragment,
- * then store the primitive numbers using the {@link #preferences} itself.
+ * then store the primitive numbers using the {@link #preferences()} itself.
  */
 public class SharedPrefCategory {
     @NonNull
     public final String name;
-    @NonNull
-    public final SharedPreferences preferences;
+    @Nullable
+    private SharedPreferences preferences;
 
     public SharedPrefCategory(@NonNull String name) {
         this.name = Objects.requireNonNull(name);
-        preferences = Objects.requireNonNull(Utils.getContext()).getSharedPreferences(name, Context.MODE_PRIVATE);
+    }
+
+    /**
+     * @return null until {@link Utils#setContext(Context)} has run. Resolving this in the constructor instead
+     * would throw out of {@link app.morphe.extension.shared.settings.Setting}'s static initializer and leave
+     * the class permanently unusable for the rest of the process.
+     */
+    @Nullable
+    public synchronized SharedPreferences preferences() {
+        if (preferences == null) {
+            Context context = Utils.getContext();
+            if (context != null) {
+                preferences = context.getSharedPreferences(name, Context.MODE_PRIVATE);
+            }
+        }
+        return preferences;
     }
 
     private void removeConflictingPreferenceKeyValue(@NonNull String key) {
@@ -40,12 +55,16 @@ public class SharedPrefCategory {
 
     @SuppressLint("ApplySharedPref") // Must use commit to ensure default value is not saved to preferences.
     private void saveObjectAsString(@NonNull String key, @Nullable Object value) {
-        preferences.edit().putString(key, (value == null ? null : value.toString())).commit();
+        SharedPreferences prefs = preferences();
+        if (prefs == null) return;
+        prefs.edit().putString(key, (value == null ? null : value.toString())).commit();
     }
 
     @SuppressLint("ApplySharedPref") // Must use commit to ensure default value is not saved to preferences.
     public void clear() {
-        preferences.edit().clear().commit();
+        SharedPreferences prefs = preferences();
+        if (prefs == null) return;
+        prefs.edit().clear().commit();
     }
 
     /**
@@ -53,12 +72,16 @@ public class SharedPrefCategory {
      */
     @SuppressLint("ApplySharedPref") // Must use commit to ensure default value is not saved to preferences.
     public void removeKey(@NonNull String key) {
-        preferences.edit().remove(Objects.requireNonNull(key)).commit();
+        SharedPreferences prefs = preferences();
+        if (prefs == null) return;
+        prefs.edit().remove(Objects.requireNonNull(key)).commit();
     }
 
     @SuppressLint("ApplySharedPref") // Must use commit to ensure default value is not saved to preferences.
     public void saveBoolean(@NonNull String key, boolean value) {
-        preferences.edit().putBoolean(key, value).commit();
+        SharedPreferences prefs = preferences();
+        if (prefs == null) return;
+        prefs.edit().putBoolean(key, value).commit();
     }
 
     /**
@@ -99,8 +122,10 @@ public class SharedPrefCategory {
     @NonNull
     public String getString(@NonNull String key, @NonNull String _default) {
         Objects.requireNonNull(_default);
+        SharedPreferences prefs = preferences();
+        if (prefs == null) return _default;
         try {
-            return preferences.getString(key, _default);
+            return prefs.getString(key, _default);
         } catch (ClassCastException ex) {
             // Value stored is a completely different type (should never happen).
             removeConflictingPreferenceKeyValue(key);
@@ -111,8 +136,10 @@ public class SharedPrefCategory {
     @NonNull
     public <T extends Enum<?>> T getEnum(@NonNull String key, @NonNull T _default) {
         Objects.requireNonNull(_default);
+        SharedPreferences prefs = preferences();
+        if (prefs == null) return _default;
         try {
-            String enumName = preferences.getString(key, null);
+            String enumName = prefs.getString(key, null);
             if (enumName != null) {
                 try {
                     // noinspection unchecked
@@ -131,8 +158,10 @@ public class SharedPrefCategory {
     }
 
     public boolean getBoolean(@NonNull String key, boolean _default) {
+        SharedPreferences prefs = preferences();
+        if (prefs == null) return _default;
         try {
-            return preferences.getBoolean(key, _default);
+            return prefs.getBoolean(key, _default);
         } catch (ClassCastException ex) {
             // Value stored is a completely different type (should never happen).
             removeConflictingPreferenceKeyValue(key);
@@ -142,15 +171,17 @@ public class SharedPrefCategory {
 
     @NonNull
     public Integer getIntegerString(@NonNull String key, @NonNull Integer _default) {
+        SharedPreferences prefs = preferences();
+        if (prefs == null) return _default;
         try {
-            String value = preferences.getString(key, null);
+            String value = prefs.getString(key, null);
             if (value != null) {
                 return Integer.valueOf(value);
             }
         } catch (ClassCastException | NumberFormatException ex) {
             try {
                 // Old data previously stored as primitive.
-                return preferences.getInt(key, _default);
+                return prefs.getInt(key, _default);
             } catch (ClassCastException ex2) {
                 // Value stored is a completely different type (should never happen).
                 removeConflictingPreferenceKeyValue(key);
@@ -161,14 +192,16 @@ public class SharedPrefCategory {
 
     @NonNull
     public Long getLongString(@NonNull String key, @NonNull Long _default) {
+        SharedPreferences prefs = preferences();
+        if (prefs == null) return _default;
         try {
-            String value = preferences.getString(key, null);
+            String value = prefs.getString(key, null);
             if (value != null) {
                 return Long.valueOf(value);
             }
         } catch (ClassCastException | NumberFormatException ex) {
             try {
-                return preferences.getLong(key, _default);
+                return prefs.getLong(key, _default);
             } catch (ClassCastException ex2) {
                 removeConflictingPreferenceKeyValue(key);
             }
@@ -178,14 +211,16 @@ public class SharedPrefCategory {
 
     @NonNull
     public Float getFloatString(@NonNull String key, @NonNull Float _default) {
+        SharedPreferences prefs = preferences();
+        if (prefs == null) return _default;
         try {
-            String value = preferences.getString(key, null);
+            String value = prefs.getString(key, null);
             if (value != null) {
                 return Float.valueOf(value);
             }
         } catch (ClassCastException | NumberFormatException ex) {
             try {
-                return preferences.getFloat(key, _default);
+                return prefs.getFloat(key, _default);
             } catch (ClassCastException ex2) {
                 removeConflictingPreferenceKeyValue(key);
             }

@@ -37,6 +37,10 @@ public final class CommentBatchTranslator {
     private static final LinkedHashSet<String> requestedLoadedBatchKeys = new LinkedHashSet<>();
     private static LoadedBatch latestLoadedBatch;
     private static WeakReference<Object> lastManager = new WeakReference<>(null);
+    private static volatile Object nativeLanguageService;
+    private static volatile Method nativeTargetLanguageGetter;
+    private static volatile Object nativeLanguageSettings;
+    private static volatile Method nativeDoNotTranslateGetter;
 
     private CommentBatchTranslator() {
     }
@@ -46,9 +50,10 @@ public final class CommentBatchTranslator {
         if (itemView == null || manager == null) return;
 
         try {
-            Object comment = readField(manager, "LLILLIZIL");
-            Object context = readField(manager, "LLILZ");
-            if (comment == null || context == null) return;
+            AnchorParts parts = resolveAnchorParts(manager);
+            if (parts == null) return;
+            Object comment = parts.comment;
+            Object context = parts.context;
 
             String cid = invokeString(comment, "getCid");
             if (isBlank(cid)) return;
@@ -202,7 +207,7 @@ public final class CommentBatchTranslator {
         Class<?> current = managerClass;
         while (current != null) {
             for (Method method : current.getDeclaredMethods()) {
-                if (!"LJFF".equals(method.getName()) || !Modifier.isStatic(method.getModifiers())) continue;
+                if (!Modifier.isStatic(method.getModifiers()) || method.getReturnType() != void.class) continue;
 
                 Class<?>[] parameters = method.getParameterTypes();
                 if (parameters.length != 3) continue;
@@ -219,10 +224,12 @@ public final class CommentBatchTranslator {
 
     private static Batch buildLoadedBatch(Object anchor, boolean allowVisibleFallback) {
         long now = System.currentTimeMillis();
-        Object anchorContext = readFieldQuiet(anchor, "LLILZ");
-        Object nativeManager = readFieldQuiet(anchor, "LLILLL");
-        String anchorAid = valueOrNull(value(readFieldQuiet(anchorContext, "LIZIZ")));
-        String anchorCid = invokeStringQuiet(readFieldQuiet(anchor, "LLILLIZIL"), "getCid");
+        AnchorParts parts = resolveAnchorParts(anchor);
+        Object anchorContext = parts == null ? null : parts.context;
+        Object nativeManager = parts == null ? null : parts.nativeManager;
+        Object anchorComment = parts == null ? null : parts.comment;
+        String anchorAid = invokeStringQuiet(anchorComment, "getAwemeId");
+        String anchorCid = invokeStringQuiet(anchorComment, "getCid");
         Set<?> pending = readPendingSet(nativeManager);
 
         ArrayList<Object> comments = new ArrayList<>();
@@ -349,40 +356,119 @@ public final class CommentBatchTranslator {
         String commentLanguage = primaryLanguageTag(invokeStringQuiet(comment, "getCommentLanguage"));
         if (isBlank(commentLanguage)) return false;
 
-        String appLanguage = currentAppLanguage();
-        if (!isBlank(appLanguage) && commentLanguage.equals(appLanguage)) return true;
+        String targetLanguage = primaryLanguageTag(getNativeTranslationTargetLanguage());
+        if (!isBlank(targetLanguage) && commentLanguage.equals(targetLanguage)) return true;
 
-        String excluded = Settings.COMMENT_TRANSLATION_EXCLUDED_LANGUAGES.get();
-        if (isBlank(excluded)) return false;
-        for (String language : excluded.split("[,;\\s]+")) {
+        for (String language : getNativeDoNotTranslateLanguages()) {
             if (commentLanguage.equals(primaryLanguageTag(language))) return true;
         }
         return false;
     }
 
-    private static String currentAppLanguage() {
+    private static String currentLanguagePolicyKey() {
+        StringBuilder key = new StringBuilder("native-target:")
+                .append(value(primaryLanguageTag(getNativeTranslationTargetLanguage())))
+                .append(":dnt");
+        for (String language : getNativeDoNotTranslateLanguages()) {
+            key.append(':').append(value(primaryLanguageTag(language)));
+        }
+        return key.toString().toLowerCase(Locale.ROOT);
+    }
+
+    private static String getNativeTranslationTargetLanguage() {
+        try {
+            Object service = nativeLanguageService;
+            Method getter = nativeTargetLanguageGetter;
+            if (service == null || getter == null) {
+                synchronized (LOCK) {
+                    service = nativeLanguageService;
+                    getter = nativeTargetLanguageGetter;
+                    if (service == null || getter == null) {
+                        Class<?> serviceClass = Class.forName(
+                                "com.ss.android.ugc.aweme.translation.service.TranslationLangKevaServiceImpl"
+                        );
+                        service = serviceClass.getDeclaredConstructor().newInstance();
+                        for (Method candidate : serviceClass.getDeclaredMethods()) {
+                            if (candidate.getParameterTypes().length == 0 &&
+                                    candidate.getReturnType() == String.class) {
+                                candidate.setAccessible(true);
+                                getter = candidate;
+                                nativeLanguageService = service;
+                                nativeTargetLanguageGetter = getter;
+                                break;
+                            }
+                        }
+                    }
+                }
+            }
+
+            if (service != null && getter != null) {
+                Object selected = getter.invoke(service);
+                if (selected instanceof String && !isBlank((String) selected)) {
+                    return (String) selected;
+                }
+            }
+        } catch (Throwable ex) {
+            Logger.printDebug(() -> "[Morphe CommentBatchTranslator] native target language unavailable", asException(ex));
+        }
+
         Context context = Utils.getContext();
         if (context != null) {
             Configuration configuration = context.getResources().getConfiguration();
-            Locale locale;
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
                 LocaleList locales = configuration.getLocales();
-                locale = locales.isEmpty() ? null : locales.get(0);
-            } else {
-                locale = configuration.locale;
-            }
-            if (locale != null) {
-                String language = primaryLanguageTag(locale.toLanguageTag());
-                if (!isBlank(language)) return language;
+                if (!locales.isEmpty()) return locales.get(0).toLanguageTag();
+            } else if (configuration.locale != null) {
+                return configuration.locale.toLanguageTag();
             }
         }
-        return primaryLanguageTag(Locale.getDefault().toLanguageTag());
+        return Locale.getDefault().toLanguageTag();
     }
 
-    private static String currentLanguagePolicyKey() {
-        String appLanguage = currentAppLanguage();
-        String excluded = Settings.COMMENT_TRANSLATION_EXCLUDED_LANGUAGES.get();
-        return value(appLanguage) + ":" + value(excluded).trim().toLowerCase(Locale.ROOT);
+    private static String[] getNativeDoNotTranslateLanguages() {
+        try {
+            Object settings = nativeLanguageSettings;
+            Method getter = nativeDoNotTranslateGetter;
+            if (settings == null || getter == null) {
+                synchronized (LOCK) {
+                    settings = nativeLanguageSettings;
+                    getter = nativeDoNotTranslateGetter;
+                    if (settings == null || getter == null) {
+                        Class<?> serviceClass = Class.forName(
+                                "com.ss.android.ugc.aweme.translation.service.TranslationLangKevaServiceImpl"
+                        );
+                        Object service = serviceClass.getDeclaredConstructor().newInstance();
+                        for (Method provider : serviceClass.getDeclaredMethods()) {
+                            if (provider.getParameterTypes().length != 0 ||
+                                    provider.getReturnType() == void.class) continue;
+                            try {
+                                Method candidate = provider.getReturnType().getMethod(
+                                        "getSelectedDoNotTranslateLanguageCodes"
+                                );
+                                provider.setAccessible(true);
+                                Object resolvedSettings = provider.invoke(service);
+                                if (resolvedSettings == null) continue;
+                                candidate.setAccessible(true);
+                                settings = resolvedSettings;
+                                getter = candidate;
+                                nativeLanguageSettings = settings;
+                                nativeDoNotTranslateGetter = getter;
+                                break;
+                            } catch (NoSuchMethodException ignored) {
+                            }
+                        }
+                    }
+                }
+            }
+
+            if (settings != null && getter != null) {
+                Object value = getter.invoke(settings);
+                if (value instanceof String[]) return (String[]) value;
+            }
+        } catch (Throwable ex) {
+            Logger.printDebug(() -> "[Morphe CommentBatchTranslator] native language policy unavailable", asException(ex));
+        }
+        return new String[0];
     }
 
     private static String primaryLanguageTag(String language) {
@@ -396,12 +482,72 @@ public final class CommentBatchTranslator {
     private static Set<?> readPendingSet(Object nativeManager) {
         if (nativeManager == null) return null;
         try {
-            Field field = nativeManager.getClass().getDeclaredField("LIZIZ");
-            field.setAccessible(true);
-            Object value = field.get(null);
-            return value instanceof Set ? (Set<?>) value : null;
+            Class<?> current = nativeManager.getClass();
+            while (current != null) {
+                for (Field field : current.getDeclaredFields()) {
+                    if (!Modifier.isStatic(field.getModifiers()) ||
+                            !Set.class.isAssignableFrom(field.getType())) continue;
+                    field.setAccessible(true);
+                    Object value = field.get(null);
+                    if (value instanceof Set) return (Set<?>) value;
+                }
+                current = current.getSuperclass();
+            }
         } catch (Throwable ignored) {
-            return null;
+        }
+        return null;
+    }
+
+    private static AnchorParts resolveAnchorParts(Object anchor) {
+        if (anchor == null) return null;
+
+        try {
+            ArrayList<Object> values = readInstanceFieldValues(anchor);
+            Object comment = null;
+            for (Object value : values) {
+                if (value != null && hasNoArgMethod(value.getClass(), "getCid")) {
+                    comment = value;
+                    break;
+                }
+            }
+            if (comment == null) return null;
+
+            for (Object nativeManager : values) {
+                if (nativeManager == null || nativeManager == comment) continue;
+                for (Object context : values) {
+                    if (context == null || context == comment || context == nativeManager) continue;
+                    if (findNativeBatchMethod(nativeManager.getClass(), context.getClass()) != null) {
+                        return new AnchorParts(comment, context, nativeManager);
+                    }
+                }
+            }
+        } catch (Throwable ex) {
+            Logger.printDebug(() -> "[Morphe CommentBatchTranslator] manager resolution failed", asException(ex));
+        }
+        return null;
+    }
+
+    private static ArrayList<Object> readInstanceFieldValues(Object instance) throws IllegalAccessException {
+        ArrayList<Object> values = new ArrayList<>();
+        Class<?> current = instance.getClass();
+        while (current != null) {
+            for (Field field : current.getDeclaredFields()) {
+                if (Modifier.isStatic(field.getModifiers())) continue;
+                field.setAccessible(true);
+                Object value = field.get(instance);
+                if (value != null) values.add(value);
+            }
+            current = current.getSuperclass();
+        }
+        return values;
+    }
+
+    private static boolean hasNoArgMethod(Class<?> type, String name) {
+        try {
+            type.getMethod(name);
+            return true;
+        } catch (NoSuchMethodException ignored) {
+            return false;
         }
     }
 
@@ -492,6 +638,18 @@ public final class CommentBatchTranslator {
             this.comment = new WeakReference<>(comment);
             this.context = new WeakReference<>(context);
             this.lastSeenMs = lastSeenMs;
+        }
+    }
+
+    private static final class AnchorParts {
+        final Object comment;
+        final Object context;
+        final Object nativeManager;
+
+        AnchorParts(Object comment, Object context, Object nativeManager) {
+            this.comment = comment;
+            this.context = context;
+            this.nativeManager = nativeManager;
         }
     }
 

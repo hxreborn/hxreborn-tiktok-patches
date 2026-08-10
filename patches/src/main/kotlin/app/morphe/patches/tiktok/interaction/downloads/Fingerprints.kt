@@ -86,34 +86,88 @@ internal object StickerPreviewBinderFingerprint : Fingerprint(
         "Ljava/lang/String;",
         "Ljava/util/Map;",
     ),
-    custom = { method, _ ->
-        val instructions = method.implementation?.instructions
-        if (instructions == null) {
+    custom = { method, classDef ->
+        if (!classDef.endsWith("/0ULN;") || method.name != "LIZ") {
             false
         } else {
-            var readsUrlModel = false
-            var readsStickerImageView = false
-            var queriesStickerApi = false
+            val instructions = method.implementation?.instructions
+            if (instructions == null) {
+                false
+            } else {
+                var readsUrlModel = false
+                var bindsActionButton = false
+                var loadsStickerImage = false
 
-            instructions.forEach { instruction ->
-                instruction.getReference<FieldReference>()?.let { field ->
-                    when (field.type) {
-                        "Lcom/ss/android/ugc/aweme/base/model/UrlModel;" -> readsUrlModel = true
-                        "Lcom/bytedance/lighten/loader/SmartImageView;" -> readsStickerImageView = true
+                instructions.forEach { instruction ->
+                    instruction.getReference<FieldReference>()?.let { field ->
+                        if (field.type == "Lcom/ss/android/ugc/aweme/base/model/UrlModel;") {
+                            readsUrlModel = true
+                        }
+                    }
+
+                    instruction.getReference<MethodReference>()?.let { methodReference ->
+                        if (methodReference.definingClass == "LX/0ULN;" &&
+                            methodReference.name == "LIZIZ" &&
+                            methodReference.parameterTypes == listOf("LX/0GSy;", "LX/0ULU;") &&
+                            methodReference.returnType == "V"
+                        ) {
+                            bindsActionButton = true
+                        }
+
+                        if (methodReference.definingClass == "LX/16zb;" &&
+                            methodReference.name == "LIZJ"
+                        ) {
+                            loadsStickerImage = true
+                        }
                     }
                 }
 
-                instruction.getReference<MethodReference>()?.let { methodReference ->
-                    if (methodReference.definingClass ==
-                        "Lcom/ss/android/ugc/aweme/im/sticker/api/IMStickerApi;"
-                    ) {
-                        queriesStickerApi = true
-                    }
-                }
+                readsUrlModel && bindsActionButton && loadsStickerImage
             }
-
-            readsUrlModel && readsStickerImageView && queriesStickerApi
         }
     },
+)
+
+internal object StickerPreviewSourceFingerprint : Fingerprint(
+    returnType = "V",
+    parameters = listOf(
+        "Ljava/lang/String;",
+        "Lcom/ss/android/ugc/aweme/im/common/model/StickerItem;",
+        "Landroid/view/View;",
+        "Z",
+        "Ljava/lang/String;",
+        "Ljava/util/Map;",
+        "Lkotlin/jvm/functions/Function0;",
+        "Lkotlin/jvm/functions/Function0;",
+        "Lkotlin/jvm/functions/Function0;",
+    ),
+    custom = { method, classDef ->
+        classDef.endsWith("/0UL9;") &&
+            method.name == "LJ" &&
+            method.implementation?.instructions?.any { instruction ->
+                instruction.getReference<MethodReference>()?.let { reference ->
+                    reference.definingClass == "LX/0ULN;" &&
+                        reference.name == "LIZ" &&
+                        reference.parameterTypes == listOf(
+                            "LX/0ULM;",
+                            "Z",
+                            "Ljava/lang/String;",
+                            "Ljava/util/Map;",
+                        ) &&
+                        reference.returnType == "V"
+                } == true
+            } == true
+    },
+)
+
+internal object DownloadSuccessCoroutineFingerprint : Fingerprint(
+    returnType = "Ljava/lang/Object;",
+    parameters = listOf("Ljava/lang/Object;"),
+    strings = listOf(
+        "DownloadAction@71a5.startDownload\$globalListener\$1\$onSuccess\$1",
+        "filePath",
+        "fileExist",
+    ),
+    custom = { method, _ -> method.name == "invokeSuspend" },
 )
 
