@@ -15,6 +15,8 @@ patches {
 dependencies {
     compileOnly(libs.morphe.patcher)
 
+    implementation(libs.morphe.patches.library)
+
     // Used by JsonGenerator.
     implementation(libs.gson)
 

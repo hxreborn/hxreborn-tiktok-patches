@@ -1,6 +1,7 @@
 [versions]
 # Align with morphe-patches-template (Compatibility / Manager display names).
 morphe-patcher = "1.5.1"
+morphe-patches-library = "1.5.1"
 # Tracking https://github.com/google/smali/issues/100.
 smali = "b6365a84f4"
 agp = "8.2.2"
@@ -15,6 +16,7 @@ protoc = "3.25.2"
 
 [libraries]
 morphe-patcher = { module = "app.morphe:morphe-patcher", version.ref = "morphe-patcher" }
+morphe-patches-library = { module = "app.morphe:morphe-patches-library", version.ref = "morphe-patches-library" }
 annotation = { module = "androidx.annotation:annotation", version.ref = "annotation" }
 androidx-core = { module = "androidx.core:core", version.ref = "androidx-core" }
 gson = { module = "com.google.code.gson:gson", version.ref = "gson" }
