@@ -43,7 +43,7 @@ private data class OpenDebugTargets(
 @Suppress("unused")
 val settingsPatch = bytecodePatch(
     name = "Settings",
-    description = "Adds the Metra patches settings menu to TikTok. Supports TikTok 46.2.3.",
+    description = "Adds the Morphe patches settings menu to TikTok.",
     default = true,
 ) {
     dependsOn(sharedExtensionPatch)
@@ -351,7 +351,7 @@ val settingsPatch = bytecodePatch(
         val moveResultIndex = getStringInvokeIndex + 1
         val titleStringRegister = compose.getInstruction<OneRegisterInstruction>(moveResultIndex).registerA
 
-        composeMutable.addInstruction(moveResultIndex + 1, "const-string v$titleStringRegister, \"Metra patches\"")
+        composeMutable.addInstruction(moveResultIndex + 1, "const-string v$titleStringRegister, \"Morphe patches\"")
 
         OpenDebugCellVmDefaultStateFingerprint.methodOrNull?.apply {
             val returnIndex = indexOfFirstInstructionOrThrow(Opcode.RETURN_OBJECT)
