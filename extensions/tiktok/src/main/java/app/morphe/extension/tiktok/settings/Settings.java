@@ -73,8 +73,22 @@ public class Settings extends BaseSettings {
     public static final BooleanSetting HIDE_TAKO_AI = new BooleanSetting("hide_tako_ai", FALSE, true);
     public static final BooleanSetting COMMENT_BATCH_TRANSLATION = new BooleanSetting("comment_batch_translation", FALSE);
     public static final StringSetting COMMENT_TRANSLATION_EXCLUDED_LANGUAGES = new StringSetting("comment_translation_excluded_languages", "");
+    public static final BooleanSetting HIDE_COMMENT_QUICK_REACTIONS =
+            new BooleanSetting("hide_comment_quick_reactions", FALSE);
     public static final StringSetting DOWNLOAD_PATH = new StringSetting("down_path", "Movies/TikTok");
     public static final StringSetting IMAGE_DOWNLOAD_PATH = new StringSetting("image_down_path", "Pictures/TikTok");
+    public static final StringSetting DOWNLOAD_VIDEO_FILENAME_TEMPLATE = new StringSetting(
+            "download_video_filename_template",
+            "{creator}_{date}_{video_id}"
+    );
+    public static final StringSetting DOWNLOAD_PHOTO_FILENAME_TEMPLATE = new StringSetting(
+            "download_photo_filename_template",
+            "{creator}_{date}_{video_id}_{index}"
+    );
+    public static final StringSetting DOWNLOAD_COMMENT_MEDIA_FILENAME_TEMPLATE = new StringSetting(
+            "download_comment_media_filename_template",
+            "comment_{date}_{media_id}"
+    );
     public static final BooleanSetting DOWNLOAD_WATERMARK = new BooleanSetting("down_watermark", TRUE);
     public static final BooleanSetting CUSTOM_OFFLINE_VIDEOS = new BooleanSetting("custom_offline_videos", FALSE, true);
     public static final IntegerSetting CUSTOM_OFFLINE_VIDEO_LIMIT = new IntegerSetting(
@@ -84,6 +98,16 @@ public class Settings extends BaseSettings {
             Setting.parent(CUSTOM_OFFLINE_VIDEOS)
     );
     public static final BooleanSetting SHOW_SEEKBAR = new BooleanSetting("show_seekbar", TRUE);
+    public static final BooleanSetting SHOW_SEEKBAR_THUMBNAIL = new BooleanSetting(
+            "show_seekbar_thumbnail",
+            TRUE
+    );
+    public static final BooleanSetting STOP_VIDEO_LOOPING = new BooleanSetting("stop_video_looping", FALSE, true);
+    public static final BooleanSetting RESUME_VIDEO_AFTER_SCROLL = new BooleanSetting(
+            "resume_video_after_scroll",
+            TRUE,
+            true
+    );
     public static final BooleanSetting OPEN_EXTERNAL_LINKS = new BooleanSetting("open_external_links", TRUE);
     public static final BooleanSetting ALWAYS_SHOW_PUBLISH_DATE = new BooleanSetting("always_show_publish_date", TRUE, true);
     public static final BooleanSetting CLEAR_DISPLAY = new BooleanSetting("clear_display", FALSE);
@@ -91,6 +115,12 @@ public class Settings extends BaseSettings {
     public static final FloatSetting REMEMBERED_SPEED = new FloatSetting("REMEMBERED_SPEED", 1.0f);
     public static final BooleanSetting ENABLE_LONG_PRESS_SPEED_LOCK = new BooleanSetting("enable_long_press_speed_lock", FALSE, true);
     public static final BooleanSetting DISABLE_ANALYTICS = new BooleanSetting("disable_analytics", FALSE, true);
+    public static final BooleanSetting DISABLE_LONG_PRESS_QUICK_SHARE =
+            new BooleanSetting("disable_long_press_quick_share", FALSE);
+    public static final BooleanSetting ENABLE_NON_PERSONALIZED_SEARCH =
+            new BooleanSetting("enable_non_personalized_search", FALSE, true);
+    public static final BooleanSetting ENABLE_LIVE_SEARCH =
+            new BooleanSetting("enable_live_search", FALSE, true);
     public static final BooleanSetting SIM_SPOOF = new BooleanSetting("simspoof", FALSE, true);
     public static final StringSetting SIM_SPOOF_ISO = new StringSetting("simspoof_iso", "us");
     public static final StringSetting SIMSPOOF_MCCMNC = new StringSetting("simspoof_mccmnc", "310260");

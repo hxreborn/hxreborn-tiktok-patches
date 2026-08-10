@@ -11,6 +11,7 @@ import android.preference.PreferenceScreen;
 import app.morphe.extension.tiktok.settings.Settings;
 import app.morphe.extension.tiktok.settings.SettingsStatus;
 import app.morphe.extension.tiktok.settings.preference.DownloadPathPreference;
+import app.morphe.extension.tiktok.settings.preference.InputTextPreference;
 import app.morphe.extension.tiktok.settings.preference.NumberInputPreference;
 import app.morphe.extension.tiktok.settings.preference.TogglePreference;
 
@@ -37,6 +38,24 @@ public class DownloadsPreferenceCategory extends ConditionalPreferenceCategory {
                 context,
                 "Image download path",
                 Settings.IMAGE_DOWNLOAD_PATH
+        ));
+        addPreference(new InputTextPreference(
+                context,
+                "Video filename",
+                "Tokens: {creator}, {date}, {video_id}. The file extension is kept automatically.",
+                Settings.DOWNLOAD_VIDEO_FILENAME_TEMPLATE
+        ));
+        addPreference(new InputTextPreference(
+                context,
+                "Photo filename",
+                "Tokens: {creator}, {date}, {video_id}, {index}. The file extension is kept automatically.",
+                Settings.DOWNLOAD_PHOTO_FILENAME_TEMPLATE
+        ));
+        addPreference(new InputTextPreference(
+                context,
+                "Comment media filename",
+                "Tokens: {date}, {media_id}. Works for image and video stickers.",
+                Settings.DOWNLOAD_COMMENT_MEDIA_FILENAME_TEMPLATE
         ));
         addPreference(new TogglePreference(
                 context,

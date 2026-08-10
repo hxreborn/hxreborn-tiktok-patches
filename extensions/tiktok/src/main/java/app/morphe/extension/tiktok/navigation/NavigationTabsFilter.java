@@ -19,6 +19,10 @@ public final class NavigationTabsFilter {
     private NavigationTabsFilter() {
     }
 
+    public static List<?> filterTopTabs(List<?> tabs) {
+        return filterTopTabs(tabs, false);
+    }
+
     @SuppressWarnings({"unused", "rawtypes", "unchecked"})
     public static List<?> filterTopTabs(List<?> tabs, boolean includeChildren) {
         try {
@@ -220,9 +224,14 @@ public final class NavigationTabsFilter {
             return null;
         }
 
+        String tag = invokeStringMethod(tab, "tag");
+        return tag != null ? tag : invokeStringMethod(tab, "getTag");
+    }
+
+    private static String invokeStringMethod(Object target, String methodName) {
         try {
-            Method method = tab.getClass().getMethod("tag");
-            Object value = method.invoke(tab);
+            Method method = target.getClass().getMethod(methodName);
+            Object value = method.invoke(target);
             return value instanceof String ? (String) value : null;
         } catch (Throwable ignored) {
             return null;

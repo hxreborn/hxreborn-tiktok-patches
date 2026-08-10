@@ -2,8 +2,8 @@ group = "app.morphe"
 
 patches {
     about {
-        name = "TikTok Patches for Morphe"
-        description = "A Morphe patch source for TikTok 43.8.3."
+        name = "Metra TikTok Patches"
+        description = "Metra patches for TikTok 46.2.3, built for Morphe."
         source = "https://github.com/icysymmetra/tiktok-patches-for-morphe"
         author = "icysymmetra"
         contact = "na"
@@ -33,6 +33,7 @@ tasks {
 
         classpath = sourceSets["main"].runtimeClasspath
         mainClass.set("app.morphe.util.PatchListGeneratorKt")
+        args(project.version.toString())
     }
     // Used by gradle-semantic-release-plugin.
     publish {

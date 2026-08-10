@@ -9,18 +9,21 @@ import app.morphe.patcher.patch.PatchException
 import app.morphe.patcher.patch.bytecodePatch
 import app.morphe.patcher.util.proxy.mutableTypes.MutableMethod
 import app.morphe.patches.shared.compat.AppCompatibilities
-import app.morphe.patches.tiktok.misc.settings.enableOpenDebugPatch
+import app.morphe.patches.tiktok.misc.absettings.APP_AB_DESCRIPTOR
+import app.morphe.patches.tiktok.misc.absettings.APP_AB_INT_KEY_REGISTER
+import app.morphe.patches.tiktok.misc.absettings.APP_AB_INT_METHOD
+import app.morphe.patches.tiktok.misc.absettings.APP_AB_INT_PARAMETERS
 import app.morphe.patches.tiktok.misc.settings.settingsPatch
+import app.morphe.util.cloneMutableAndPreserveParameters
 import com.android.tools.smali.dexlib2.Opcode
 import com.android.tools.smali.dexlib2.iface.instruction.OneRegisterInstruction
 
-private const val ABMOCK_DESCRIPTOR = "LX/0BPv;"
-private const val ABMOCK_RAW_DESCRIPTOR = "LX/0BPb;"
-private const val ABMOCK_LEGACY_DESCRIPTOR = "LX/0BP8;"
 private const val ABMOCK_SETTINGS_MANAGER_DESCRIPTOR = "Lcom/bytedance/ies/abmock/SettingsManager;"
 private const val LIVE_SETTINGS_DESCRIPTOR = "Lcom/bytedance/android/live_settings/SettingsManager;"
-private const val ACTIVITY_CENTER_DESCRIPTOR = "Lcom/ss/android/ugc/aweme/compliance/business/activitycenter/EnterActivityCenterAction;"
+private const val ACTIVITY_CENTER_DESCRIPTOR = "Lcom/ss/android/ugc/tiktok/pns/activitycenter/EnterActivityCenterAction;"
 private const val VE_CONFIG_DESCRIPTOR = "Lcom/ss/android/vesdk/VEConfigCenter;"
+private const val PLAYER_SETTING_SERVICE_DESCRIPTOR =
+    "Lcom/ss/android/ugc/aweme/video/simplayer/PlayerSettingServiceImpl;"
 private const val RUNTIME_DESCRIPTOR = "Lapp/morphe/extension/tiktok/featuregatelab/FeatureGateLabRuntime;"
 
 private data class TypedBoundary(
@@ -33,21 +36,16 @@ private data class TypedBoundary(
     val runtimeMethod: String,
     val runtimeDescriptor: String,
     val wide: Boolean = false,
+    val keyScratchRegister: String? = null,
 )
 
 private val boundaries = listOf(
-    TypedBoundary(ABMOCK_DESCRIPTOR, "LIZJ", "Z", listOf("I", "Ljava/lang/String;", "Z", "Z"), "p2", Opcode.RETURN, "overrideBoolean", "(Ljava/lang/String;Z)Z"),
-    TypedBoundary(ABMOCK_DESCRIPTOR, "LJFF", "D", listOf("D", "I", "Ljava/lang/String;", "Z"), "p4", Opcode.RETURN_WIDE, "overrideDouble", "(Ljava/lang/String;D)D", true),
-    TypedBoundary(ABMOCK_DESCRIPTOR, "LJIIIIZZ", "F", listOf("I", "Ljava/lang/String;", "Z", "F"), "p2", Opcode.RETURN, "overrideFloat", "(Ljava/lang/String;F)F"),
-    TypedBoundary(ABMOCK_DESCRIPTOR, "LJIIJJI", "I", listOf("I", "I", "Ljava/lang/String;", "Z"), "p3", Opcode.RETURN, "overrideInt", "(Ljava/lang/String;I)I"),
-    TypedBoundary(ABMOCK_DESCRIPTOR, "LJIILJJIL", "J", listOf("I", "J", "Ljava/lang/String;", "Z"), "p4", Opcode.RETURN_WIDE, "overrideLong", "(Ljava/lang/String;J)J", true),
-    TypedBoundary(ABMOCK_DESCRIPTOR, "LJIILLIIL", "Ljava/lang/String;", listOf("I", "Ljava/lang/String;", "Ljava/lang/String;", "Z"), "p2", Opcode.RETURN_OBJECT, "overrideString", "(Ljava/lang/String;Ljava/lang/String;)Ljava/lang/String;"),
-    TypedBoundary(ABMOCK_LEGACY_DESCRIPTOR, "LJFF", "Z", listOf("Ljava/lang/String;", "Z"), "p1", Opcode.RETURN, "overrideBoolean", "(Ljava/lang/String;Z)Z"),
-    TypedBoundary(ABMOCK_LEGACY_DESCRIPTOR, "LIZLLL", "D", listOf("Ljava/lang/String;", "D"), "p1", Opcode.RETURN_WIDE, "overrideDouble", "(Ljava/lang/String;D)D", true),
-    TypedBoundary(ABMOCK_LEGACY_DESCRIPTOR, "LJII", "F", listOf("Ljava/lang/String;", "F"), "p1", Opcode.RETURN, "overrideFloat", "(Ljava/lang/String;F)F"),
-    TypedBoundary(ABMOCK_LEGACY_DESCRIPTOR, "LIZ", "I", listOf("Ljava/lang/String;", "I"), "p1", Opcode.RETURN, "overrideInt", "(Ljava/lang/String;I)I"),
-    TypedBoundary(ABMOCK_LEGACY_DESCRIPTOR, "LIZIZ", "J", listOf("Ljava/lang/String;", "J"), "p1", Opcode.RETURN_WIDE, "overrideLong", "(Ljava/lang/String;J)J", true),
-    TypedBoundary(ABMOCK_LEGACY_DESCRIPTOR, "LJ", "Ljava/lang/String;", listOf("Ljava/lang/String;", "Ljava/lang/String;"), "p1", Opcode.RETURN_OBJECT, "overrideString", "(Ljava/lang/String;Ljava/lang/String;)Ljava/lang/String;"),
+    TypedBoundary(APP_AB_DESCRIPTOR, "LIZ", "Z", listOf("I", "Ljava/lang/String;", "Z", "Z"), "p2", Opcode.RETURN, "overrideBoolean", "(Ljava/lang/String;Z)Z"),
+    TypedBoundary(APP_AB_DESCRIPTOR, "LIZJ", "D", listOf("D", "I", "Ljava/lang/String;", "Z"), "p4", Opcode.RETURN_WIDE, "overrideDouble", "(Ljava/lang/String;D)D", true),
+    TypedBoundary(APP_AB_DESCRIPTOR, "LIZLLL", "F", listOf("I", "Ljava/lang/String;", "Z", "F"), "p2", Opcode.RETURN, "overrideFloat", "(Ljava/lang/String;F)F"),
+    TypedBoundary(APP_AB_DESCRIPTOR, APP_AB_INT_METHOD, "I", APP_AB_INT_PARAMETERS, APP_AB_INT_KEY_REGISTER, Opcode.RETURN, "overrideInt", "(Ljava/lang/String;I)I"),
+    TypedBoundary(APP_AB_DESCRIPTOR, "LJII", "J", listOf("I", "J", "Ljava/lang/String;", "Z"), "p4", Opcode.RETURN_WIDE, "overrideLong", "(Ljava/lang/String;J)J", true),
+    TypedBoundary(APP_AB_DESCRIPTOR, "LJIIIIZZ", "Ljava/lang/String;", listOf("I", "Ljava/lang/String;", "Ljava/lang/String;", "Z"), "p2", Opcode.RETURN_OBJECT, "overrideString", "(Ljava/lang/String;Ljava/lang/String;)Ljava/lang/String;", keyScratchRegister = "v0"),
     TypedBoundary(ABMOCK_SETTINGS_MANAGER_DESCRIPTOR, "LIZ", "Z", listOf("Ljava/lang/String;", "Z"), "p0", Opcode.RETURN, "overrideBoolean", "(Ljava/lang/String;Z)Z"),
     TypedBoundary(ABMOCK_SETTINGS_MANAGER_DESCRIPTOR, "LIZIZ", "D", listOf("Ljava/lang/String;", "D"), "p0", Opcode.RETURN_WIDE, "overrideDouble", "(Ljava/lang/String;D)D", true),
     TypedBoundary(ABMOCK_SETTINGS_MANAGER_DESCRIPTOR, "LIZJ", "F", listOf("Ljava/lang/String;", "F"), "p0", Opcode.RETURN, "overrideFloat", "(Ljava/lang/String;F)F"),
@@ -63,6 +61,7 @@ private val boundaries = listOf(
     TypedBoundary(VE_CONFIG_DESCRIPTOR, "getValue", "Ljava/lang/Boolean;", listOf("Ljava/lang/String;", "Z"), "p1", Opcode.RETURN_OBJECT, "overrideVeBoolean", "(Ljava/lang/String;Ljava/lang/Boolean;)Ljava/lang/Boolean;"),
     TypedBoundary(VE_CONFIG_DESCRIPTOR, "getValue", "F", listOf("Ljava/lang/String;", "F"), "p1", Opcode.RETURN, "overrideVeFloat", "(Ljava/lang/String;F)F"),
     TypedBoundary(VE_CONFIG_DESCRIPTOR, "getValue", "I", listOf("Ljava/lang/String;", "I"), "p1", Opcode.RETURN, "overrideVeInt", "(Ljava/lang/String;I)I"),
+    TypedBoundary(VE_CONFIG_DESCRIPTOR, "getValue", "J", listOf("Ljava/lang/String;", "J"), "p1", Opcode.RETURN_WIDE, "overrideVeLong", "(Ljava/lang/String;J)J", true),
     TypedBoundary(VE_CONFIG_DESCRIPTOR, "getValue", "Ljava/lang/String;", listOf("Ljava/lang/String;", "Ljava/lang/String;"), "p1", Opcode.RETURN_OBJECT, "overrideVeString", "(Ljava/lang/String;Ljava/lang/String;)Ljava/lang/String;"),
 )
 
@@ -72,8 +71,8 @@ val featureGateLabPatch = bytecodePatch(
     description = "Adds a menu for viewing and overriding supported TikTok feature flags and configuration values.",
     default = true,
 ) {
-    dependsOn(settingsPatch, enableOpenDebugPatch)
-    compatibleWith(*AppCompatibilities.tiktok4383())
+    dependsOn(settingsPatch)
+    compatibleWith(*AppCompatibilities.tiktok4623())
 
     execute {
         boundaries.forEach { boundary ->
@@ -86,13 +85,76 @@ val featureGateLabPatch = bytecodePatch(
             method.patchBoundary(boundary)
         }
 
-        val rawAbmock = mutableClassDefBy(ABMOCK_RAW_DESCRIPTOR)
+        val rawAbmock = mutableClassDefBy(APP_AB_DESCRIPTOR)
         val rawGetter = rawAbmock.methods.singleOrNull {
-            it.name == "LJIIL" &&
+            it.name == "LJIIJJI" &&
                 it.returnType == "Ljava/lang/Object;" &&
                 it.parameterTypes == listOf("Ljava/lang/String;", "Z")
         } ?: throw PatchException("Feature Gate Lab raw App AB boundary not found")
         rawGetter.patchRawAbBoundary()
+
+        val settingsManager = mutableClassDefBy(ABMOCK_SETTINGS_MANAGER_DESCRIPTOR)
+        val objectGetterWithoutDefault = settingsManager.methods.singleOrNull {
+            it.name == "LJII" &&
+                it.returnType == "Ljava/lang/Object;" &&
+                it.parameterTypes == listOf("Ljava/lang/String;", "Ljava/lang/Class;")
+        } ?: throw PatchException("Feature Gate Lab SettingsManager object boundary without default not found")
+        objectGetterWithoutDefault
+            .cloneMutableAndPreserveParameters()
+            .patchSettingsManagerObjectBoundary(
+            hasDefault = false,
+            isStatic = true,
+        )
+
+        val objectGetterWithDefault = settingsManager.methods.singleOrNull {
+            it.name == "LJIIIIZZ" &&
+                it.returnType == "Ljava/lang/Object;" &&
+                it.parameterTypes == listOf(
+                    "Ljava/lang/String;",
+                    "Ljava/lang/Class;",
+                    "Ljava/lang/Object;",
+                )
+        } ?: throw PatchException("Feature Gate Lab SettingsManager object boundary with default not found")
+        objectGetterWithDefault.patchSettingsManagerObjectBoundary(
+            hasDefault = true,
+            isStatic = false,
+        )
+
+        val liveSettingsManager = mutableClassDefBy(LIVE_SETTINGS_DESCRIPTOR)
+        val liveObjectGetterWithDefault = liveSettingsManager.methods.singleOrNull {
+            it.name == "getValueSafely" &&
+                it.returnType == "Ljava/lang/Object;" &&
+                it.parameterTypes == listOf("Ljava/lang/String;", "Ljava/lang/Object;")
+        } ?: throw PatchException("Feature Gate Lab Live object boundary with default not found")
+        liveObjectGetterWithDefault.patchLiveSettingsObjectBoundary(hasClassKey = false)
+
+        val liveObjectGetterByClass = liveSettingsManager.methods.singleOrNull {
+            it.name == "getValueSafely" &&
+                it.returnType == "Ljava/lang/Object;" &&
+                it.parameterTypes == listOf("Ljava/lang/Class;")
+        } ?: throw PatchException("Feature Gate Lab Live object boundary by class not found")
+        liveObjectGetterByClass.patchLiveSettingsObjectBoundary(hasClassKey = true)
+
+        val liveStringArrayGetter = liveSettingsManager.methods.singleOrNull {
+            it.name == "getStringArrayValue" &&
+                it.returnType == "[Ljava/lang/String;" &&
+                it.parameterTypes == listOf("Ljava/lang/String;", "[Ljava/lang/String;")
+        } ?: throw PatchException("Feature Gate Lab Live string-array boundary not found")
+        liveStringArrayGetter.patchLiveSettingsObjectBoundary(hasClassKey = false)
+
+        val playerSettings = mutableClassDefBy(PLAYER_SETTING_SERVICE_DESCRIPTOR)
+        val playerGetter = playerSettings.methods.singleOrNull {
+            it.name == "get" &&
+                it.returnType == "Ljava/lang/Object;" &&
+                it.parameterTypes == listOf(
+                    "Ljava/lang/String;",
+                    "Ljava/lang/reflect/Type;",
+                    "Ljava/lang/Object;",
+                    "Z",
+                    "Z",
+                )
+        } ?: throw PatchException("Feature Gate Lab PlayerSettingService boundary not found")
+        playerGetter.patchPlayerSettingBoundary()
 
         val activityCenter = mutableClassDefBy(ACTIVITY_CENTER_DESCRIPTOR)
         val getSchema = activityCenter.methods.singleOrNull {
@@ -112,6 +174,95 @@ val featureGateLabPatch = bytecodePatch(
         } ?: throw PatchException("Feature Gate Lab runtime marker not found")
         installed.addInstructions(0, "const/4 v0, 0x1\nreturn v0")
     }
+}
+
+private fun MutableMethod.patchLiveSettingsObjectBoundary(hasClassKey: Boolean) {
+    val implementation = implementation
+        ?: throw PatchException("Feature Gate Lab Live object boundary has no implementation")
+    implementation.instructions
+        .withIndex()
+        .filter { (_, instruction) -> instruction.opcode == Opcode.RETURN_OBJECT }
+        .map { (index, instruction) ->
+            index to ((instruction as? OneRegisterInstruction)?.registerA
+                ?: throw PatchException("Feature Gate Lab Live object return without result register"))
+        }
+        .asReversed()
+        .forEach { (index, register) ->
+            val returnCast = if (returnType == "Ljava/lang/Object;") {
+                ""
+            } else {
+                "\ncheck-cast v$register, $returnType"
+            }
+            val hook = if (hasClassKey) {
+                """
+                    invoke-static {p1, v$register}, $RUNTIME_DESCRIPTOR->observeLiveSettingsClassObject(Ljava/lang/Class;Ljava/lang/Object;)Ljava/lang/Object;
+                    move-result-object v$register$returnCast
+                """
+            } else {
+                """
+                    invoke-static {p1, p2, v$register}, $RUNTIME_DESCRIPTOR->observeLiveSettingsObject(Ljava/lang/String;Ljava/lang/Object;Ljava/lang/Object;)Ljava/lang/Object;
+                    move-result-object v$register$returnCast
+                """
+            }
+            addInstructions(index, hook)
+        }
+}
+
+private fun MutableMethod.patchSettingsManagerObjectBoundary(
+    hasDefault: Boolean,
+    isStatic: Boolean,
+) {
+    val implementation = implementation
+        ?: throw PatchException("Feature Gate Lab SettingsManager object boundary has no implementation")
+    implementation.instructions
+        .withIndex()
+        .filter { (_, instruction) -> instruction.opcode == Opcode.RETURN_OBJECT }
+        .map { (index, instruction) ->
+            index to ((instruction as? OneRegisterInstruction)?.registerA
+                ?: throw PatchException("Feature Gate Lab SettingsManager object return without result register"))
+        }
+        .asReversed()
+        .forEach { (index, register) ->
+            val hook = if (hasDefault) {
+                """
+                    invoke-static {p1, p2, p3, v$register}, $RUNTIME_DESCRIPTOR->observeSettingsObject(Ljava/lang/String;Ljava/lang/Class;Ljava/lang/Object;Ljava/lang/Object;)Ljava/lang/Object;
+                    move-result-object v$register
+                """
+            } else if (isStatic) {
+                """
+                    invoke-static {p0, p1, v$register}, $RUNTIME_DESCRIPTOR->observeSettingsObjectWithoutDefault(Ljava/lang/String;Ljava/lang/Class;Ljava/lang/Object;)Ljava/lang/Object;
+                    move-result-object v$register
+                """
+            } else {
+                """
+                    invoke-static {p1, p2, v$register}, $RUNTIME_DESCRIPTOR->observeSettingsObjectWithoutDefault(Ljava/lang/String;Ljava/lang/Class;Ljava/lang/Object;)Ljava/lang/Object;
+                    move-result-object v$register
+                """
+            }
+            addInstructions(index, hook)
+        }
+}
+
+private fun MutableMethod.patchPlayerSettingBoundary() {
+    val implementation = implementation
+        ?: throw PatchException("Feature Gate Lab PlayerSettingService boundary has no implementation")
+    implementation.instructions
+        .withIndex()
+        .filter { (_, instruction) -> instruction.opcode == Opcode.RETURN_OBJECT }
+        .map { (index, instruction) ->
+            index to ((instruction as? OneRegisterInstruction)?.registerA
+                ?: throw PatchException("Feature Gate Lab PlayerSettingService return without result register"))
+        }
+        .asReversed()
+        .forEach { (index, register) ->
+            addInstructions(
+                index,
+                """
+                    invoke-static {p1, p2, v$register}, $RUNTIME_DESCRIPTOR->overridePlayerValue(Ljava/lang/String;Ljava/lang/reflect/Type;Ljava/lang/Object;)Ljava/lang/Object;
+                    move-result-object v$register
+                """,
+            )
+        }
 }
 
 private fun MutableMethod.patchRawAbBoundary() {
@@ -170,6 +321,13 @@ private fun MutableMethod.patchBoundary(boundary: TypedBoundary) {
         .asReversed()
         .forEach { (index, register) ->
             val resultRegisters = if (boundary.wide) "v$register, v${register + 1}" else "v$register"
+            val keyRegister = boundary.keyScratchRegister ?: boundary.keyParameter
+            val prepareKey = boundary.keyScratchRegister?.let {
+                if (it == "v$register") {
+                    throw PatchException("Feature Gate Lab key scratch overlaps result register: $this")
+                }
+                "move-object/from16 $it, ${boundary.keyParameter}\n"
+            }.orEmpty()
             val moveResult = when (boundary.returnOpcode) {
                 Opcode.RETURN_WIDE -> "move-result-wide v$register"
                 Opcode.RETURN_OBJECT -> "move-result-object v$register"
@@ -178,7 +336,8 @@ private fun MutableMethod.patchBoundary(boundary: TypedBoundary) {
             addInstructions(
                 index,
                 """
-                    invoke-static {${boundary.keyParameter}, $resultRegisters}, $RUNTIME_DESCRIPTOR->${boundary.runtimeMethod}${boundary.runtimeDescriptor}
+                    $prepareKey
+                    invoke-static {$keyRegister, $resultRegisters}, $RUNTIME_DESCRIPTOR->${boundary.runtimeMethod}${boundary.runtimeDescriptor}
                     $moveResult
                 """,
             )

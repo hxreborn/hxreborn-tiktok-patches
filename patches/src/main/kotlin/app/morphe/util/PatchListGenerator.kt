@@ -51,15 +51,11 @@ import java.util.jar.Manifest
 typealias PackageName = String
 typealias VersionName = String
 
-internal fun main() {
-    val patchFiles = setOf(
-        File("build/libs/").listFiles { file ->
-            val fileName = file.name
-            !fileName.contains("javadoc") &&
-                    !fileName.contains("sources") &&
-                    fileName.endsWith(".mpp")
-        }!!.first()
-    )
+internal fun main(args: Array<String>) {
+    require(args.size == 1) { "Expected the current patch bundle version" }
+    val patchFile = File("build/libs/patches-${args.single()}.mpp")
+    require(patchFile.isFile) { "Current patch bundle not found: ${patchFile.path}" }
+    val patchFiles = setOf(patchFile)
     val loadedPatches = loadPatchesFromJar(patchFiles)
     val patchClassLoader = URLClassLoader(patchFiles.map { it.toURI().toURL() }.toTypedArray())
     val manifest = patchClassLoader.getResources("META-INF/MANIFEST.MF")

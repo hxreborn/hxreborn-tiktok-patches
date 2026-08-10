@@ -2,15 +2,16 @@ package app.morphe.patches.tiktok.misc.navigation
 
 import app.morphe.patcher.Fingerprint
 
-internal object HomeTabAbilityListFingerprint : Fingerprint(
+internal object TopTabModelListFingerprint : Fingerprint(
     definingClass = "/TabAbilityAssem;",
-    name = "eT1",
+    name = "W52",
     returnType = "Ljava/util/List;",
-    parameters = listOf("Z"),
+    parameters = listOf(),
 )
 
-internal object BottomTabBuildListFingerprint : Fingerprint(
-    returnType = "V",
-    parameters = listOf("Ljava/util/List;"),
-    strings = listOf("HOME", "PUBLISH", "FRIENDS_TAB", "SHOP_MALL", "NOTIFICATION"),
+internal object BottomTabModelListFingerprint : Fingerprint(
+    definingClass = "/TabAbilityAssem;",
+    name = "OA",
+    returnType = "Ljava/util/List;",
+    parameters = listOf(),
 )

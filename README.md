@@ -1,20 +1,20 @@
 <p align="center">
-  <img src="assets/readme-header.png" alt="TikTok Patches for Morphe" width="290"/>
+  <img src="assets/readme-header.png" alt="Metra TikTok Patches" width="290"/>
 </p>
 
 <p align="center">
-  <a href="https://www.apkmirror.com/apk/tiktok-pte-ltd/tik-tok-including-musical-ly/tiktok-43-8-3-release/tiktok-43-8-3-2-android-apk-download/"><img alt="TikTok 43.8.3" src="https://img.shields.io/badge/TikTok-43.8.3-ff0050?style=flat-square" /></a>
+  <a href="https://www.apkmirror.com/apk/tiktok-pte-ltd/tik-tok-including-musical-ly/tiktok-46-2-3-release/tiktok-46-2-3-android-apk-download/"><img alt="TikTok 46.2.3" src="https://img.shields.io/badge/TikTok-46.2.3-ff0050?style=flat-square" /></a>
   <a href="https://github.com/hxreborn/tiktok-patches-for-morphe/releases/latest"><img alt="release" src="https://img.shields.io/github/v/release/hxreborn/tiktok-patches-for-morphe?style=flat-square&color=ff0050&label=release" /></a>
   <a href="https://github.com/hxreborn/tiktok-patches-for-morphe/commits/main"><img alt="commits since release" src="https://img.shields.io/github/commits-since/hxreborn/tiktok-patches-for-morphe/latest?style=flat-square&color=00b894&label=since%20release" /></a>
   <a href="LICENSE"><img alt="license" src="https://img.shields.io/badge/license-GPLv3-blue?style=flat-square" /></a>
   <a href="https://morphe.software/add-source?github=hxreborn/tiktok-patches-for-morphe"><img alt="add source" src="https://img.shields.io/badge/Morphe-Add%20Source-00a8ff?style=flat-square" /></a>
 </p>
 
-# TikTok Patches for Morphe
+# Metra TikTok Patches
 
 <br>
 
-Personal TikTok patches for [Morphe](https://github.com/MorpheApp/morphe-cli), based on [icysymmetra](https://github.com/icysymmetra)'s work. Targets `com.zhiliaoapp.musically` on [TikTok `43.8.3`](https://www.apkmirror.com/apk/tiktok-pte-ltd/tik-tok-including-musical-ly/tiktok-43-8-3-release/tiktok-43-8-3-2-android-apk-download/).
+Personal TikTok patches for [Morphe](https://github.com/MorpheApp/morphe-cli), based on [icysymmetra](https://github.com/icysymmetra)'s work. Targets `com.zhiliaoapp.musically` on [TikTok `46.2.3`](https://www.apkmirror.com/apk/tiktok-pte-ltd/tik-tok-including-musical-ly/tiktok-46-2-3-release/tiktok-46-2-3-android-apk-download/).
 
 <br>
 
@@ -42,7 +42,7 @@ Everything from [icysymmetra's upstream](https://github.com/icysymmetra/tiktok-p
 \*TikTok decides which accounts count as institutions. Major news outlets usually carry that tag and
 stay in your feed, but some do not and get hidden like any other verified account.
 
-Last synced with upstream at [`ce30cfd`](https://github.com/icysymmetra/tiktok-patches-for-morphe/commit/ce30cfd). Release numbers are this fork's own and do not track upstream's.
+Last synced with upstream at [`40acc76`](https://github.com/icysymmetra/tiktok-patches-for-morphe/commit/40acc76). Release numbers are this fork's own and do not track upstream's.
 
 <br>
 

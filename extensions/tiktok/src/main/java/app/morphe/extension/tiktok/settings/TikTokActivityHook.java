@@ -37,7 +37,7 @@ public class TikTokActivityHook {
             Constructor entryConstructor = entryClazz.getConstructor(entryInfoClazz);
             Constructor entryInfoConstructor = entryInfoClazz.getDeclaredConstructors()[0];
             Object buttonInfo = entryInfoConstructor.newInstance(
-                    "Morphe settings", null, (View.OnClickListener) view -> startSettingsActivity(), "morphe");
+                    "Metra patches", null, (View.OnClickListener) view -> startSettingsActivity(), "morphe");
             return entryConstructor.newInstance(buttonInfo);
         } catch (ClassNotFoundException | NoSuchMethodException | InvocationTargetException | IllegalAccessException |
                  InstantiationException e) {
@@ -76,6 +76,22 @@ public class TikTokActivityHook {
         PreferenceFragment preferenceFragment = new TikTokPreferenceFragment();
         base.getFragmentManager().beginTransaction().replace(fragmentId, preferenceFragment).commit();
 
+        return true;
+    }
+
+    public static boolean handleBackPressed(AdPersonalizationActivity activity) {
+        Intent intent = activity.getIntent();
+        if (intent == null
+                || (!SETTINGS_ACTION.equals(intent.getAction())
+                && !intent.getBooleanExtra(SETTINGS_EXTRA, false))) {
+            return false;
+        }
+
+        if (activity.getFragmentManager().getBackStackEntryCount() > 0) {
+            activity.getFragmentManager().popBackStack();
+        } else {
+            activity.finish();
+        }
         return true;
     }
 

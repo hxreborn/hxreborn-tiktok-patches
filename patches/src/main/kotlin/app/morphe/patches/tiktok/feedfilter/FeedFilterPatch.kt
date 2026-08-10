@@ -29,7 +29,7 @@ val feedFilterPatch = bytecodePatch(
         sharedExtensionPatch,
     )
 
-    compatibleWith(*AppCompatibilities.tiktok4383())
+    compatibleWith(*AppCompatibilities.tiktok4623())
 
     execute {
         // Enables the feed filter extension after settings were loaded.
@@ -75,6 +75,32 @@ val feedFilterPatch = bytecodePatch(
                         :morphe_skip_filter_$returnIndex
                         nop
                     """,
+                )
+            }
+        }
+
+        FollowFeedListGetItemsFingerprint.method.let { method ->
+            val returnIndices = method.implementation!!.instructions.withIndex()
+                .filter { it.value.opcode == Opcode.RETURN_OBJECT }
+                .map { it.index }
+
+            returnIndices.asReversed().forEach { returnIndex ->
+                method.addInstructions(
+                    returnIndex,
+                    "invoke-static/range {p0 .. p0}, $EXTENSION_CLASS_DESCRIPTOR->filter(Lcom/ss/android/ugc/aweme/follow/presenter/FollowFeedList;)V",
+                )
+            }
+        }
+
+        FollowFeedPresenterPostProcessFingerprint.method.let { method ->
+            val returnIndices = method.implementation!!.instructions.withIndex()
+                .filter { it.value.opcode == Opcode.RETURN_VOID }
+                .map { it.index }
+
+            returnIndices.asReversed().forEach { returnIndex ->
+                method.addInstructions(
+                    returnIndex,
+                    "invoke-static/range {p1 .. p1}, $EXTENSION_CLASS_DESCRIPTOR->filterFinal(Lcom/ss/android/ugc/aweme/follow/presenter/FollowFeedList;)V",
                 )
             }
         }

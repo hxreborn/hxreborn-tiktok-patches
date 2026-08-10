@@ -21,6 +21,10 @@ public class Aweme {
         throw new UnsupportedOperationException("Stub");
     }
 
+    public boolean isSoftAd() {
+        throw new UnsupportedOperationException("Stub");
+    }
+
     public boolean isLiveReplay() {
         throw new UnsupportedOperationException("Stub");
     }

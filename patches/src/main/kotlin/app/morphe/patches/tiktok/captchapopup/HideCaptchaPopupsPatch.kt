@@ -21,7 +21,7 @@ private object CaptchaPopupFingerprint : Fingerprint(
     parameters = listOf(
         "Landroid/app/Activity;",
         "Ljava/lang/String;",
-        "LX/10Dr;",
+        "LX/13fZ;",
         "Landroidx/fragment/app/Fragment;",
     ),
     strings = listOf("popCaptchaV2 - riskInfo ="),
@@ -31,7 +31,7 @@ private object LegacyCaptchaPopupFingerprint : Fingerprint(
     definingClass = "/sec/SecApiImpl;",
     name = "popCaptcha",
     returnType = "V",
-    parameters = listOf("Landroid/app/Activity;", "I", "LX/10Dr;"),
+    parameters = listOf("Landroid/app/Activity;", "I", "LX/13fZ;"),
     strings = listOf("popCaptcha - errorcode = "),
 )
 
@@ -39,7 +39,7 @@ private object OecCaptchaPopupFingerprint : Fingerprint(
     definingClass = "Lcom/tts/oecverify/verify/RiskControlService;",
     name = "execute",
     returnType = "Z",
-    parameters = listOf("LX/10FW;", "Lcom/tts/oecverify/BdTuringCallback;"),
+    parameters = listOf("LX/13eU;", "Lcom/tts/oecverify/BdTuringCallback;"),
 )
 
 private object LiveHostCaptchaPopupFingerprint : Fingerprint(
@@ -49,7 +49,7 @@ private object LiveHostCaptchaPopupFingerprint : Fingerprint(
     parameters = listOf(
         "Landroid/app/Activity;",
         "Ljava/lang/String;",
-        "LX/0zeW;",
+        "LX/1Cc3;",
         "Landroidx/fragment/app/Fragment;",
     ),
 )
@@ -57,11 +57,11 @@ private object LiveHostCaptchaPopupFingerprint : Fingerprint(
 @Suppress("unused")
 val hideCaptchaPopupsPatch = bytecodePatch(
     name = "Hide CAPTCHA popups",
-    description = "Prevents client-side verification puzzle dialogs from opening, including those shown while browsing LIVE. This does not bypass server-side checks.",
+    description = "Adds a default-off setting to hide browsing and LIVE puzzle dialogs while preserving login and account verification.",
     default = true,
 ) {
     dependsOn(sharedExtensionPatch)
-    compatibleWith(*AppCompatibilities.tiktok4383())
+    compatibleWith(*AppCompatibilities.tiktok4623())
 
     execute {
         SettingsStatusLoadFingerprint.method.addInstruction(
@@ -72,11 +72,11 @@ val hideCaptchaPopupsPatch = bytecodePatch(
         CaptchaPopupFingerprint.method.addInstructions(
             0,
             """
-                invoke-static {}, $FEATURE_CONTROLS_CLASS_DESCRIPTOR->shouldHideCaptchaPopup()Z
+                invoke-static {p1, p2}, $FEATURE_CONTROLS_CLASS_DESCRIPTOR->shouldHideCaptchaPopup(Landroid/app/Activity;Ljava/lang/String;)Z
                 move-result v0
                 if-eqz v0, :morphe_show_captcha_popup
                 if-eqz p3, :morphe_hide_captcha_popup_return
-                invoke-virtual {p3}, LX/10Dr;->LIZJ()V
+                invoke-virtual {p3}, LX/13fZ;->LIZJ()V
                 :morphe_hide_captcha_popup_return
                 return-void
                 :morphe_show_captcha_popup
@@ -87,11 +87,11 @@ val hideCaptchaPopupsPatch = bytecodePatch(
         LegacyCaptchaPopupFingerprint.method.addInstructions(
             0,
             """
-                invoke-static {}, $FEATURE_CONTROLS_CLASS_DESCRIPTOR->shouldHideCaptchaPopup()Z
+                invoke-static {p1}, $FEATURE_CONTROLS_CLASS_DESCRIPTOR->shouldHideCaptchaPopup(Landroid/app/Activity;)Z
                 move-result v0
                 if-eqz v0, :morphe_show_legacy_captcha_popup
                 if-eqz p3, :morphe_hide_legacy_captcha_popup_return
-                invoke-virtual {p3}, LX/10Dr;->LIZJ()V
+                invoke-virtual {p3}, LX/13fZ;->LIZJ()V
                 :morphe_hide_legacy_captcha_popup_return
                 return-void
                 :morphe_show_legacy_captcha_popup
@@ -119,11 +119,11 @@ val hideCaptchaPopupsPatch = bytecodePatch(
         LiveHostCaptchaPopupFingerprint.method.addInstructions(
             0,
             """
-                invoke-static {}, $FEATURE_CONTROLS_CLASS_DESCRIPTOR->shouldHideCaptchaPopup()Z
+                invoke-static {p1, p2}, $FEATURE_CONTROLS_CLASS_DESCRIPTOR->shouldHideCaptchaPopup(Landroid/app/Activity;Ljava/lang/String;)Z
                 move-result v0
                 if-eqz v0, :morphe_show_live_captcha_popup
                 if-eqz p3, :morphe_hide_live_captcha_popup_return
-                invoke-interface {p3}, LX/0zeW;->LIZIZ()V
+                invoke-interface {p3}, LX/1Cc3;->LIZIZ()V
                 :morphe_hide_live_captcha_popup_return
                 return-void
                 :morphe_show_live_captcha_popup

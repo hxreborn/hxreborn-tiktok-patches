@@ -64,15 +64,14 @@ private fun Method.returnEarlyIfTelemetryDisabled(disabledInstructions: (registe
 val disableTelemetryPatch = bytecodePatch(
     name = "Disable telemetry",
     description = "Adds a Miscellaneous toggle that disables ByteDance AppLog analytics, AppsFlyer attribution " +
-        "tracking, BDLocation background uploads, Firebase Analytics, and crash reporting. " +
-        "Off by default. (Supports TikTok 43.8.3.)",
+        "tracking, BDLocation background uploads, Firebase Analytics, and crash reporting. Off by default.",
 ) {
     dependsOn(
         sharedExtensionPatch,
         settingsPatch,
     )
 
-    compatibleWith(*AppCompatibilities.tiktok4383())
+    compatibleWith(*AppCompatibilities.tiktok4623())
 
     execute {
         SettingsStatusLoadFingerprint.method.addInstruction(
@@ -113,7 +112,7 @@ val disableTelemetryPatch = bytecodePatch(
                 .returnEarlyIfTelemetryDisabled { "return-void" }
         }
 
-        // This SDK is not bundled in the 43.8.3 global APK, but some package variants may include it.
+        // This SDK is not bundled in the global APK, but some package variants may include it.
         BDLocationSetUploadFingerprint.methodOrNull?.returnEarlyIfTelemetryDisabled { register ->
             """
                 const/16 v$register, 0x0

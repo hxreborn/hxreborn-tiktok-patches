@@ -16,6 +16,7 @@ import app.morphe.patches.tiktok.misc.extension.sharedExtensionPatch
 import app.morphe.patches.tiktok.misc.settings.SettingsStatusLoadFingerprint
 import app.morphe.util.addInstructionsAtControlFlowLabel
 import app.morphe.util.findInstructionIndicesReversedOrThrow
+import app.morphe.util.getFreeRegisterProvider
 import app.morphe.util.getReference
 import app.morphe.util.indexOfFirstInstructionOrThrow
 import app.morphe.util.indexOfFirstStringInstructionOrThrow
@@ -23,22 +24,24 @@ import app.morphe.util.returnEarly
 import com.android.tools.smali.dexlib2.Opcode
 import com.android.tools.smali.dexlib2.iface.instruction.FiveRegisterInstruction
 import com.android.tools.smali.dexlib2.iface.instruction.OneRegisterInstruction
+import com.android.tools.smali.dexlib2.iface.instruction.RegisterRangeInstruction
 import com.android.tools.smali.dexlib2.iface.instruction.ReferenceInstruction
 import com.android.tools.smali.dexlib2.iface.reference.FieldReference
 import com.android.tools.smali.dexlib2.iface.reference.MethodReference
 
 private const val EXTENSION_CLASS_DESCRIPTOR = "Lapp/morphe/extension/tiktok/download/DownloadsPatch;"
 private const val STICKER_EXTENSION_CLASS_DESCRIPTOR = "Lapp/morphe/extension/tiktok/download/StickerGallerySaver;"
+private const val FILENAME_FORMATTER_CLASS_DESCRIPTOR = "Lapp/morphe/extension/tiktok/download/DownloadFilenameFormatter;"
 
 @Suppress("unused")
 val downloadsPatch = bytecodePatch(
     name = "Downloads",
-    description = "Adds watermark-free video and photo downloads, comment sticker saving, and configurable download-folder controls.",
+    description = "Adds watermark-free downloads, comment sticker saving, configurable folders, and filename templates.",
     default = true,
 ) {
     dependsOn(sharedExtensionPatch)
 
-    compatibleWith(*AppCompatibilities.tiktok4383())
+    compatibleWith(*AppCompatibilities.tiktok4623())
 
     execute {
         SettingsStatusLoadFingerprint.method.addInstruction(
@@ -116,6 +119,80 @@ val downloadsPatch = bytecodePatch(
                 returnIndex,
                 """
                     invoke-static/range {p0 .. p1}, $STICKER_EXTENSION_CLASS_DESCRIPTOR->attachSaveImageButton(Landroid/view/View;Ljava/lang/Object;)V
+                """,
+            )
+        }
+
+        // Preserve the full StickerItem behind TikTok's reduced preview model for media detection.
+        StickerPreviewSourceFingerprint.method.apply {
+            val bindCallIndices = implementation!!.instructions.withIndex()
+                .filter { (_, instruction) ->
+                    instruction.getReference<MethodReference>()?.let { reference ->
+                        reference.definingClass == "LX/0ULN;" &&
+                            reference.name == "LIZ" &&
+                            reference.parameterTypes.firstOrNull() == "LX/0ULM;"
+                    } == true
+                }
+                .map { it.index }
+                .toList()
+
+            if (bindCallIndices.isEmpty()) {
+                throw app.morphe.patcher.patch.PatchException(
+                    "Downloads: could not find 46.2.3 sticker preview bind calls.",
+                )
+            }
+
+            bindCallIndices.asReversed().forEach { bindCallIndex ->
+                val bindInstruction = implementation!!.instructions[bindCallIndex]
+                val previewRegister = when (bindInstruction) {
+                    is FiveRegisterInstruction -> bindInstruction.registerD
+                    is RegisterRangeInstruction -> bindInstruction.startRegister + 1
+                    else -> throw app.morphe.patcher.patch.PatchException(
+                        "Downloads: unsupported sticker preview bind instruction.",
+                    )
+                }
+                val registerProvider = getFreeRegisterProvider(bindCallIndex, 2, previewRegister)
+                val previewTempRegister = registerProvider.getFreeRegister()
+                val sourceTempRegister = registerProvider.getFreeRegister()
+
+                if (previewTempRegister > 15 || sourceTempRegister > 15) {
+                    throw app.morphe.patcher.patch.PatchException(
+                        "Downloads: could not allocate low registers for sticker source association.",
+                    )
+                }
+
+                addInstructions(
+                    bindCallIndex,
+                    """
+                        move-object/from16 v$previewTempRegister, v$previewRegister
+                        move-object/from16 v$sourceTempRegister, p2
+                        invoke-static {v$previewTempRegister, v$sourceTempRegister}, $STICKER_EXTENSION_CLASS_DESCRIPTOR->registerStickerSource(Ljava/lang/Object;Ljava/lang/Object;)V
+                    """,
+                )
+            }
+        }
+
+        // Rename completed downloads while both the saved path and Aweme metadata are available.
+        DownloadSuccessCoroutineFingerprint.method.apply {
+            val fieldReferences = implementation!!.instructions.mapNotNull {
+                it.getReference<FieldReference>()
+            }
+            val pathField = fieldReferences.first {
+                it.definingClass == definingClass && it.type == "Ljava/lang/String;"
+            }
+            val awemeField = fieldReferences.first {
+                it.definingClass == definingClass &&
+                    it.type == "Lcom/ss/android/ugc/aweme/feed/model/Aweme;"
+            }
+
+            addInstructions(
+                0,
+                """
+                    iget-object v0, p0, $pathField
+                    iget-object v1, p0, $awemeField
+                    invoke-static {v0, v1}, $FILENAME_FORMATTER_CLASS_DESCRIPTOR->renameDownloadedMedia(Ljava/lang/String;Ljava/lang/Object;)Ljava/lang/String;
+                    move-result-object v0
+                    iput-object v0, p0, $pathField
                 """,
             )
         }

@@ -5,9 +5,12 @@
 package app.morphe.patches.tiktok.interaction.seekbar
 
 import app.morphe.patches.shared.compat.AppCompatibilities
+import app.morphe.patcher.extensions.InstructionExtensions.addInstruction
 import app.morphe.patcher.extensions.InstructionExtensions.addInstructions
 import app.morphe.patcher.patch.bytecodePatch
+import app.morphe.patches.tiktok.misc.absettings.hookAppAbIntBoundary
 import app.morphe.patches.tiktok.misc.extension.sharedExtensionPatch
+import app.morphe.patches.tiktok.misc.settings.SettingsStatusLoadFingerprint
 
 private const val EXTENSION_CLASS_DESCRIPTOR = "Lapp/morphe/extension/tiktok/seekbar/SeekbarPatch;"
 
@@ -19,7 +22,7 @@ val showSeekbarPatch = bytecodePatch(
 ) {
     dependsOn(sharedExtensionPatch)
 
-    compatibleWith(*AppCompatibilities.tiktok4383())
+    compatibleWith(*AppCompatibilities.tiktok4623())
 
     execute {
         ShouldShowProgressBarFingerprint.method.addInstructions(
@@ -45,5 +48,27 @@ val showSeekbarPatch = bytecodePatch(
                 """,
             )
         }
+    }
+}
+
+@Suppress("unused")
+val showSeekbarThumbnailPatch = bytecodePatch(
+    name = "Show seekbar thumbnail",
+    description = "Shows TikTok's video preview thumbnail while dragging the seekbar.",
+    default = true,
+) {
+    dependsOn(sharedExtensionPatch)
+    compatibleWith(*AppCompatibilities.tiktok4623())
+
+    execute {
+        SettingsStatusLoadFingerprint.method.addInstruction(
+            0,
+            "invoke-static {}, " +
+                "Lapp/morphe/extension/tiktok/settings/SettingsStatus;->enableSeekbarThumbnail()V",
+        )
+        hookAppAbIntBoundary(
+            EXTENSION_CLASS_DESCRIPTOR,
+            "overrideThumbnailGate",
+        )
     }
 }

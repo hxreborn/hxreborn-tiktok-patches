@@ -23,16 +23,20 @@ import java.util.Map;
 import app.morphe.extension.shared.Utils;
 
 public final class FeatureGateLabStore {
-    public static final String TARGET_VERSION = "43.8.3";
+    public static final String TARGET_VERSION = "46.2.3";
     public static final String MANAGER_ABMOCK = "abmock";
+    public static final String MANAGER_PLAYER_CONFIG = "player_config";
     public static final String MANAGER_LIVE = "live";
     public static final String MANAGER_PIA_ACTIVITY_CENTER = "pia_activity_center";
+    public static final String MANAGER_SETTINGS_MANAGER = "settings_manager";
     public static final String MANAGER_VE_CONFIG = "ve_config";
 
     private static final String PREFS_NAME = "morphe_feature_gate_lab";
     private static final String MASTER_KEY = "master_enabled";
     private static final String WARNING_ACK_KEY = "warning_acknowledged";
     private static final String RULE_IDS_KEY = "rule_ids";
+    private static final String STORED_TARGET_VERSION_KEY = "stored_target_version";
+    private static final String MIGRATION_NOTICE_KEY = "migration_notice_pending";
 
     private FeatureGateLabStore() {
     }
@@ -61,6 +65,15 @@ public final class FeatureGateLabStore {
         if (prefs != null) {
             prefs.edit().putBoolean(WARNING_ACK_KEY, true).apply();
         }
+    }
+
+    public static boolean consumeMigrationNotice() {
+        SharedPreferences prefs = prefs();
+        if (prefs == null || !prefs.getBoolean(MIGRATION_NOTICE_KEY, false)) {
+            return false;
+        }
+        prefs.edit().putBoolean(MIGRATION_NOTICE_KEY, false).apply();
+        return true;
     }
 
     public static Rule rule(String manager, String key, String type) {
@@ -128,9 +141,13 @@ public final class FeatureGateLabStore {
     }
 
     public static void resetAllLabData() {
+        SettingsManagerObservationRecorder.clear();
         SharedPreferences prefs = prefs();
         if (prefs != null) {
-            prefs.edit().clear().apply();
+            prefs.edit()
+                    .clear()
+                    .putString(STORED_TARGET_VERSION_KEY, TARGET_VERSION)
+                    .apply();
         }
         FeatureGateLabRuntime.clearTriggered();
         FeatureGateLabRuntime.reloadRules();
@@ -239,16 +256,35 @@ public final class FeatureGateLabStore {
                 }
                 case "STRING":
                     return value.length() <= 4096 ? null : "string exceeds 4096 characters";
+                case "OBJECT": {
+                    if (value.length() > 64 * 1024) {
+                        return "structured value exceeds 64 KB";
+                    }
+                    JSONObject object = new JSONObject(value);
+                    if (object.length() == 0) {
+                        return "select at least one field";
+                    }
+                    return null;
+                }
                 default:
                     return "unsupported type";
             }
         } catch (NumberFormatException exception) {
             return "invalid " + normalized.toLowerCase() + " value";
+        } catch (JSONException exception) {
+            return "invalid structured value";
         }
     }
 
     public static boolean supportsOverride(String manager, String type) {
+        if (MANAGER_SETTINGS_MANAGER.equals(manager)) {
+            return "OBJECT".equals(normalizeType(type));
+        }
+        if (MANAGER_LIVE.equals(manager) && "OBJECT".equals(normalizeType(type))) {
+            return true;
+        }
         if (!MANAGER_ABMOCK.equals(manager)
+                && !MANAGER_PLAYER_CONFIG.equals(manager)
                 && !MANAGER_LIVE.equals(manager)
                 && !MANAGER_PIA_ACTIVITY_CENTER.equals(manager)
                 && !MANAGER_VE_CONFIG.equals(manager)) {
@@ -348,7 +384,32 @@ public final class FeatureGateLabStore {
 
     private static SharedPreferences prefs() {
         Context context = Utils.getContext();
-        return context == null ? null : context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE);
+        if (context == null) {
+            return null;
+        }
+        SharedPreferences prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE);
+        ensureTargetVersion(prefs);
+        return prefs;
+    }
+
+    private static synchronized void ensureTargetVersion(SharedPreferences prefs) {
+        String storedVersion = prefs.getString(STORED_TARGET_VERSION_KEY, "");
+        if (TARGET_VERSION.equals(storedVersion)) {
+            return;
+        }
+
+        List<String> ids = ruleIds(prefs);
+        boolean hadSavedState = prefs.getBoolean(MASTER_KEY, false) || !ids.isEmpty();
+        SharedPreferences.Editor editor = prefs.edit()
+                .putString(STORED_TARGET_VERSION_KEY, TARGET_VERSION)
+                .putBoolean(MASTER_KEY, false);
+        for (String id : ids) {
+            editor.putBoolean("rule." + id + ".enabled", false);
+        }
+        if (hadSavedState) {
+            editor.putBoolean(MIGRATION_NOTICE_KEY, true);
+        }
+        editor.apply();
     }
 
     static boolean runtimeStorageAvailable() {

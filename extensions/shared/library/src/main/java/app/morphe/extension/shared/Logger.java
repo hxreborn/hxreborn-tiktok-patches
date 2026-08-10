@@ -12,6 +12,7 @@ import androidx.annotation.Nullable;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 
+import app.morphe.extension.shared.diagnostics.DiagnosticCategory;
 import app.morphe.extension.shared.settings.BaseSettings;
 import app.morphe.extension.shared.settings.preference.LogBufferManager;
 
@@ -86,13 +87,21 @@ public class Logger {
      * @param includeStackTrace If the current stack should be included.
      * @param showToast         If a toast is to be shown.
      */
-    private static void logInternal(LogLevel logLevel, LogMessage message, @Nullable Throwable ex,
-                                    boolean includeStackTrace, boolean showToast) {
+    private static void logInternal(
+            LogLevel logLevel,
+            @Nullable DiagnosticCategory category,
+            @Nullable String explicitSource,
+            LogMessage message,
+            @Nullable Throwable ex,
+            boolean includeStackTrace,
+            boolean showToast
+    ) {
         // It's very important that no Settings are used in this method,
         // as this code is used when a context is not set and thus referencing
         // a setting will crash the app.
         String messageString = message.buildMessageString();
-        String className = getOuterClassSimpleName(message);
+        String className = explicitSource == null ? getOuterClassSimpleName(message) : explicitSource;
+        if (category == null) category = legacyCategory(className, logLevel);
 
         String logText = messageString;
 
@@ -116,7 +125,7 @@ public class Logger {
 
         // Do not include "morphe:" prefix in clipboard logs.
         String managerToastString = className + ": " + logText;
-        LogBufferManager.appendToLogBuffer(managerToastString);
+        LogBufferManager.appendEvent(category, className, logLevel.name(), logText);
 
         String logTag = MORPHE_LOG_TAG_PREFIX + className;
         switch (logLevel) {
@@ -173,7 +182,7 @@ public class Logger {
      */
     public static void printDebug(LogMessage message, @Nullable Exception ex) {
         if (shouldLogDebug()) {
-            logInternal(LogLevel.DEBUG, message, ex, includeStackTrace(), false);
+            logInternal(LogLevel.DEBUG, null, null, message, ex, includeStackTrace(), false);
         }
     }
 
@@ -188,7 +197,7 @@ public class Logger {
      * Logs information messages using the outer class name of the code calling this method.
      */
     public static void printInfo(LogMessage message, @Nullable Exception ex) {
-        logInternal(LogLevel.INFO, message, ex, includeStackTrace(), false);
+        logInternal(LogLevel.INFO, null, null, message, ex, includeStackTrace(), false);
     }
 
     /**
@@ -209,6 +218,53 @@ public class Logger {
      * @param ex               exception (optional)
      */
     public static void printException(LogMessage message, @Nullable Throwable ex) {
-        logInternal(LogLevel.ERROR, message, ex, includeStackTrace(), shouldShowErrorToast());
+        logInternal(LogLevel.ERROR, DiagnosticCategory.PATCH_ERRORS, null, message, ex,
+                includeStackTrace(), shouldShowErrorToast());
+    }
+
+    public static void diagnosticDebug(
+            DiagnosticCategory category,
+            String source,
+            LogMessage message
+    ) {
+        if (shouldLogDebug()) {
+            logInternal(LogLevel.DEBUG, category, source, message, null, includeStackTrace(), false);
+        }
+    }
+
+    public static void diagnosticInfo(
+            DiagnosticCategory category,
+            String source,
+            LogMessage message
+    ) {
+        logInternal(LogLevel.INFO, category, source, message, null, includeStackTrace(), false);
+    }
+
+    public static void diagnosticError(
+            DiagnosticCategory category,
+            String source,
+            LogMessage message,
+            @Nullable Throwable throwable
+    ) {
+        logInternal(LogLevel.ERROR, category, source, message, throwable,
+                includeStackTrace(), shouldShowErrorToast());
+    }
+
+    private static DiagnosticCategory legacyCategory(String source, LogLevel level) {
+        if (level == LogLevel.ERROR) return DiagnosticCategory.PATCH_ERRORS;
+        if (source.startsWith("FollowDiagnostics")) return DiagnosticCategory.FOLLOW;
+        if (source.startsWith("Downloads") || source.startsWith("Sticker")) {
+            return DiagnosticCategory.DOWNLOADS;
+        }
+        if (source.startsWith("FeatureGateLab")) return DiagnosticCategory.FEATURE_GATE_LAB;
+        if (source.startsWith("Feed") || source.startsWith("Navigation")
+                || source.startsWith("BottomNavigation")) {
+            return DiagnosticCategory.FEED_AND_NAVIGATION;
+        }
+        if (source.startsWith("TikTokActivityHook") || source.contains("Preference")
+                || source.startsWith("Settings")) {
+            return DiagnosticCategory.SETTINGS;
+        }
+        return DiagnosticCategory.OTHER;
     }
 }

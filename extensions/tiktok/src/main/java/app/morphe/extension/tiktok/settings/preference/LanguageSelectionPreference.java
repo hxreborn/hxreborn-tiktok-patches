@@ -26,7 +26,6 @@ import android.widget.TextView;
 
 import androidx.annotation.NonNull;
 
-import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
@@ -41,6 +40,19 @@ import app.morphe.extension.shared.settings.StringSetting;
 
 @SuppressWarnings("deprecation")
 public final class LanguageSelectionPreference extends Preference {
+    private static final String SERVICE_MANAGER_CLASS =
+            "com.ss.android.ugc.aweme.framework.services.ServiceManager";
+    private static final String CONTENT_LANGUAGE_SERVICE_CLASS =
+            "com.ss.android.ugc.aweme.contentlanguage.api.IContentLanguageService";
+    private static final String[] BUNDLED_LANGUAGE_CODES = {
+            "af", "ar", "az", "bg", "bn", "ca", "ceb", "cs", "da", "de", "el", "en",
+            "es", "et", "fa", "fi", "fil", "fr", "ga", "gu", "he", "hi", "hr", "hu",
+            "id", "is", "it", "ja", "jv", "kk", "km", "kn", "ko", "lt", "lv", "ml",
+            "mr", "ms", "my", "nb", "nl", "or", "pa", "pl", "pt", "ro", "ru", "sk",
+            "sl", "sq", "sv", "sw", "ta", "te", "th", "tr", "uk", "ur", "uz", "vi",
+            "zh", "zu"
+    };
+
     private final StringSetting setting;
     private String value;
     private boolean valueSet;
@@ -121,9 +133,7 @@ public final class LanguageSelectionPreference extends Preference {
         root.addView(title, matchWrap());
 
         TextView helper = new TextView(context);
-        helper.setText(allOptions.isEmpty()
-                ? "TikTok's language catalog has not loaded yet. Reopen this menu after TikTok finishes starting."
-                : "Checked languages keep their original comments. This list comes from TikTok's translation settings.");
+        helper.setText("Checked languages keep their original comments. TikTok's current catalog is supplemented by languages bundled with this app version.");
         helper.setTextColor(SettingsUi.textSecondary());
         helper.setTextSize(14);
         LinearLayout.LayoutParams helperParams = matchWrap();
@@ -202,11 +212,14 @@ public final class LanguageSelectionPreference extends Preference {
     private List<LanguageOption> buildOptions() {
         Map<String, LanguageOption> unique = new LinkedHashMap<>();
         try {
-            Class<?> providerClass = Class.forName("X.0PD4");
-            Object service = providerClass.getMethod("LIZ").invoke(null);
+            Class<?> serviceManagerClass = Class.forName(SERVICE_MANAGER_CLASS);
+            Object serviceManager = serviceManagerClass.getMethod("get").invoke(null);
+            Class<?> serviceClass = Class.forName(CONTENT_LANGUAGE_SERVICE_CLASS);
+            Object service = serviceManagerClass
+                    .getMethod("getService", Class.class)
+                    .invoke(serviceManager, serviceClass);
             if (service != null) {
-                Method getLanguages = service.getClass().getMethod("LJII");
-                Object result = getLanguages.invoke(service);
+                Object result = serviceClass.getMethod("getLanguage").invoke(service);
                 if (result instanceof List) {
                     for (Object language : (List<?>) result) {
                         if (language == null) continue;
@@ -227,9 +240,20 @@ public final class LanguageSelectionPreference extends Preference {
             // The target-owned catalog can be unavailable early in app startup.
         }
 
+        addBundledLanguages(unique);
         List<LanguageOption> result = new ArrayList<>(unique.values());
         result.sort(Comparator.comparing(option -> option.name, String.CASE_INSENSITIVE_ORDER));
         return result;
+    }
+
+    private static void addBundledLanguages(Map<String, LanguageOption> unique) {
+        for (String code : BUNDLED_LANGUAGE_CODES) {
+            if (unique.containsKey(code)) continue;
+            Locale locale = Locale.forLanguageTag(code);
+            String name = locale.getDisplayLanguage(Locale.ENGLISH);
+            if (TextUtils.isEmpty(name)) name = code.toUpperCase(Locale.ROOT);
+            unique.put(code, new LanguageOption(code, name));
+        }
     }
 
     private Map<String, String> labelsByCode() {
@@ -259,6 +283,9 @@ public final class LanguageSelectionPreference extends Preference {
         String code = raw.trim().replace('_', '-').toLowerCase(Locale.ROOT);
         int separator = code.indexOf('-');
         if (separator > 0) code = code.substring(0, separator);
+        if ("in".equals(code)) code = "id";
+        if ("iw".equals(code)) code = "he";
+        if ("ji".equals(code)) code = "yi";
         if (code.length() < 2 || code.length() > 3) return null;
         for (int i = 0; i < code.length(); i++) {
             if (code.charAt(i) < 'a' || code.charAt(i) > 'z') return null;
@@ -356,10 +383,6 @@ public final class LanguageSelectionPreference extends Preference {
             text.setTextColor(SettingsUi.textPrimary());
             text.setTextSize(16);
             row.addView(text, new LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1));
-            row.setOnClickListener(view -> {
-                int adapterPosition = getPosition(option);
-                toggleSelection(options, selected, this, adapterPosition);
-            });
             return row;
         }
     }

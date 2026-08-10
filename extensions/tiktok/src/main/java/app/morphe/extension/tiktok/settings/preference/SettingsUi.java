@@ -7,30 +7,40 @@ import android.app.Dialog;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.res.ColorStateList;
+import android.graphics.Canvas;
 import android.graphics.Color;
+import android.graphics.ColorFilter;
+import android.graphics.Paint;
+import android.graphics.PixelFormat;
+import android.graphics.RectF;
 import android.graphics.Typeface;
 import android.graphics.drawable.ColorDrawable;
+import android.graphics.drawable.Drawable;
 import android.graphics.drawable.GradientDrawable;
 import android.os.Build;
 import android.view.View;
+import android.view.ViewGroup;
 import android.view.Window;
 import android.widget.Button;
+import android.widget.CheckBox;
+import android.widget.CheckedTextView;
 import android.widget.CompoundButton;
 import android.widget.EditText;
+import android.widget.ListView;
 import android.widget.TextView;
 
 import androidx.annotation.ColorInt;
 
 public final class SettingsUi {
-    public static final @ColorInt int ACCENT = Color.argb(255, 255, 64, 129);
-    public static final @ColorInt int DARK_BACKGROUND = Color.argb(255, 10, 10, 10);
-    public static final @ColorInt int DARK_SURFACE = Color.argb(255, 18, 18, 18);
-    public static final @ColorInt int DARK_SURFACE_LIFTED = Color.argb(255, 24, 24, 24);
-    public static final @ColorInt int DARK_BORDER = Color.argb(255, 58, 58, 58);
-    public static final @ColorInt int DARK_DIVIDER = Color.argb(255, 45, 45, 45);
-    public static final @ColorInt int DARK_TEXT_PRIMARY = Color.argb(255, 245, 245, 245);
-    public static final @ColorInt int DARK_TEXT_SECONDARY = Color.argb(255, 184, 184, 184);
-    public static final @ColorInt int DARK_TEXT_DISABLED = Color.argb(255, 118, 118, 118);
+    public static final @ColorInt int ACCENT = Color.argb(255, 240, 45, 99);
+    public static final @ColorInt int DARK_BACKGROUND = Color.argb(255, 13, 13, 16);
+    public static final @ColorInt int DARK_SURFACE = Color.argb(255, 21, 21, 26);
+    public static final @ColorInt int DARK_SURFACE_LIFTED = Color.argb(255, 32, 32, 39);
+    public static final @ColorInt int DARK_BORDER = Color.argb(255, 55, 55, 63);
+    public static final @ColorInt int DARK_DIVIDER = Color.argb(255, 29, 29, 34);
+    public static final @ColorInt int DARK_TEXT_PRIMARY = Color.argb(255, 242, 242, 245);
+    public static final @ColorInt int DARK_TEXT_SECONDARY = Color.argb(255, 151, 151, 159);
+    public static final @ColorInt int DARK_TEXT_DISABLED = Color.argb(255, 109, 109, 118);
 
     public static final @ColorInt int LIGHT_BACKGROUND = Color.WHITE;
     public static final @ColorInt int LIGHT_SURFACE = Color.WHITE;
@@ -167,6 +177,76 @@ public final class SettingsUi {
         }
     }
 
+    public static void styleStandardAlertDialog(AlertDialog dialog) {
+        styleFramedDialog(dialog);
+
+        Window window = dialog.getWindow();
+        if (window == null) {
+            return;
+        }
+
+        makeDialogPanelsTransparent(window.getDecorView(), dialog.getContext());
+        styleDialogText(window.getDecorView());
+
+        ListView list = dialog.getListView();
+        if (list != null) {
+            list.setBackgroundColor(Color.TRANSPARENT);
+            list.setDivider(new ColorDrawable(divider()));
+            list.setDividerHeight(Math.max(1, dp(dialog.getContext(), 1)));
+            list.post(() -> {
+                styleDialogText(list);
+                list.postDelayed(() -> styleDialogText(list), 50);
+            });
+        }
+
+        styleActionButton(dialog.getButton(DialogInterface.BUTTON_POSITIVE), true);
+        styleActionButton(dialog.getButton(DialogInterface.BUTTON_NEGATIVE), false);
+        styleActionButton(dialog.getButton(DialogInterface.BUTTON_NEUTRAL), false);
+    }
+
+    private static void makeDialogPanelsTransparent(View root, Context context) {
+        String[] panelNames = {
+                "parentPanel",
+                "topPanel",
+                "contentPanel",
+                "buttonPanel",
+                "customPanel"
+        };
+        for (String panelName : panelNames) {
+            int id = context.getResources().getIdentifier(panelName, "id", "android");
+            if (id == 0) {
+                continue;
+            }
+            View panel = root.findViewById(id);
+            if (panel != null) {
+                panel.setBackgroundColor(Color.TRANSPARENT);
+            }
+        }
+    }
+
+    private static void styleDialogText(View view) {
+        if (view instanceof CheckBox) {
+            CheckBox checkBox = (CheckBox) view;
+            checkBox.setTextColor(textPrimary());
+            styleCheckBox(checkBox);
+        } else if (view instanceof CheckedTextView) {
+            CheckedTextView checkedTextView = (CheckedTextView) view;
+            checkedTextView.setTextColor(textPrimary());
+            checkedTextView.setCheckMarkDrawable(new DialogCheckMarkDrawable(checkedTextView.getContext()));
+        } else if (view instanceof Button) {
+            ((Button) view).setTextColor(ACCENT);
+        } else if (view instanceof TextView) {
+            ((TextView) view).setTextColor(textPrimary());
+        }
+
+        if (view instanceof ViewGroup) {
+            ViewGroup group = (ViewGroup) view;
+            for (int i = 0; i < group.getChildCount(); i++) {
+                styleDialogText(group.getChildAt(i));
+            }
+        }
+    }
+
     public static void styleActionButton(Button button, boolean primary) {
         if (button == null) {
             return;
@@ -198,6 +278,95 @@ public final class SettingsUi {
             };
             int[] colors = new int[]{ACCENT, textDisabled(), textSecondary()};
             button.setButtonTintList(new ColorStateList(states, colors));
+        }
+    }
+
+    private static final class DialogCheckMarkDrawable extends Drawable {
+        private final Paint fill = new Paint(Paint.ANTI_ALIAS_FLAG);
+        private final Paint stroke = new Paint(Paint.ANTI_ALIAS_FLAG);
+        private final int intrinsicSize;
+        private final float boxSize;
+        private final float radius;
+        private boolean checked;
+
+        DialogCheckMarkDrawable(Context context) {
+            intrinsicSize = dp(context, 32);
+            boxSize = dp(context, 18);
+            radius = dp(context, 2);
+            stroke.setStyle(Paint.Style.STROKE);
+            stroke.setStrokeWidth(Math.max(2, dp(context, 2)));
+            stroke.setStrokeCap(Paint.Cap.ROUND);
+            stroke.setStrokeJoin(Paint.Join.ROUND);
+        }
+
+        @Override
+        public void draw(Canvas canvas) {
+            float left = getBounds().exactCenterX() - boxSize / 2f;
+            float top = getBounds().exactCenterY() - boxSize / 2f;
+            RectF box = new RectF(left, top, left + boxSize, top + boxSize);
+
+            if (checked) {
+                fill.setColor(ACCENT);
+                canvas.drawRoundRect(box, radius, radius, fill);
+                stroke.setColor(Color.WHITE);
+                float unit = boxSize / 18f;
+                canvas.drawLine(left + 4f * unit, top + 9f * unit,
+                        left + 8f * unit, top + 13f * unit, stroke);
+                canvas.drawLine(left + 8f * unit, top + 13f * unit,
+                        left + 15f * unit, top + 5f * unit, stroke);
+            } else {
+                stroke.setColor(textSecondary());
+                canvas.drawRoundRect(box, radius, radius, stroke);
+            }
+        }
+
+        @Override
+        protected boolean onStateChange(int[] stateSet) {
+            boolean nextChecked = false;
+            for (int state : stateSet) {
+                if (state == android.R.attr.state_checked) {
+                    nextChecked = true;
+                    break;
+                }
+            }
+            if (checked == nextChecked) {
+                return false;
+            }
+            checked = nextChecked;
+            invalidateSelf();
+            return true;
+        }
+
+        @Override
+        public boolean isStateful() {
+            return true;
+        }
+
+        @Override
+        public int getIntrinsicWidth() {
+            return intrinsicSize;
+        }
+
+        @Override
+        public int getIntrinsicHeight() {
+            return intrinsicSize;
+        }
+
+        @Override
+        public void setAlpha(int alpha) {
+            fill.setAlpha(alpha);
+            stroke.setAlpha(alpha);
+        }
+
+        @Override
+        public void setColorFilter(ColorFilter colorFilter) {
+            fill.setColorFilter(colorFilter);
+            stroke.setColorFilter(colorFilter);
+        }
+
+        @Override
+        public int getOpacity() {
+            return PixelFormat.TRANSLUCENT;
         }
     }
 }
