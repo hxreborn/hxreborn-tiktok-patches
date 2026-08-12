@@ -16,6 +16,9 @@ public class SettingsStatus {
     public static boolean simSpoofEnabled = false;
     public static boolean disableTelemetryEnabled = false;
     public static boolean captchaPopupSuppressionEnabled = false;
+    public static boolean hideSuggestedAccountsEnabled = false;
+    public static boolean expandActivityListEnabled = false;
+    public static boolean hideInboxStoriesEnabled = false;
     public static boolean longPressSpeedLockEnabled = false;
     public static boolean disableLongPressQuickShareEnabled = false;
     public static boolean nonPersonalizedSearchEnabled = false;
@@ -61,6 +64,18 @@ public class SettingsStatus {
 
     public static void enableCaptchaPopupSuppression() {
         captchaPopupSuppressionEnabled = true;
+    }
+
+    public static void enableHideSuggestedAccounts() {
+        hideSuggestedAccountsEnabled = true;
+    }
+
+    public static void enableExpandActivityList() {
+        expandActivityListEnabled = true;
+    }
+
+    public static void enableHideInboxStories() {
+        hideInboxStoriesEnabled = true;
     }
 
     public static void enableLongPressSpeedLock() {
