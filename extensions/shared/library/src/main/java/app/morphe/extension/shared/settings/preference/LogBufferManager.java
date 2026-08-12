@@ -29,13 +29,14 @@ import app.morphe.extension.shared.Utils;
 import app.morphe.extension.shared.diagnostics.DiagnosticEvent;
 import app.morphe.extension.shared.settings.BaseSettings;
 
-/** Bounded structured event storage and latest Java crash storage. */
+/** Bounded structured event storage and latest sanitized crash storage. */
 public final class LogBufferManager {
     private static final int BUFFER_MAX_CHARS = 250_000;
     private static final int BUFFER_MAX_SIZE = 10_000;
     private static final int CLIPBOARD_MAX_CHARS = 60_000;
     private static final int CRASH_MAX_BYTES = 64_000;
     private static final String CRASH_FILE = "morphe_java_crash_report_v1.txt";
+    private static final String NPTH_CRASH_FILE = "morphe_npth_crash_report_v1.txt";
 
     private static final Deque<DiagnosticEvent> logBuffer = new ConcurrentLinkedDeque<>();
     private static final AtomicInteger logBufferCharSize = new AtomicInteger();
@@ -150,6 +151,7 @@ public final class LogBufferManager {
         Set<String> selected = LogExportFilterPreference.parse(BaseSettings.DEBUG_LOG_FILTERS.get());
         boolean includeAll = selected.isEmpty() || selected.contains("all");
         String crash = readCrashReport(Utils.getContext());
+        String npthCrash = readNpthCrashReport(Utils.getContext());
 
         List<DiagnosticEvent> snapshot = new ArrayList<>(logBuffer);
         StringBuilder events = new StringBuilder();
@@ -159,7 +161,7 @@ public final class LogBufferManager {
             events.append(event.format());
         }
 
-        if (crash.isEmpty() && events.length() == 0) return "";
+        if (crash.isEmpty() && npthCrash.isEmpty() && events.length() == 0) return "";
 
         StringBuilder report = new StringBuilder();
         report.append("MORPHE DIAGNOSTIC REPORT\n")
@@ -171,6 +173,9 @@ public final class LogBufferManager {
 
         if (!crash.isEmpty()) {
             report.append("\n[LATEST JAVA CRASH]\n").append(crash);
+        }
+        if (!npthCrash.isEmpty()) {
+            report.append("\n[LATEST TIKTOK CRASH SIGNAL]\n").append(npthCrash);
         }
         if (events.length() > 0) {
             report.append("\n\n[SELECTED EVENTS]\n")
@@ -193,9 +198,17 @@ public final class LogBufferManager {
     }
 
     public static void persistCrashReport(Context context, String report) throws Exception {
+        persistCrashReport(context, CRASH_FILE, report);
+    }
+
+    public static void persistNpthCrashReport(Context context, String report) throws Exception {
+        persistCrashReport(context, NPTH_CRASH_FILE, report);
+    }
+
+    private static void persistCrashReport(Context context, String fileName, String report) throws Exception {
         byte[] bytes = safe(report).getBytes(StandardCharsets.UTF_8);
         int length = Math.min(bytes.length, CRASH_MAX_BYTES);
-        AtomicFile atomicFile = new AtomicFile(new File(context.getFilesDir(), CRASH_FILE));
+        AtomicFile atomicFile = new AtomicFile(new File(context.getFilesDir(), fileName));
 
         synchronized (CRASH_FILE_LOCK) {
             FileOutputStream output = null;
@@ -213,8 +226,16 @@ public final class LogBufferManager {
     }
 
     public static String readCrashReport(Context context) {
+        return readCrashReport(context, CRASH_FILE);
+    }
+
+    public static String readNpthCrashReport(Context context) {
+        return readCrashReport(context, NPTH_CRASH_FILE);
+    }
+
+    private static String readCrashReport(Context context, String fileName) {
         if (context == null) return "";
-        File file = new File(context.getFilesDir(), CRASH_FILE);
+        File file = new File(context.getFilesDir(), fileName);
         if (!file.isFile() || file.length() <= 0 || file.length() > CRASH_MAX_BYTES) return "";
 
         synchronized (CRASH_FILE_LOCK) {
@@ -235,7 +256,7 @@ public final class LogBufferManager {
 
     public static void clearLogBuffer() {
         clearLogBufferData();
-        clearCrashReport(Utils.getContext());
+        clearCrashReports(Utils.getContext());
         Utils.showToastShort("Morphe diagnostic data cleared.");
     }
 
@@ -246,10 +267,11 @@ public final class LogBufferManager {
         }
     }
 
-    private static void clearCrashReport(Context context) {
+    private static void clearCrashReports(Context context) {
         if (context == null) return;
         synchronized (CRASH_FILE_LOCK) {
             new AtomicFile(new File(context.getFilesDir(), CRASH_FILE)).delete();
+            new AtomicFile(new File(context.getFilesDir(), NPTH_CRASH_FILE)).delete();
         }
     }
 

@@ -22,6 +22,7 @@ import android.text.Editable;
 import android.text.TextUtils;
 import android.text.TextWatcher;
 import android.view.Gravity;
+import android.view.ContextThemeWrapper;
 import android.view.KeyEvent;
 import android.view.View;
 import android.view.ViewGroup;
@@ -669,7 +670,13 @@ public final class FeatureGateLabFragment extends Fragment {
     private void showOverflow() {
         View anchor = getView() == null ? null : getView().findViewWithTag("feature_gate_menu");
         if (anchor == null) return;
-        PopupMenu menu = new PopupMenu(getActivity(), anchor);
+        int popupTheme = SettingsUi.isDarkMode()
+                ? android.R.style.Theme_Material
+                : android.R.style.Theme_Material_Light;
+        PopupMenu menu = new PopupMenu(
+                new ContextThemeWrapper(getActivity(), popupTheme),
+                anchor
+        );
         menu.getMenu().add(0, 1, 0, "Refresh values");
         menu.getMenu().add(0, 2, 1, "Export loaded values");
         menu.getMenu().add(0, 3, 2, "Import loaded values");

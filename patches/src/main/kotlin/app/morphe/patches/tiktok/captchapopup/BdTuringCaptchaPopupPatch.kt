@@ -12,7 +12,7 @@ import app.morphe.patches.tiktok.misc.extension.sharedExtensionPatch
 
 private const val FEATURE_CONTROLS_CLASS_DESCRIPTOR = "Lapp/morphe/extension/tiktok/featurecontrols/FeatureControls;"
 
-private object BdTuringCaptchaPopupFingerprint : Fingerprint(
+private object RiskControlServiceExecuteFingerprint : Fingerprint(
     definingClass = "Lcom/bytedance/bdturing/verify/RiskControlService;",
     name = "execute",
     returnType = "Z",
@@ -28,7 +28,7 @@ val bdTuringCaptchaPopupPatch = bytecodePatch(
     compatibleWith(*AppCompatibilities.tiktok4623())
 
     execute {
-        BdTuringCaptchaPopupFingerprint.method.apply {
+        RiskControlServiceExecuteFingerprint.method.apply {
             val requestType = parameterTypes[0]
             val callbackType = parameterTypes[1]
 

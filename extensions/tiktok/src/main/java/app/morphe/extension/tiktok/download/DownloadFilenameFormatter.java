@@ -13,24 +13,33 @@ import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 
 public final class DownloadFilenameFormatter {
     private static final int MAX_BASENAME_LENGTH = 160;
+    private static final long PENDING_NAME_TTL_MS = 10 * 60 * 1000L;
+    private static final Map<String, PendingName> PENDING_NAMES = new LinkedHashMap<String, PendingName>() {
+        @Override
+        protected boolean removeEldestEntry(Map.Entry<String, PendingName> eldest) {
+            return size() > 64;
+        }
+    };
 
     private DownloadFilenameFormatter() {
     }
 
-    public static String renameDownloadedMedia(String originalPath, Object aweme) {
+    public static void registerDownloadedMediaName(String originalPath, Object aweme) {
         if (originalPath == null || originalPath.trim().isEmpty() || aweme == null) {
-            return originalPath;
+            return;
         }
 
         try {
             File original = new File(originalPath);
             if (!original.isFile()) {
-                return originalPath;
+                return;
             }
 
             String extension = extensionOf(original.getName());
@@ -62,20 +71,29 @@ public final class DownloadFilenameFormatter {
                     null
             );
             if (target.equals(original)) {
-                return originalPath;
+                return;
             }
-            if (!original.renameTo(target)) {
-                debug("rename failed original=" + original.getName() + " target=" + target.getName());
-                return originalPath;
+            synchronized (PENDING_NAMES) {
+                PENDING_NAMES.put(original.getName(), new PendingName(target.getName(), System.currentTimeMillis()));
             }
-
-            debug("renamed type=" + (photo ? "photo" : "video") + " file=" + target.getName());
-            return target.getAbsolutePath();
+            debug("prepared type=" + (photo ? "photo" : "video") + " file=" + target.getName());
         } catch (Throwable ex) {
             if (BaseSettings.DEBUG.get()) {
                 Logger.printException(() -> "[Morphe Downloads] filename formatting failed", ex);
             }
-            return originalPath;
+        }
+    }
+
+    public static String resolveDestinationName(String originalName) {
+        if (originalName == null || originalName.trim().isEmpty()) return originalName;
+        synchronized (PENDING_NAMES) {
+            PendingName pending = PENDING_NAMES.get(originalName);
+            if (pending == null) return originalName;
+            if (System.currentTimeMillis() - pending.createdAt > PENDING_NAME_TTL_MS) {
+                PENDING_NAMES.remove(originalName);
+                return originalName;
+            }
+            return pending.name;
         }
     }
 
@@ -250,6 +268,16 @@ public final class DownloadFilenameFormatter {
     private static void debug(String message) {
         if (BaseSettings.DEBUG.get()) {
             Logger.printInfo(() -> "[Morphe Downloads] " + message);
+        }
+    }
+
+    private static final class PendingName {
+        final String name;
+        final long createdAt;
+
+        PendingName(String name, long createdAt) {
+            this.name = name;
+            this.createdAt = createdAt;
         }
     }
 }

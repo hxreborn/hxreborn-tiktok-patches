@@ -16,26 +16,39 @@ import java.util.List;
 @SuppressWarnings("unused")
 public class DownloadsPatch {
     private static volatile String lastLoggedPath;
-    private static volatile String lastLoggedImagePath;
     private static volatile Boolean lastLoggedRemoveWatermark;
     private static volatile String lastLoggedCleanSourceSignature;
 
-    public static String getDownloadPath() {
-        String path = Settings.DOWNLOAD_PATH.get();
+    public static String getVideoDownloadPath() {
+        return getDownloadPath(Settings.DOWNLOAD_VIDEO_PATH.get(), DownloadDestination.Kind.VIDEO);
+    }
+
+    public static String getPhotoDownloadPath() {
+        return getDownloadPath(Settings.DOWNLOAD_PHOTO_PATH.get(), DownloadDestination.Kind.PHOTO);
+    }
+
+    public static String getMediaDownloadPath(boolean video) {
+        return video ? getVideoDownloadPath() : getPhotoDownloadPath();
+    }
+
+    private static String getDownloadPath(String configuredPath, DownloadDestination.Kind kind) {
+        String path = DownloadDestination.resolve(configuredPath, kind);
         if (BaseSettings.DEBUG.get() && (lastLoggedPath == null || !lastLoggedPath.equals(path))) {
             lastLoggedPath = path;
-            Logger.printInfo(() -> "[Morphe Downloads] download_path=\"" + path + "\"");
+            Logger.printInfo(() -> "[Morphe Downloads] " + kind.name().toLowerCase()
+                    + "_path=\"" + path + "\"");
         }
         return path;
     }
 
-    public static String getImageDownloadPath() {
-        String path = Settings.IMAGE_DOWNLOAD_PATH.get();
-        if (BaseSettings.DEBUG.get() && (lastLoggedImagePath == null || !lastLoggedImagePath.equals(path))) {
-            lastLoggedImagePath = path;
-            Logger.printInfo(() -> "[Morphe Downloads] image_download_path=\"" + path + "\"");
-        }
-        return path;
+    public static android.net.Uri getVideoCollectionUri() {
+        String path = getVideoDownloadPath();
+        return DownloadDestination.collectionUri(path, true);
+    }
+
+    public static android.net.Uri getPhotoCollectionUri() {
+        String path = getPhotoDownloadPath();
+        return DownloadDestination.collectionUri(path, false);
     }
 
     public static boolean shouldRemoveWatermark() {

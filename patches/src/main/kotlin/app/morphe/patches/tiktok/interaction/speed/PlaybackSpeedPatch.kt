@@ -13,7 +13,7 @@ import app.morphe.patches.tiktok.misc.extension.sharedExtensionPatch
 import app.morphe.patches.tiktok.shared.OnRenderFirstFrameFingerprint
 import app.morphe.util.getReference
 import app.morphe.util.indexOfFirstInstructionOrThrow
-import com.android.tools.smali.dexlib2.iface.instruction.OneRegisterInstruction
+import com.android.tools.smali.dexlib2.iface.instruction.FiveRegisterInstruction
 import com.android.tools.smali.dexlib2.iface.reference.MethodReference
 
 @Suppress("unused")
@@ -27,13 +27,22 @@ val playbackSpeedPatch = bytecodePatch(
     compatibleWith(*AppCompatibilities.tiktok4623())
 
     execute {
-        GetSpeedFingerprint.method.apply {
-            val injectIndex = indexOfFirstInstructionOrThrow { getReference<MethodReference>()?.returnType == "F" } + 2
-            val register = getInstruction<OneRegisterInstruction>(injectIndex - 1).registerA
-
+        PlaybackSpeedMenuSelectionFingerprint.method.apply {
+            val applySpeedIndex = indexOfFirstInstructionOrThrow {
+                getReference<MethodReference>()?.let { reference ->
+                    reference.returnType == "V" &&
+                        reference.parameterTypes == listOf(
+                            "F",
+                            "Lcom/ss/android/ugc/aweme/feed/model/Aweme;",
+                            "Ljava/lang/String;",
+                            "Ljava/lang/String;",
+                        )
+                } == true
+            }
+            val speedRegister = getInstruction<FiveRegisterInstruction>(applySpeedIndex).registerC
             addInstruction(
-                injectIndex,
-                "invoke-static { v$register }, " +
+                applySpeedIndex,
+                "invoke-static {v$speedRegister}, " +
                     "Lapp/morphe/extension/tiktok/speed/PlaybackSpeedPatch;->rememberPlaybackSpeed(F)V",
             )
         }

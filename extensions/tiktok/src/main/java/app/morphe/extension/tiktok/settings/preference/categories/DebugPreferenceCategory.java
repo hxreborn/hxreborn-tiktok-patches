@@ -37,8 +37,8 @@ public class DebugPreferenceCategory extends ConditionalPreferenceCategory {
 
         addPreference(new TogglePreference(
                 context,
-                "Capture Java crashes locally",
-                "Save the latest Java crash after TikTok starts.",
+                "Capture crash reports locally",
+                "Save the latest available TikTok crash report for diagnostic export.",
                 BaseSettings.CAPTURE_JAVA_CRASHES
         ));
 
@@ -53,7 +53,7 @@ public class DebugPreferenceCategory extends ConditionalPreferenceCategory {
 
         var clearLogs = new TintedClearLogBufferPreference(context);
         clearLogs.setTitle("Clear diagnostic data");
-        clearLogs.setSummary("Clear buffered events and the saved Java crash.");
+        clearLogs.setSummary("Clear buffered events and saved crash reports.");
         addPreference(clearLogs);
     }
 

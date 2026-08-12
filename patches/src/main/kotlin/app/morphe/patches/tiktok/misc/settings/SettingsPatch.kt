@@ -353,17 +353,39 @@ val settingsPatch = bytecodePatch(
 
         composeMutable.addInstruction(moveResultIndex + 1, "const-string v$titleStringRegister, \"Morphe patches\"")
 
-        OpenDebugCellVmDefaultStateFingerprint.methodOrNull?.apply {
-            val returnIndex = indexOfFirstInstructionOrThrow(Opcode.RETURN_OBJECT)
-            val stateRegister = getInstruction<OneRegisterInstruction>(returnIndex).registerA
-            addInstructions(
-                returnIndex,
+        OpenDebugCellVmDefaultStateFingerprint.methodOrNull?.let { defaultState ->
+            val constructorReference = defaultState.implementation!!.instructions.firstNotNullOfOrNull { instruction ->
+                if (instruction.opcode != Opcode.INVOKE_DIRECT) return@firstNotNullOfOrNull null
+                val reference = (instruction as? ReferenceInstruction)?.reference as? MethodReference
+                    ?: return@firstNotNullOfOrNull null
+                reference.takeIf { it.name == "<init>" && it.definingClass == openDebugStateClass }
+            } ?: throw PatchException("Settings: could not resolve the OpenDebug state constructor.")
+
+            var stateConstructor: MutableMethod? = null
+            classDefForEach { classDef ->
+                if (classDef.type != constructorReference.definingClass) return@classDefForEach
+                val constructor = classDef.methods.singleOrNull { method ->
+                    method.name == constructorReference.name &&
+                        method.parameterTypes == constructorReference.parameterTypes
+                } ?: return@classDefForEach
+                stateConstructor = mutableClassDefBy(classDef).findMutableMethodOf(constructor)
+            }
+            val constructor = stateConstructor
+                ?: throw PatchException("Settings: OpenDebug state constructor was not found.")
+            val iconLoadIndex = constructor.indexOfFirstInstructionOrThrow {
+                opcode == Opcode.SGET_OBJECT && getReference<FieldReference>()?.type == "LX/08EY;"
+            }
+            val iconRegister = constructor.getInstruction<OneRegisterInstruction>(iconLoadIndex).registerA
+            val localRegisterCount = constructor.implementation!!.registerCount - constructor.parameters.size - 1
+            val tempRegister = (0 until localRegisterCount).firstOrNull { it != iconRegister }
+                ?: throw PatchException("Settings: no local register is available for the Metra icon.")
+
+            constructor.addInstructions(
+                iconLoadIndex + 1,
                 """
-                    new-instance v0, LX/08EY;
-                    const v1, 0x7f010088
-                    invoke-direct {v0, v1}, LX/08EY;-><init>(I)V
-                    iput-object v0, v$stateRegister, LX/0HQM;->LLILLL:LX/08EY;
-                    iput-object v0, v$stateRegister, LX/0HQM;->LLILZLL:LX/08EY;
+                    new-instance v$iconRegister, LX/08EY;
+                    const v$tempRegister, 0x7f010088
+                    invoke-direct {v$iconRegister, v$tempRegister}, LX/08EY;-><init>(I)V
                 """,
             )
         }

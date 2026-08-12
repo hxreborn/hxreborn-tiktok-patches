@@ -12,6 +12,8 @@ import android.util.Log;
 
 import java.io.PrintWriter;
 import java.io.StringWriter;
+import java.lang.reflect.Method;
+import java.lang.reflect.Proxy;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.Locale;
@@ -29,6 +31,8 @@ public final class JavaCrashCapture {
     private static final AtomicBoolean INSTALLED = new AtomicBoolean();
     private static final Object REPORT_LOCK = new Object();
     private static final int RECENT_EVENTS_MAX_CHARS = 12_000;
+    private static final int NPTH_DETAIL_MAX_CHARS = 48_000;
+    private static Object npthCallback;
 
     private JavaCrashCapture() {
     }
@@ -38,11 +42,11 @@ public final class JavaCrashCapture {
         if (!INSTALLED.compareAndSet(false, true)) return;
 
         Thread.UncaughtExceptionHandler original = Thread.getDefaultUncaughtExceptionHandler();
-        if (original instanceof MorpheCrashHandler) return;
-
-        Thread.setDefaultUncaughtExceptionHandler(
-                new MorpheCrashHandler(context.getApplicationContext(), original)
-        );
+        Context appContext = context.getApplicationContext();
+        if (!(original instanceof MorpheCrashHandler)) {
+            Thread.setDefaultUncaughtExceptionHandler(new MorpheCrashHandler(appContext, original));
+        }
+        registerNpthCallback(appContext);
         LogBufferManager.appendEvent(
                 DiagnosticCategory.SETTINGS,
                 "JavaCrashCapture",
@@ -50,6 +54,111 @@ public final class JavaCrashCapture {
                 "Java crash capture installed after NpthExtent"
         );
         Log.i("morphe:JavaCrashCapture", "Java crash capture installed after NpthExtent");
+    }
+
+    @SuppressWarnings({"unchecked", "rawtypes"})
+    private static void registerNpthCallback(Context context) {
+        try {
+            Class<?> crashTypeClass = Class.forName("com.bytedance.crash.CrashType");
+            Class<?> callbackClass = Class.forName("com.bytedance.crash.ICrashCallback");
+            Class<?> npthClass = Class.forName("com.bytedance.crash.Npth");
+            Object allCrashTypes = Enum.valueOf((Class<? extends Enum>) crashTypeClass, "ALL");
+
+            npthCallback = Proxy.newProxyInstance(
+                    callbackClass.getClassLoader(),
+                    new Class<?>[]{callbackClass},
+                    (proxy, method, args) -> {
+                        if (method.getDeclaringClass() == Object.class) {
+                            if ("toString".equals(method.getName())) return "MorpheNpthCrashCallback";
+                            if ("hashCode".equals(method.getName())) return System.identityHashCode(proxy);
+                            if ("equals".equals(method.getName())) return proxy == args[0];
+                            return null;
+                        }
+                        if ("onCrash".equals(method.getName()) && args != null && args.length == 3) {
+                            persistNpthSignal(context, args[0], args[1], args[2]);
+                        }
+                        return null;
+                    }
+            );
+
+            Method register = npthClass.getDeclaredMethod(
+                    "registerCrashCallback", callbackClass, crashTypeClass
+            );
+            register.invoke(null, npthCallback, allCrashTypes);
+            LogBufferManager.appendEvent(
+                    DiagnosticCategory.SETTINGS,
+                    "NpthCrashCapture",
+                    "INFO",
+                    "TikTok native, ANR, and launch crash capture registered"
+            );
+            Log.i(
+                    "morphe:NpthCrashCapture",
+                    "TikTok native, ANR, and launch crash capture registered"
+            );
+        } catch (Throwable throwable) {
+            npthCallback = null;
+            Log.w("morphe:NpthCrashCapture", "Could not register TikTok crash callback", throwable);
+        }
+    }
+
+    private static void persistNpthSignal(
+            Context context,
+            Object crashType,
+            Object detail,
+            Object threadValue
+    ) {
+        String type = String.valueOf(crashType);
+        // The existing uncaught-exception handler records richer Java crash details.
+        if ("java".equalsIgnoreCase(type)) return;
+
+        try {
+            Thread thread = threadValue instanceof Thread ? (Thread) threadValue : null;
+            String report = buildNpthReport(context, type, String.valueOf(detail), thread);
+            synchronized (REPORT_LOCK) {
+                LogBufferManager.persistNpthCrashReport(context, report);
+            }
+        } catch (Throwable ignored) {
+            // Npth invokes this during failure handling; never interfere with its own pipeline.
+        }
+    }
+
+    private static String buildNpthReport(
+            Context context,
+            String crashType,
+            String detail,
+            Thread thread
+    ) {
+        String sanitizedDetail = sanitizeNpthDetail(detail);
+        StringBuilder report = new StringBuilder();
+        report.append("schema: 1\n")
+                .append("complete: true\n")
+                .append("source: tiktok_npth_callback\n")
+                .append("timestamp_utc: ").append(utcNow()).append('\n')
+                .append("package: ").append(context.getPackageName()).append('\n')
+                .append("tiktok_version: ").append(Utils.getAppVersionName()).append('\n')
+                .append("morphe_version: ").append(Utils.getPatchesReleaseVersion()).append('\n')
+                .append("crash_type: ").append(safe(crashType)).append('\n')
+                .append("process: ").append(processName(context)).append('\n')
+                .append("pid: ").append(Process.myPid()).append('\n')
+                .append("thread: ").append(thread == null ? "unavailable" : thread.getName())
+                .append("\n\n[NPTH SUMMARY]\n")
+                .append(sanitizedDetail);
+
+        String recent = LogBufferManager.snapshotForCrash(RECENT_EVENTS_MAX_CHARS);
+        if (!recent.isEmpty()) {
+            report.append("\n[RECENT MORPHE EVENTS]\n").append(recent);
+        }
+        return report.toString();
+    }
+
+    private static String sanitizeNpthDetail(String detail) {
+        if (detail == null || "null".equals(detail)) return "";
+        boolean truncated = detail.length() > NPTH_DETAIL_MAX_CHARS;
+        String boundedDetail = truncated ? detail.substring(0, NPTH_DETAIL_MAX_CHARS) : detail;
+        String sanitized = boundedDetail
+                .replaceAll("(?i)https?://\\S+", "[url omitted]")
+                .replaceAll("(?i)(access_token|sessionid|sid_tt|passport_csrf_token)=\\S+", "$1=[omitted]");
+        return truncated ? sanitized + "\n[summary truncated]" : sanitized;
     }
 
     private static final class MorpheCrashHandler implements Thread.UncaughtExceptionHandler {

@@ -21,6 +21,7 @@ import android.os.Build;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.Window;
+import android.view.WindowManager;
 import android.widget.Button;
 import android.widget.CheckBox;
 import android.widget.CheckedTextView;
@@ -145,6 +146,7 @@ public final class SettingsUi {
             if (decorView != null) {
                 decorView.setBackgroundColor(Color.TRANSPARENT);
             }
+            constrainDialogWindow(dialog, window);
         }
 
         if (dialog instanceof AlertDialog) {
@@ -163,6 +165,7 @@ public final class SettingsUi {
         Window window = dialog.getWindow();
         if (window != null) {
             window.setBackgroundDrawable(borderedSurface(dialog.getContext(), 6, true));
+            constrainDialogWindow(dialog, window);
         }
 
         if (dialog instanceof AlertDialog) {
@@ -202,6 +205,20 @@ public final class SettingsUi {
         styleActionButton(dialog.getButton(DialogInterface.BUTTON_POSITIVE), true);
         styleActionButton(dialog.getButton(DialogInterface.BUTTON_NEGATIVE), false);
         styleActionButton(dialog.getButton(DialogInterface.BUTTON_NEUTRAL), false);
+    }
+
+    public static int dialogListHeight(Context context, int preferredDp) {
+        int preferred = dp(context, preferredDp);
+        int screenBased = Math.round(context.getResources().getDisplayMetrics().heightPixels * 0.38f);
+        return Math.min(preferred, Math.max(dp(context, 220), screenBased));
+    }
+
+    private static void constrainDialogWindow(Dialog dialog, Window window) {
+        int screenWidth = dialog.getContext().getResources().getDisplayMetrics().widthPixels;
+        int horizontalMargins = dp(dialog.getContext(), 32);
+        int maxWidth = dp(dialog.getContext(), 560);
+        int width = Math.min(maxWidth, Math.max(dp(dialog.getContext(), 280), screenWidth - horizontalMargins));
+        window.setLayout(width, WindowManager.LayoutParams.WRAP_CONTENT);
     }
 
     private static void makeDialogPanelsTransparent(View root, Context context) {

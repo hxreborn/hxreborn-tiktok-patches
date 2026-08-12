@@ -10,16 +10,13 @@ import app.morphe.patcher.extensions.InstructionExtensions.addInstructions
 import app.morphe.patcher.extensions.InstructionExtensions.addInstructionsWithLabels
 import app.morphe.patcher.extensions.InstructionExtensions.getInstruction
 import app.morphe.patcher.extensions.InstructionExtensions.removeInstructions
+import app.morphe.patcher.extensions.InstructionExtensions.replaceInstruction
 import app.morphe.patcher.patch.bytecodePatch
-import app.morphe.patcher.util.proxy.mutableTypes.MutableMethod
 import app.morphe.patches.tiktok.misc.extension.sharedExtensionPatch
 import app.morphe.patches.tiktok.misc.settings.SettingsStatusLoadFingerprint
-import app.morphe.util.addInstructionsAtControlFlowLabel
 import app.morphe.util.findInstructionIndicesReversedOrThrow
 import app.morphe.util.getFreeRegisterProvider
 import app.morphe.util.getReference
-import app.morphe.util.indexOfFirstInstructionOrThrow
-import app.morphe.util.indexOfFirstStringInstructionOrThrow
 import app.morphe.util.returnEarly
 import com.android.tools.smali.dexlib2.Opcode
 import com.android.tools.smali.dexlib2.iface.instruction.FiveRegisterInstruction
@@ -172,7 +169,7 @@ val downloadsPatch = bytecodePatch(
             }
         }
 
-        // Rename completed downloads while both the saved path and Aweme metadata are available.
+        // Prepare the public filename without renaming TikTok's private staging file.
         DownloadSuccessCoroutineFingerprint.method.apply {
             val fieldReferences = implementation!!.instructions.mapNotNull {
                 it.getReference<FieldReference>()
@@ -190,67 +187,180 @@ val downloadsPatch = bytecodePatch(
                 """
                     iget-object v0, p0, $pathField
                     iget-object v1, p0, $awemeField
-                    invoke-static {v0, v1}, $FILENAME_FORMATTER_CLASS_DESCRIPTOR->renameDownloadedMedia(Ljava/lang/String;Ljava/lang/Object;)Ljava/lang/String;
-                    move-result-object v0
-                    iput-object v0, p0, $pathField
+                    invoke-static {v0, v1}, $FILENAME_FORMATTER_CLASS_DESCRIPTOR->registerDownloadedMediaName(Ljava/lang/String;Ljava/lang/Object;)V
                 """,
             )
         }
 
-        // Change the download path: video and image posts build their save URI in separate methods,
-        // so rewrite each to read its own setting
-        DownloadUriFingerprint.method.redirectDownloadPath("getDownloadPath")
-        ImageDownloadUriFingerprint.method.redirectDownloadPath("getImageDownloadPath")
-
-        PhotoModeDownloadUriFingerprint.method.apply {
-            val imageMimeIndex = indexOfFirstStringInstructionOrThrow("image/jpeg")
-            val insertIndex = indexOfFirstInstructionOrThrow(imageMimeIndex) {
-                opcode == Opcode.INVOKE_STATIC &&
-                    getReference<MethodReference>()?.let { ref ->
-                        ref.returnType == "Landroid/net/Uri;" &&
-                            ref.parameterTypes == listOf(
-                                "Landroid/content/Context;",
-                                "Ljava/lang/String;",
-                                "Ljava/lang/String;",
-                                "Ljava/lang/String;",
-                            )
-                    } == true
-            }
-            val pathRegister = getInstruction<FiveRegisterInstruction>(insertIndex).registerF
-
-            addInstructionsAtControlFlowLabel(
-                insertIndex,
+        // Change the download path.
+        VideoDownloadUriFingerprint.method.apply {
+            addInstructions(
+                0,
                 """
-                    invoke-static {}, $EXTENSION_CLASS_DESCRIPTOR->getImageDownloadPath()Ljava/lang/String;
-                    move-result-object v$pathRegister
+                    invoke-static/range {p1 .. p1}, $FILENAME_FORMATTER_CLASS_DESCRIPTOR->resolveDestinationName(Ljava/lang/String;)Ljava/lang/String;
+                    move-result-object p1
                 """,
             )
+            findInstructionIndicesReversedOrThrow {
+                getReference<FieldReference>().let { ref ->
+                    ref?.definingClass == "Landroid/os/Environment;" && ref.name.startsWith("DIRECTORY_")
+                }
+            }.forEach { fieldIndex ->
+                val pathRegister = getInstruction<OneRegisterInstruction>(fieldIndex).registerA
+                val builderRegister = getInstruction<FiveRegisterInstruction>(fieldIndex + 1).registerC
+
+                // Remove 'field load â†’ append â†’ "/Camera/" â†’ append' block.
+                removeInstructions(fieldIndex, 4)
+
+                addInstructions(
+                    fieldIndex,
+                    """
+                        invoke-static {}, $EXTENSION_CLASS_DESCRIPTOR->getVideoDownloadPath()Ljava/lang/String;
+                        move-result-object v$pathRegister
+                        invoke-virtual { v$builderRegister, v$pathRegister }, Ljava/lang/StringBuilder;->append(Ljava/lang/String;)Ljava/lang/StringBuilder;
+                    """,
+                )
+            }
         }
-    }
-}
 
-// Replace every 'Environment.DIRECTORY_* + "/Camera/"' concatenation in a URI builder with a call to
-// the given extension method, reusing whichever registers the original append already used
-private fun MutableMethod.redirectDownloadPath(extensionMethodName: String) {
-    findInstructionIndicesReversedOrThrow {
-        getReference<FieldReference>().let { ref ->
-            ref?.definingClass == "Landroid/os/Environment;" && ref.name.startsWith("DIRECTORY_")
+        PhotoDownloadUriFingerprint.method.apply {
+            addInstructions(
+                0,
+                """
+                    invoke-static/range {p1 .. p1}, $FILENAME_FORMATTER_CLASS_DESCRIPTOR->resolveDestinationName(Ljava/lang/String;)Ljava/lang/String;
+                    move-result-object p1
+                """,
+            )
+            findInstructionIndicesReversedOrThrow {
+                getReference<FieldReference>().let { ref ->
+                    ref?.definingClass == "Landroid/os/Environment;" && ref.name.startsWith("DIRECTORY_")
+                }
+            }.forEach { fieldIndex ->
+                val pathRegister = getInstruction<OneRegisterInstruction>(fieldIndex).registerA
+                val builderRegister = getInstruction<FiveRegisterInstruction>(fieldIndex + 1).registerC
+                removeInstructions(fieldIndex, 4)
+                addInstructions(
+                    fieldIndex,
+                    """
+                        invoke-static {}, $EXTENSION_CLASS_DESCRIPTOR->getPhotoDownloadPath()Ljava/lang/String;
+                        move-result-object v$pathRegister
+                        invoke-virtual { v$builderRegister, v$pathRegister }, Ljava/lang/StringBuilder;->append(Ljava/lang/String;)Ljava/lang/StringBuilder;
+                    """,
+                )
+            }
         }
-    }.forEach { fieldIndex ->
-        val pathRegister = getInstruction<OneRegisterInstruction>(fieldIndex).registerA
-        val builderRegister = getInstruction<FiveRegisterInstruction>(fieldIndex + 1).registerC
 
-        // Remove 'field load → append → "/Camera/" → append' block
-        removeInstructions(fieldIndex, 4)
+        VideoLookupUriFingerprint.method.apply {
+            addInstructions(
+                0,
+                """
+                    invoke-static/range {p1 .. p1}, $FILENAME_FORMATTER_CLASS_DESCRIPTOR->resolveDestinationName(Ljava/lang/String;)Ljava/lang/String;
+                    move-result-object p1
+                """,
+            )
+            findInstructionIndicesReversedOrThrow {
+                getReference<FieldReference>().let { ref ->
+                    ref?.definingClass == "Landroid/os/Environment;" && ref.name.startsWith("DIRECTORY_")
+                }
+            }.forEach { fieldIndex ->
+                val pathRegister = getInstruction<OneRegisterInstruction>(fieldIndex).registerA
+                val builderRegister = getInstruction<FiveRegisterInstruction>(fieldIndex + 1).registerC
+                removeInstructions(fieldIndex, 4)
+                addInstructions(
+                    fieldIndex,
+                    """
+                        invoke-static {}, $EXTENSION_CLASS_DESCRIPTOR->getVideoDownloadPath()Ljava/lang/String;
+                        move-result-object v$pathRegister
+                        invoke-virtual { v$builderRegister, v$pathRegister }, Ljava/lang/StringBuilder;->append(Ljava/lang/String;)Ljava/lang/StringBuilder;
+                    """,
+                )
+            }
+            val collectionIndex = findInstructionIndicesReversedOrThrow {
+                getReference<MethodReference>()?.let { reference ->
+                    reference.definingClass == "Landroid/provider/MediaStore\$Video\$Media;" && reference.name == "getContentUri"
+                } == true
+            }.first()
+            replaceInstruction(collectionIndex, "invoke-static {}, $EXTENSION_CLASS_DESCRIPTOR->getVideoCollectionUri()Landroid/net/Uri;")
+        }
 
-        addInstructions(
-            fieldIndex,
-            """
-                invoke-static {}, $EXTENSION_CLASS_DESCRIPTOR->$extensionMethodName()Ljava/lang/String;
-                move-result-object v$pathRegister
-                invoke-virtual { v$builderRegister, v$pathRegister }, Ljava/lang/StringBuilder;->append(Ljava/lang/String;)Ljava/lang/StringBuilder;
-            """,
-        )
+        PhotoLookupUriFingerprint.method.apply {
+            addInstructions(
+                0,
+                """
+                    invoke-static/range {p1 .. p1}, $FILENAME_FORMATTER_CLASS_DESCRIPTOR->resolveDestinationName(Ljava/lang/String;)Ljava/lang/String;
+                    move-result-object p1
+                """,
+            )
+            findInstructionIndicesReversedOrThrow {
+                getReference<FieldReference>().let { ref ->
+                    ref?.definingClass == "Landroid/os/Environment;" && ref.name.startsWith("DIRECTORY_")
+                }
+            }.forEach { fieldIndex ->
+                val pathRegister = getInstruction<OneRegisterInstruction>(fieldIndex).registerA
+                val builderRegister = getInstruction<FiveRegisterInstruction>(fieldIndex + 1).registerC
+                removeInstructions(fieldIndex, 4)
+                addInstructions(
+                    fieldIndex,
+                    """
+                        invoke-static {}, $EXTENSION_CLASS_DESCRIPTOR->getPhotoDownloadPath()Ljava/lang/String;
+                        move-result-object v$pathRegister
+                        invoke-virtual { v$builderRegister, v$pathRegister }, Ljava/lang/StringBuilder;->append(Ljava/lang/String;)Ljava/lang/StringBuilder;
+                    """,
+                )
+            }
+            val collectionIndex = findInstructionIndicesReversedOrThrow {
+                getReference<MethodReference>()?.let { reference ->
+                    reference.definingClass == "Landroid/provider/MediaStore\$Images\$Media;" && reference.name == "getContentUri"
+                } == true
+            }.first()
+            replaceInstruction(collectionIndex, "invoke-static {}, $EXTENSION_CLASS_DESCRIPTOR->getPhotoCollectionUri()Landroid/net/Uri;")
+        }
+
+        VideoMediaStoreInsertFingerprint.method.apply {
+            val collectionIndex = findInstructionIndicesReversedOrThrow {
+                getReference<MethodReference>()?.let { reference ->
+                    reference.definingClass == "Landroid/provider/MediaStore\$Video\$Media;" && reference.name == "getContentUri"
+                } == true
+            }.first()
+            replaceInstruction(collectionIndex, "invoke-static {}, $EXTENSION_CLASS_DESCRIPTOR->getVideoCollectionUri()Landroid/net/Uri;")
+        }
+
+        PhotoMediaStoreInsertFingerprint.method.apply {
+            val collectionIndex = findInstructionIndicesReversedOrThrow {
+                getReference<MethodReference>()?.let { reference ->
+                    reference.definingClass == "Landroid/provider/MediaStore\$Images\$Media;" && reference.name == "getContentUri"
+                } == true
+            }.first()
+            replaceInstruction(collectionIndex, "invoke-static {}, $EXTENSION_CLASS_DESCRIPTOR->getPhotoCollectionUri()Landroid/net/Uri;")
+        }
+
+        // Image posts use a direct media-copy helper instead of the ordinary photo wrapper.
+        ImagePostMediaCopyFingerprint.method.apply {
+            addInstructions(
+                0,
+                """
+                    invoke-static/range {p2 .. p2}, $FILENAME_FORMATTER_CLASS_DESCRIPTOR->resolveDestinationName(Ljava/lang/String;)Ljava/lang/String;
+                    move-result-object p2
+                """,
+            )
+            findInstructionIndicesReversedOrThrow {
+                getReference<FieldReference>()?.let { reference ->
+                    reference.definingClass == "Landroid/os/Environment;" && reference.name == "DIRECTORY_DCIM"
+                } == true
+            }.forEach { fieldIndex ->
+                val pathRegister = getInstruction<OneRegisterInstruction>(fieldIndex).registerA
+                val builderRegister = getInstruction<FiveRegisterInstruction>(fieldIndex + 1).registerC
+                removeInstructions(fieldIndex, 4)
+                addInstructions(
+                    fieldIndex,
+                    """
+                        invoke-static/range {p3 .. p3}, $EXTENSION_CLASS_DESCRIPTOR->getMediaDownloadPath(Z)Ljava/lang/String;
+                        move-result-object v$pathRegister
+                        invoke-virtual {v$builderRegister, v$pathRegister}, Ljava/lang/StringBuilder;->append(Ljava/lang/String;)Ljava/lang/StringBuilder;
+                    """,
+                )
+            }
+        }
     }
 }
 

@@ -54,6 +54,17 @@ private object LiveHostCaptchaPopupFingerprint : Fingerprint(
     ),
 )
 
+private object BdTuringCaptchaPopupFingerprint : Fingerprint(
+    definingClass = "Lcom/tts/oecverify/BdTuring;",
+    name = "showVerifyDialog",
+    returnType = "V",
+    parameters = listOf(
+        "Landroid/app/Activity;",
+        "LX/13eU;",
+        "Lcom/tts/oecverify/BdTuringCallback;",
+    ),
+)
+
 @Suppress("unused")
 val hideCaptchaPopupsPatch = bytecodePatch(
     name = "Hide CAPTCHA popups",
@@ -127,6 +138,24 @@ val hideCaptchaPopupsPatch = bytecodePatch(
                 :morphe_hide_live_captcha_popup_return
                 return-void
                 :morphe_show_live_captcha_popup
+                nop
+            """,
+        )
+
+        // Network verification can present Turing directly without passing through SecApiImpl.
+        BdTuringCaptchaPopupFingerprint.method.addInstructions(
+            0,
+            """
+                invoke-static {p1, p2}, $FEATURE_CONTROLS_CLASS_DESCRIPTOR->shouldHideCaptchaPopup(Landroid/app/Activity;Ljava/lang/Object;)Z
+                move-result v0
+                if-eqz v0, :morphe_show_turing_captcha_popup
+                if-eqz p3, :morphe_hide_turing_captcha_popup_return
+                const/4 v0, 0x3
+                const/4 v1, 0x0
+                invoke-interface {p3, v0, v1}, Lcom/tts/oecverify/BdTuringCallback;->onFail(ILorg/json/JSONObject;)V
+                :morphe_hide_turing_captcha_popup_return
+                return-void
+                :morphe_show_turing_captcha_popup
                 nop
             """,
         )

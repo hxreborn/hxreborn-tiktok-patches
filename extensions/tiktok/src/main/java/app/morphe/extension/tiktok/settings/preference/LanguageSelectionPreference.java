@@ -154,7 +154,7 @@ public final class LanguageSelectionPreference extends Preference {
         list.setAdapter(adapter);
         LinearLayout.LayoutParams listParams = new LinearLayout.LayoutParams(
                 ViewGroup.LayoutParams.MATCH_PARENT,
-                dp(430)
+                SettingsUi.dialogListHeight(context, 430)
         );
         listParams.setMargins(0, dp(8), 0, dp(10));
         root.addView(list, listParams);

@@ -13,8 +13,12 @@ package app.morphe.patches.tiktok.misc.extension
 import app.morphe.patcher.Fingerprint
 import app.morphe.patches.shared.misc.extension.ExtensionHook
 import app.morphe.patches.shared.misc.extension.sharedExtensionPatch
+import app.morphe.util.getReference
+import app.morphe.util.indexOfFirstInstructionOrThrow
+import com.android.tools.smali.dexlib2.iface.reference.MethodReference
 
 private const val MAIN_ACTIVITY_CLASS = "Lcom/ss/android/ugc/aweme/main/MainActivity;"
+private const val HOST_APPLICATION_CLASS = "Lcom/ss/android/ugc/aweme/app/host/AwemeHostApplication;"
 private const val JATO_INIT_TASK_CLASS = "Lcom/ss/android/ugc/aweme/legoImp/task/JatoInitTask;"
 private const val STORE_REGION_INIT_TASK_CLASS = "Lcom/ss/android/ugc/aweme/legoImp/task/StoreRegionInitTask;"
 
@@ -23,6 +27,13 @@ internal object MainActivityOnCreateFingerprint : Fingerprint(
     name = "onCreate",
     returnType = "V",
     parameters = listOf("Landroid/os/Bundle;"),
+)
+
+internal object HostApplicationAttachBaseContextFingerprint : Fingerprint(
+    definingClass = HOST_APPLICATION_CLASS,
+    name = "attachBaseContext",
+    returnType = "V",
+    parameters = listOf("Landroid/content/Context;"),
 )
 
 internal object JatoInitTaskRunFingerprint : Fingerprint(
@@ -43,6 +54,20 @@ private val initHook = ExtensionHook(
     fingerprint = MainActivityOnCreateFingerprint,
 )
 
+private val hostApplicationInitHook = ExtensionHook(
+    fingerprint = HostApplicationAttachBaseContextFingerprint,
+    insertIndexResolver = { method ->
+        method.indexOfFirstInstructionOrThrow {
+            getReference<MethodReference>()?.let { reference ->
+                reference.definingClass == "Landroid/app/Application;" &&
+                    reference.name == "attachBaseContext" &&
+                    reference.parameterTypes == listOf("Landroid/content/Context;")
+            } == true
+        } + 1
+    },
+    contextRegisterResolver = { "p1" },
+)
+
 private val jatoInitHook = ExtensionHook(
     fingerprint = JatoInitTaskRunFingerprint,
     contextRegisterResolver = { "p1" },
@@ -56,6 +81,7 @@ private val storeRegionInitHook = ExtensionHook(
 val sharedExtensionPatch = sharedExtensionPatch(
     extensionName = "tiktok",
     isYouTubeOrYouTubeMusic = false,
+    hostApplicationInitHook,
     initHook,
     jatoInitHook,
     storeRegionInitHook,

@@ -7,10 +7,17 @@ package app.morphe.patches.tiktok.interaction.speed
 import app.morphe.patcher.Fingerprint
 import com.android.tools.smali.dexlib2.AccessFlags
 
-internal object GetSpeedFingerprint : Fingerprint(
-    custom = { method, classDef ->
-        classDef.endsWith("/BaseListFragmentPanel;") && method.name == "onFeedSpeedSelectedEvent"
-    },
+internal object PlaybackSpeedMenuSelectionFingerprint : Fingerprint(
+    returnType = "V",
+    parameters = listOf(
+        "Landroid/view/View;",
+        "Lcom/ss/android/ugc/aweme/share/base/model/BaseSharePackage;",
+    ),
+    strings = listOf(
+        "enter_from",
+        "panel_source",
+        "click_share_button",
+    ),
 )
 
 internal object SetSpeedFingerprint : Fingerprint(

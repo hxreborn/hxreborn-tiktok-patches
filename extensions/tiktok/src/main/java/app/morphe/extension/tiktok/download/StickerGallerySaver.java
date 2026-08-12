@@ -32,7 +32,6 @@ import android.widget.Toast;
 
 import app.morphe.extension.shared.Logger;
 import app.morphe.extension.shared.settings.BaseSettings;
-import app.morphe.extension.shared.settings.StringSetting;
 import app.morphe.extension.tiktok.settings.Settings;
 
 import com.ss.android.ugc.aweme.base.model.UrlModel;
@@ -55,7 +54,6 @@ import java.util.concurrent.Executors;
 @SuppressWarnings("unused")
 public final class StickerGallerySaver {
     private static final String ACTION_LABEL = "Save media";
-    private static final String STICKER_DIRECTORY = "Stickers";
     private static final int CONNECT_TIMEOUT_MS = 15_000;
     private static final int READ_TIMEOUT_MS = 20_000;
 
@@ -270,10 +268,11 @@ public final class StickerGallerySaver {
         ContentValues values = new ContentValues();
         values.put(MediaStore.Images.Media.DISPLAY_NAME, displayName);
         values.put(MediaStore.Images.Media.MIME_TYPE, "image/png");
-        values.put(MediaStore.Images.Media.RELATIVE_PATH, stickerRelativePath(false));
+        String relativePath = stickerRelativePath(false);
+        values.put(MediaStore.Images.Media.RELATIVE_PATH, relativePath);
         values.put(MediaStore.Images.Media.IS_PENDING, 1);
 
-        Uri uri = resolver.insert(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, values);
+        Uri uri = resolver.insert(DownloadDestination.collectionUri(relativePath, false), values);
         if (uri == null) {
             throw new IllegalStateException("MediaStore insert returned null");
         }
@@ -310,12 +309,11 @@ public final class StickerGallerySaver {
         ContentValues values = new ContentValues();
         values.put(MediaStore.MediaColumns.DISPLAY_NAME, displayName);
         values.put(MediaStore.MediaColumns.MIME_TYPE, format.mimeType);
-        values.put(MediaStore.MediaColumns.RELATIVE_PATH, stickerRelativePath(format.video));
+        String relativePath = stickerRelativePath(format.video);
+        values.put(MediaStore.MediaColumns.RELATIVE_PATH, relativePath);
         values.put(MediaStore.MediaColumns.IS_PENDING, 1);
 
-        Uri collection = format.video
-                ? MediaStore.Video.Media.EXTERNAL_CONTENT_URI
-                : MediaStore.Images.Media.EXTERNAL_CONTENT_URI;
+        Uri collection = DownloadDestination.collectionUri(relativePath, format.video);
         Uri uri = resolver.insert(collection, values);
         if (uri == null) throw new IllegalStateException("MediaStore insert returned null");
 
@@ -395,10 +393,11 @@ public final class StickerGallerySaver {
         ContentValues values = new ContentValues();
         values.put(MediaStore.Video.Media.DISPLAY_NAME, displayName);
         values.put(MediaStore.Video.Media.MIME_TYPE, "video/mp4");
-        values.put(MediaStore.Video.Media.RELATIVE_PATH, stickerRelativePath(true));
+        String relativePath = stickerRelativePath(true);
+        values.put(MediaStore.Video.Media.RELATIVE_PATH, relativePath);
         values.put(MediaStore.Video.Media.IS_PENDING, 1);
 
-        Uri uri = resolver.insert(MediaStore.Video.Media.EXTERNAL_CONTENT_URI, values);
+        Uri uri = resolver.insert(DownloadDestination.collectionUri(relativePath, true), values);
         if (uri == null) throw new IllegalStateException("MediaStore insert returned null");
 
         try {
@@ -449,21 +448,11 @@ public final class StickerGallerySaver {
     }
 
     private static String stickerRelativePath(boolean video) {
-        StringSetting setting = video ? Settings.DOWNLOAD_PATH : Settings.IMAGE_DOWNLOAD_PATH;
-        String path = setting.get();
-        if (path == null || path.trim().isEmpty()) {
-            path = setting.defaultValue;
-        }
-
-        path = path.replace('\\', '/');
-        while (path.startsWith("/")) {
-            path = path.substring(1);
-        }
-        while (path.endsWith("/")) {
-            path = path.substring(0, path.length() - 1);
-        }
-
-        return path + "/" + STICKER_DIRECTORY;
+        String path = DownloadDestination.resolve(
+                Settings.DOWNLOAD_STICKER_PATH.get(),
+                DownloadDestination.Kind.STICKER
+        );
+        return path;
     }
 
     private static String displayPath(String displayName, boolean video) {

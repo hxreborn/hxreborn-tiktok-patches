@@ -55,4 +55,25 @@ public class SpoofSimPatch {
 
         return value;
     }
+
+    public static String getMcc(String value) {
+        return getMccMncPart(value, true);
+    }
+
+    public static String getMnc(String value) {
+        return getMccMncPart(value, false);
+    }
+
+    private static String getMccMncPart(String value, boolean mcc) {
+        if (isContextNotSet(mcc ? "cellMcc" : "cellMnc")) return value;
+        if (!Settings.SIM_SPOOF.get()) return value;
+
+        String combined = Settings.SIMSPOOF_MCCMNC.get();
+        if (combined == null || combined.length() < 5) return value;
+
+        String replacement = mcc ? combined.substring(0, 3) : combined.substring(3);
+        Logger.printDebug(() -> "Spoofing " + (mcc ? "cell MCC" : "cell MNC")
+                + " from: " + value + " to: " + replacement);
+        return replacement;
+    }
 }

@@ -85,7 +85,7 @@ public class SimPresetPreference extends Preference {
         LinearLayout dialogView = new LinearLayout(context);
         dialogView.setOrientation(LinearLayout.VERTICAL);
         dialogView.setBackground(createDialogBackground());
-        int padding = dpToPx(22);
+        int padding = dpToPx(20);
         dialogView.setPadding(padding, padding, padding, padding);
 
         TextView title = new TextView(context);
@@ -99,7 +99,7 @@ public class SimPresetPreference extends Preference {
         ));
 
         TextView helper = new TextView(context);
-        helper.setText("Choose a country preset to fill ISO, MCC/MNC, and operator name.");
+        helper.setText("Choose a preset to fill the SIM details.");
         helper.setTextColor(getSummaryTextColor());
         LinearLayout.LayoutParams helperParams = new LinearLayout.LayoutParams(
                 ViewGroup.LayoutParams.MATCH_PARENT,
@@ -110,7 +110,7 @@ public class SimPresetPreference extends Preference {
 
         EditText search = new EditText(context);
         search.setSingleLine(true);
-        search.setHint("Search country, operator, ISO, or MCC/MNC");
+        search.setHint("Search countries or operators");
         search.setTextColor(getTitleTextColor());
         search.setHintTextColor(getSummaryTextColor());
         SettingsUi.styleEditText(search);
@@ -136,7 +136,7 @@ public class SimPresetPreference extends Preference {
         listContainer.setPadding(containerInset, containerInset, containerInset, containerInset);
         LinearLayout.LayoutParams listParams = new LinearLayout.LayoutParams(
                 ViewGroup.LayoutParams.MATCH_PARENT,
-                dpToPx(420)
+                SettingsUi.dialogListHeight(context, 320)
         );
         listParams.setMargins(0, dpToPx(12), 0, dpToPx(14));
         listContainer.addView(listView, new FrameLayout.LayoutParams(

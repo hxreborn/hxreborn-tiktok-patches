@@ -160,7 +160,7 @@ public class TabSelectionPreference extends Preference {
         ));
         LinearLayout.LayoutParams scrollParams = new LinearLayout.LayoutParams(
                 ViewGroup.LayoutParams.MATCH_PARENT,
-                dpToPx(380)
+                SettingsUi.dialogListHeight(context, 380)
         );
         scrollParams.setMargins(0, 0, 0, dpToPx(16));
         dialogView.addView(scrollView, scrollParams);

@@ -46,6 +46,30 @@ public final class FeatureControls {
         return shouldHideCaptchaPopup(activity, serviceType);
     }
 
+    public static boolean shouldHideCaptchaPopup(Activity activity, Object verifyRequest) {
+        if (!Settings.HIDE_CAPTCHA_POPUPS.get() || !isLoggedIn()) return false;
+        if (activity != null && activity.getClass().getName().startsWith(ACCOUNT_ACTIVITY_PREFIX)) {
+            return false;
+        }
+
+        String scene = readVerificationScene(verifyRequest);
+        if (scene == null) return false;
+
+        Intent intent = activity == null ? null : activity.getIntent();
+        String intentRoute = intent == null ? null : intent.getDataString();
+        return !isAccountRoute(intentRoute) && !isAccountRoute(scene);
+    }
+
+    private static String readVerificationScene(Object verifyRequest) {
+        if (verifyRequest == null) return null;
+        try {
+            Object value = verifyRequest.getClass().getMethod("LJIIJ").invoke(verifyRequest);
+            return value instanceof String ? (String) value : null;
+        } catch (Throwable ignored) {
+            return null;
+        }
+    }
+
     private static boolean isLoggedIn() {
         try {
             Class<?> serviceManagerClass = Class.forName(SERVICE_MANAGER_CLASS);
@@ -64,7 +88,9 @@ public final class FeatureControls {
     private static boolean isAccountRoute(String value) {
         if (value == null) return false;
         String normalized = value.toLowerCase(java.util.Locale.ROOT);
-        return normalized.contains("/passport/")
+        return normalized.equals("login")
+                || normalized.equals("passport")
+                || normalized.contains("/passport/")
                 || normalized.contains("/login/")
                 || normalized.contains("\"passport\"")
                 || normalized.contains("\"login\"");

@@ -78,8 +78,17 @@ public class Settings extends BaseSettings {
     public static final StringSetting COMMENT_TRANSLATION_EXCLUDED_LANGUAGES = new StringSetting("comment_translation_excluded_languages", "");
     public static final BooleanSetting HIDE_COMMENT_QUICK_REACTIONS =
             new BooleanSetting("hide_comment_quick_reactions", FALSE);
-    public static final StringSetting DOWNLOAD_PATH = new StringSetting("down_path", "Movies/TikTok");
-    public static final StringSetting IMAGE_DOWNLOAD_PATH = new StringSetting("image_down_path", "Pictures/TikTok");
+    public static final StringSetting DOWNLOAD_PATH = new StringSetting("down_path", "DCIM/TikTok");
+    private static final StringSetting IMAGE_DOWNLOAD_PATH = new StringSetting("image_down_path", "Pictures/TikTok", false, false);
+    public static final StringSetting DOWNLOAD_VIDEO_PATH = new StringSetting("download_video_path", "Movies/TikTok");
+    public static final StringSetting DOWNLOAD_PHOTO_PATH = new StringSetting("download_photo_path", "Pictures/TikTok");
+    public static final StringSetting DOWNLOAD_STICKER_PATH = new StringSetting("download_sticker_path", "DCIM/TikTok/Stickers");
+    private static final BooleanSetting DOWNLOAD_PATHS_MIGRATED = new BooleanSetting(
+            "download_paths_migrated",
+            FALSE,
+            false,
+            false
+    );
     public static final StringSetting DOWNLOAD_VIDEO_FILENAME_TEMPLATE = new StringSetting(
             "download_video_filename_template",
             "{creator}_{date}_{video_id}"
@@ -115,7 +124,7 @@ public class Settings extends BaseSettings {
     public static final BooleanSetting ALWAYS_SHOW_PUBLISH_DATE = new BooleanSetting("always_show_publish_date", TRUE, true);
     public static final BooleanSetting CLEAR_DISPLAY = new BooleanSetting("clear_display", FALSE);
     public static final BooleanSetting COPY_COMMENTS_WITHOUT_USERNAME = new BooleanSetting("copy_comments_without_username", TRUE);
-    public static final FloatSetting REMEMBERED_SPEED = new FloatSetting("REMEMBERED_SPEED", 1.0f);
+    public static final FloatSetting REMEMBERED_SPEED = new FloatSetting("remembered_speed_v2", 1.0f);
     public static final BooleanSetting ENABLE_LONG_PRESS_SPEED_LOCK = new BooleanSetting("enable_long_press_speed_lock", FALSE, true);
     public static final BooleanSetting DISABLE_ANALYTICS = new BooleanSetting("disable_analytics", FALSE, true);
     public static final BooleanSetting DISABLE_LONG_PRESS_QUICK_SHARE =
@@ -128,4 +137,19 @@ public class Settings extends BaseSettings {
     public static final StringSetting SIM_SPOOF_ISO = new StringSetting("simspoof_iso", "us");
     public static final StringSetting SIMSPOOF_MCCMNC = new StringSetting("simspoof_mccmnc", "310260");
     public static final StringSetting SIMSPOOF_OP_NAME = new StringSetting("simspoof_op_name", "T-Mobile");
+
+    static {
+        if (!DOWNLOAD_PATHS_MIGRATED.get()) {
+            if (!DOWNLOAD_PATH.isSetToDefault()) {
+                String legacyPath = DOWNLOAD_PATH.get();
+                DOWNLOAD_VIDEO_PATH.save(legacyPath);
+                DOWNLOAD_PHOTO_PATH.save(legacyPath);
+                DOWNLOAD_STICKER_PATH.save(legacyPath + "/Stickers");
+            }
+            if (!IMAGE_DOWNLOAD_PATH.isSetToDefault()) {
+                DOWNLOAD_PHOTO_PATH.save(IMAGE_DOWNLOAD_PATH.get());
+            }
+            DOWNLOAD_PATHS_MIGRATED.save(TRUE);
+        }
+    }
 }

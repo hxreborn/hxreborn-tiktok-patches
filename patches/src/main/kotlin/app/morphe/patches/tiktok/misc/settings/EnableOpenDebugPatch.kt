@@ -13,7 +13,7 @@ private const val CRASH_CAPTURE_INITIALIZER =
 @Suppress("unused")
 val enableOpenDebugPatch = bytecodePatch(
     name = "Diagnostic tools",
-    description = "Adds optional Morphe diagnostic logging, filtered reports, and local Java crash capture.",
+    description = "Adds optional Morphe diagnostic logging, filtered reports, and local TikTok crash capture.",
     default = false,
 ) {
     dependsOn(sharedExtensionPatch, settingsPatch)
