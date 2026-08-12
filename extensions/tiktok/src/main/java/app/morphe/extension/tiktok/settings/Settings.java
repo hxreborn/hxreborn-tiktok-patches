@@ -144,7 +144,6 @@ public class Settings extends BaseSettings {
                 String legacyPath = DOWNLOAD_PATH.get();
                 DOWNLOAD_VIDEO_PATH.save(legacyPath);
                 DOWNLOAD_PHOTO_PATH.save(legacyPath);
-                DOWNLOAD_STICKER_PATH.save(legacyPath + "/Stickers");
             }
             if (!IMAGE_DOWNLOAD_PATH.isSetToDefault()) {
                 DOWNLOAD_PHOTO_PATH.save(IMAGE_DOWNLOAD_PATH.get());
