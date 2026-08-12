@@ -36,7 +36,7 @@ Everything from [icysymmetra's upstream](https://github.com/icysymmetra/tiktok-p
 - Hide suggested accounts on the Activity, New followers, and Inbox pages
 - Hide the Inbox stories row
 - Expand the Activity and New followers lists instead of hiding them behind View all
-- Separate image and video download folders
+- Hide the BdTuring risk-control CAPTCHA dialog
 
 \*TikTok decides which accounts count as institutions. Major news outlets usually carry that tag and
 stay in your feed, but some do not and get hidden like any other verified account.
