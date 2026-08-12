@@ -21,6 +21,9 @@ public final class InterfacePreferenceCategory extends ConditionalPreferenceCate
     @Override
     public boolean getSettingsStatus() {
         return SettingsStatus.captchaPopupSuppressionEnabled
+                || SettingsStatus.hideSuggestedAccountsEnabled
+                || SettingsStatus.expandActivityListEnabled
+                || SettingsStatus.hideInboxStoriesEnabled
                 || SettingsStatus.alwaysShowPublishDateEnabled;
     }
 
@@ -32,6 +35,30 @@ public final class InterfacePreferenceCategory extends ConditionalPreferenceCate
                     "Hide CAPTCHA popups",
                     "Hide browsing and LIVE puzzle dialogs. Login and account verification remain available.",
                     Settings.HIDE_CAPTCHA_POPUPS
+            ));
+        }
+        if (SettingsStatus.hideSuggestedAccountsEnabled) {
+            addPreference(new TogglePreference(
+                    context,
+                    "Hide suggested accounts",
+                    "Hide the Suggested accounts list on the Activity, New followers and Inbox pages. Requires restart.",
+                    Settings.HIDE_SUGGESTED_ACCOUNTS
+            ));
+        }
+        if (SettingsStatus.expandActivityListEnabled) {
+            addPreference(new TogglePreference(
+                    context,
+                    "Expand activity list",
+                    "Show the full Activity and New followers lists instead of collapsing them behind View all. Requires restart.",
+                    Settings.EXPAND_ACTIVITY_LIST
+            ));
+        }
+        if (SettingsStatus.hideInboxStoriesEnabled) {
+            addPreference(new TogglePreference(
+                    context,
+                    "Hide inbox stories",
+                    "Hide the Stories row at the top of the Inbox page. Requires restart.",
+                    Settings.HIDE_INBOX_STORIES
             ));
         }
         if (SettingsStatus.alwaysShowPublishDateEnabled) {

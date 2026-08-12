@@ -25,6 +25,12 @@ misc.xml
 deploymentTargetDropDown.xml
 render.experimental.xml
 
+# Eclipse
+.project
+.classpath
+.settings/
+bin/
+
 # Keystore files
 *.jks
 *.keystore

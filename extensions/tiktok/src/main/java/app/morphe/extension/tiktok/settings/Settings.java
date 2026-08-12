@@ -30,6 +30,9 @@ public class Settings extends BaseSettings {
     public static final BooleanSetting HIDE_FRIEND_RECOMMENDATIONS = new BooleanSetting("hide_friend_recommendations", FALSE, true);
     public static final BooleanSetting HIDE_VERIFIED_ACCOUNTS = new BooleanSetting("hide_verified_accounts", FALSE, true);
     public static final BooleanSetting HIDE_CAPTCHA_POPUPS = new BooleanSetting("hide_captcha_popups", TRUE, true);
+    public static final BooleanSetting HIDE_SUGGESTED_ACCOUNTS = new BooleanSetting("hide_suggested_accounts", TRUE, true);
+    public static final BooleanSetting EXPAND_ACTIVITY_LIST = new BooleanSetting("expand_activity_list", TRUE, true);
+    public static final BooleanSetting HIDE_INBOX_STORIES = new BooleanSetting("hide_inbox_stories", TRUE, true);
     public static final StringSetting MIN_MAX_VIEWS = new StringSetting("min_max_views", "0-" + Long.MAX_VALUE, true);
     public static final StringSetting MIN_MAX_LIKES = new StringSetting("min_max_likes", "0-" + Long.MAX_VALUE, true);
     public static final BooleanSetting FEED_NAVIGATION = new BooleanSetting("feed_navigation", FALSE, true);

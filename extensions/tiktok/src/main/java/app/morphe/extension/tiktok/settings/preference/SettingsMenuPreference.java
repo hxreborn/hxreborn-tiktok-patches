@@ -39,6 +39,7 @@ public final class SettingsMenuPreference extends Preference {
     }
 
     private static final int ACCESSORY_TAG = 0x4D4D454E;
+    private static final int SUMMARY_MAX_LINES = 3;
     private final int activeCount;
 
     public SettingsMenuPreference(
@@ -97,7 +98,7 @@ public final class SettingsMenuPreference extends Preference {
 
         TextView summary = SettingsUi.text(context, "", 12.8f, SettingsUi.textSecondary(), 0);
         summary.setId(android.R.id.summary);
-        summary.setSingleLine(true);
+        summary.setMaxLines(SUMMARY_MAX_LINES);
         summary.setEllipsize(TextUtils.TruncateAt.END);
         labels.addView(summary, new LinearLayout.LayoutParams(-1, -2));
 
@@ -135,7 +136,8 @@ public final class SettingsMenuPreference extends Preference {
         TextView summary = view.findViewById(android.R.id.summary);
         if (summary != null) {
             summary.setTextSize(12.8f);
-            summary.setSingleLine(true);
+            summary.setSingleLine(false);
+            summary.setMaxLines(SUMMARY_MAX_LINES);
             summary.setEllipsize(TextUtils.TruncateAt.END);
         }
     }

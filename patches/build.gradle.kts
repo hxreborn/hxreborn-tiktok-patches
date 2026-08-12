@@ -4,16 +4,18 @@ patches {
     about {
         name = "hxreborn TikTok Patches"
         description = "TikTok patches for Morphe, forked from icysymmetra."
-        source = "https://github.com/hxreborn/tiktok-patches-for-morphe"
+        source = "https://github.com/hxreborn/hxreborn-tiktok-patches"
         author = "hxreborn"
         contact = "hxreborn@duck.com"
-        website = "https://github.com/hxreborn/tiktok-patches-for-morphe"
+        website = "https://github.com/hxreborn/hxreborn-tiktok-patches"
         license = "GNU General Public License v3.0, with additional GPL section 7 requirements"
     }
 }
 
 dependencies {
     compileOnly(libs.morphe.patcher)
+
+    implementation(libs.morphe.patches.library)
 
     // Used by JsonGenerator.
     implementation(libs.gson)

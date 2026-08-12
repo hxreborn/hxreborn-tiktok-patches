@@ -40,6 +40,12 @@ public final class FeatureControls {
         return !isAccountRoute(intentRoute) && !isAccountRoute(riskInfo);
     }
 
+    public static boolean shouldHideTuringCaptchaPopup(Activity activity, String serviceType) {
+        // Never suppress account security verification
+        if ("sms".equals(serviceType) || "twice_verify".equals(serviceType)) return false;
+        return shouldHideCaptchaPopup(activity, serviceType);
+    }
+
     private static boolean isLoggedIn() {
         try {
             Class<?> serviceManagerClass = Class.forName(SERVICE_MANAGER_CLASS);

@@ -52,7 +52,7 @@ public class TikTokPreferenceFragment extends AbstractPreferenceFragment {
     private enum Section {
         FEED_FILTER("Feed filter", "Ads, Shop, livestreams, and view limits."),
         FEED_NAVIGATION("Feed navigation", "Feed tabs, bottom tabs, and Tako AI."),
-        INTERFACE("Interface", "Popups and publish dates."),
+        INTERFACE("Interface", "Popups, inbox lists, and publish dates."),
         COMMENTS("Comments and translation", "Auto translate, quick reactions, and copy options."),
         DOWNLOADS("Downloads", "Paths, filenames, watermark, and offline videos."),
         REGION("Bypass regional restriction", "SIM info, country, and operator."),
@@ -268,9 +268,15 @@ public class TikTokPreferenceFragment extends AbstractPreferenceFragment {
             ));
         }
         if (SettingsStatus.captchaPopupSuppressionEnabled
+                || SettingsStatus.hideSuggestedAccountsEnabled
+                || SettingsStatus.expandActivityListEnabled
+                || SettingsStatus.hideInboxStoriesEnabled
                 || SettingsStatus.alwaysShowPublishDateEnabled) {
             addMenu(screen, Section.INTERFACE, SettingsMenuPreference.Icon.LAYOUT, countEnabled(
                     SettingsStatus.captchaPopupSuppressionEnabled && Settings.HIDE_CAPTCHA_POPUPS.get(),
+                    SettingsStatus.hideSuggestedAccountsEnabled && Settings.HIDE_SUGGESTED_ACCOUNTS.get(),
+                    SettingsStatus.expandActivityListEnabled && Settings.EXPAND_ACTIVITY_LIST.get(),
+                    SettingsStatus.hideInboxStoriesEnabled && Settings.HIDE_INBOX_STORIES.get(),
                     SettingsStatus.alwaysShowPublishDateEnabled && Settings.ALWAYS_SHOW_PUBLISH_DATE.get()
             ));
         }
