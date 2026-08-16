@@ -2,23 +2,22 @@
  * SPDX-FileCopyrightText: 2026 hxreborn
  * SPDX-License-Identifier: GPL-3.0-only
  */
-package com.ss.android.ugc.aweme.feed.model;
+package com.ss.android.ugc.aweme.feed.model.cardinsert;
 
-// Dummy class
-public class AwemeRelationRecommendModel {
-    public String getRecType() {
+public class LynxTemplate {
+    public String getBizChannel() {
         throw new UnsupportedOperationException("Stub");
     }
 
-    public long getRecommendType() {
+    public String getMainEntranceChannel() {
         throw new UnsupportedOperationException("Stub");
     }
 
-    public String getFriendTypeStr() {
+    public String getMainEntranceLynxUrl() {
         throw new UnsupportedOperationException("Stub");
     }
 
-    public String getRelationTextKey() {
+    public String getBizDynamicUrl() {
         throw new UnsupportedOperationException("Stub");
     }
 }

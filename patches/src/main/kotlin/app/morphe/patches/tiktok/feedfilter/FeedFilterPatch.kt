@@ -18,11 +18,12 @@ private const val EXTENSION_CLASS_DESCRIPTOR = "Lapp/morphe/extension/tiktok/fee
 private const val TAKO_AI_FILTER_CLASS_DESCRIPTOR = "Lapp/morphe/extension/tiktok/feedfilter/TakoAiFilter;"
 private const val PLAYLIST_BAR_FILTER_CLASS_DESCRIPTOR = "Lapp/morphe/extension/tiktok/feedfilter/PlaylistBarFilter;"
 private const val EVENT_BADGE_FILTER_CLASS_DESCRIPTOR = "Lapp/morphe/extension/tiktok/feedfilter/EventBadgeFilter;"
+private const val FRIEND_RECOMMENDATION_FILTER_CLASS_DESCRIPTOR = "Lapp/morphe/extension/tiktok/feedfilter/FriendRecommendationFilter;"
 
 @Suppress("unused")
 val feedFilterPatch = bytecodePatch(
     name = "Feed filter",
-    description = "Hides feed ads, TikTok Shop items, livestreams, stories, photo posts, the playlist bar, the floating event badge, AI-generated posts, paid partnership and promotional content, friend recommendations, posts from verified accounts, and videos outside configured view or like ranges.",
+    description = "Hides feed ads, TikTok Shop items, livestreams, stories, photo posts, the playlist bar, the floating event badge, AI-generated posts, paid partnership and promotional content, the account and bulletin-board suggestion cards, posts from verified accounts, and videos outside configured view or like ranges.",
     default = true,
 ) {
     dependsOn(
@@ -131,6 +132,20 @@ val feedFilterPatch = bytecodePatch(
                 const/4 v0, 0x0
                 return v0
                 :morphe_show_playlist_bar
+                nop
+            """,
+        )
+
+        // Null is the app's own "no recommended users to insert" result
+        RecUserCardInsertFingerprint.methodOrNull?.addInstructions(
+            0,
+            """
+                invoke-static {}, $FRIEND_RECOMMENDATION_FILTER_CLASS_DESCRIPTOR->shouldHide()Z
+                move-result v0
+                if-eqz v0, :morphe_insert_rec_user_card
+                const/4 v0, 0x0
+                return-object v0
+                :morphe_insert_rec_user_card
                 nop
             """,
         )

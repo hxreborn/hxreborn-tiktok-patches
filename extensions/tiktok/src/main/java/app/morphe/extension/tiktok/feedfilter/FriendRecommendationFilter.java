@@ -4,17 +4,16 @@
  */
 package app.morphe.extension.tiktok.feedfilter;
 
+import app.morphe.extension.shared.Logger;
 import app.morphe.extension.tiktok.settings.Settings;
-import com.ss.android.ugc.aweme.feed.model.Aweme;
 
-public class FriendRecommendationFilter implements IFilter {
-    @Override
-    public boolean getEnabled() {
-        return Settings.HIDE_FRIEND_RECOMMENDATIONS.get();
-    }
+@SuppressWarnings("unused")
+public final class FriendRecommendationFilter {
+    private FriendRecommendationFilter() {}
 
-    @Override
-    public boolean getFiltered(Aweme item) {
-        return item.getRelationRecommendInfo() != null;
+    public static boolean shouldHide() {
+        boolean hide = Settings.HIDE_FRIEND_RECOMMENDATIONS.get();
+        Logger.printDebug(() -> "[Morphe TikTok FeedFilter] rec user card insert: hide=" + hide);
+        return hide;
     }
 }

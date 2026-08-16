@@ -7,6 +7,7 @@ package com.ss.android.ugc.aweme.feed.model;
 
 import com.ss.android.ugc.aweme.commerce.AwemeCommerceStruct;
 import com.ss.android.ugc.aweme.feed.AIGCInfo;
+import com.ss.android.ugc.aweme.feed.model.cardinsert.CardInsertInfo;
 import com.ss.android.ugc.aweme.profile.model.User;
 
 import java.util.List;
@@ -73,11 +74,11 @@ public class Aweme {
         throw new UnsupportedOperationException("Stub");
     }
 
-    public AwemeRelationRecommendModel getRelationRecommendInfo() {
+    public User getAuthor() {
         throw new UnsupportedOperationException("Stub");
     }
 
-    public User getAuthor() {
+    public CardInsertInfo getCardInsertInfo() {
         throw new UnsupportedOperationException("Stub");
     }
 }

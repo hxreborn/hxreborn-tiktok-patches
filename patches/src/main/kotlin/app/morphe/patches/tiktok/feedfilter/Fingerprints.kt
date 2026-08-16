@@ -80,3 +80,9 @@ internal object TakoAiFeedButtonBindFingerprint : Fingerprint(
     returnType = "V",
     parameters = listOf("Landroid/view/View;"),
 )
+
+internal object RecUserCardInsertFingerprint : Fingerprint(
+    returnType = "Lkotlin/Pair;",
+    parameters = listOf("I", "Ljava/util/List;", "Ljava/lang/String;", "Lkotlin/jvm/functions/Function0;"),
+    strings = listOf("friend_recommend_card"),
+)
