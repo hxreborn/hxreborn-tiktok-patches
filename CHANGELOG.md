@@ -1,3 +1,25 @@
+# [0.11.0](https://github.com/hxreborn/hxreborn-tiktok-patches/compare/v0.10.0...v0.11.0) (2026-08-16)
+
+
+### Bug Fixes
+
+* **captcha:** also suppress BdTuring risk-control captcha popups ([d5f6a01](https://github.com/hxreborn/hxreborn-tiktok-patches/commit/d5f6a01df90710f6c01f8d76feb972a4f93a47ce))
+* **clear-display:** preserve state across feed transitions ([a433fe0](https://github.com/hxreborn/hxreborn-tiktok-patches/commit/a433fe03b98ecee8814a83f94aaef760222e538f))
+* **downloads:** keep stickers out of the video folder when migrating a custom path ([3f21cce](https://github.com/hxreborn/hxreborn-tiktok-patches/commit/3f21cce9c8e474c9e7935a4c7bc70756ade4ba87))
+* **playback:** persist explicit speed selections ([0f785fc](https://github.com/hxreborn/hxreborn-tiktok-patches/commit/0f785fc8685c30793bf7ffea028d1223613f52c9))
+* **settings:** make custom dialogs fit device screens ([7592339](https://github.com/hxreborn/hxreborn-tiktok-patches/commit/75923397520ff45fde1b5f618c1de2010de422e0))
+* **settings:** wrap menu summaries to three lines ([d383ea8](https://github.com/hxreborn/hxreborn-tiktok-patches/commit/d383ea8c6ed69c56a77ede21cc2e2eb267ebc950))
+* **tiktok:** cover direct Turing CAPTCHA dialogs ([27b2639](https://github.com/hxreborn/hxreborn-tiktok-patches/commit/27b263920ffadaf2e27777c703c225f2e4f3ce40))
+* **tiktok:** expand startup and runtime hook coverage ([bac0ba8](https://github.com/hxreborn/hxreborn-tiktok-patches/commit/bac0ba8d2697a60d2c66d723fba75e211ca48a49))
+* **tiktok:** prevent settings crash and expand crash reports ([08186e7](https://github.com/hxreborn/hxreborn-tiktok-patches/commit/08186e77ba89d92debfcd319fe8fcc745e2a363b))
+
+
+### Features
+
+* **downloads:** support separate media destinations ([f4580c9](https://github.com/hxreborn/hxreborn-tiktok-patches/commit/f4580c94b3b2c0d2d79c2bb0bfa6a544abeaedb3))
+* **feedfilter:** hide account and bulletin-board suggestion cards in the feed ([3e11a12](https://github.com/hxreborn/hxreborn-tiktok-patches/commit/3e11a12cc8e01351b9733ae1aed86789238009d2))
+* **inbox:** hide suggested accounts and stories and expand activity lists ([bc53dbb](https://github.com/hxreborn/hxreborn-tiktok-patches/commit/bc53dbb7b09ce67b0d1c76f16dd2709d28c15692))
+
 # [0.10.0](https://github.com/hxreborn/tiktok-patches-for-morphe/compare/v0.9.1...v0.10.0) (2026-08-10)
 
 
