@@ -21,9 +21,6 @@ public class PaidPartnershipFilter implements IFilter {
             return false;
         }
 
-        final String disclosure = commerceInfo.getBCHashtag();
-        return commerceInfo.isBrandedContent()
-            || commerceInfo.isBrandOrganicContent()
-            || (disclosure != null && !disclosure.isEmpty());
+        return commerceInfo.isBrandedContent() || commerceInfo.isBrandOrganicContent();
     }
 }
