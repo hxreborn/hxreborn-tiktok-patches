@@ -41,7 +41,7 @@ Everything from [icysymmetra's upstream](https://github.com/icysymmetra/tiktok-p
 \*TikTok decides which accounts count as institutions. Major news outlets usually carry that tag and
 stay in your feed, but some do not and get hidden like any other verified account.
 
-Last synced with upstream at [`e06bb70`](https://github.com/icysymmetra/tiktok-patches-for-morphe/commit/e06bb70). Release numbers are this fork's own and do not track upstream's.
+Last synced with upstream at [`f580ae8`](https://github.com/icysymmetra/tiktok-patches-for-morphe/commit/f580ae8). Release numbers are this fork's own and do not track upstream's.
 
 <br>
 

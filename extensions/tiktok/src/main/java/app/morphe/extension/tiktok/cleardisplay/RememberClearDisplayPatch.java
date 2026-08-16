@@ -11,6 +11,8 @@ import app.morphe.extension.tiktok.settings.Settings;
 
 @SuppressWarnings("unused")
 public class RememberClearDisplayPatch {
+    private static final int EVENT_SWITCH_PAGE = 3;
+    private static final int EVENT_NOTIFY_EXIT = 9;
     private static volatile Boolean lastLoggedState;
 
     public static boolean getClearDisplayState() {
@@ -22,12 +24,24 @@ public class RememberClearDisplayPatch {
         return state;
     }
 
-    public static void rememberClearDisplayState(boolean newState) {
-        if (BaseSettings.DEBUG.get()) {
-            boolean oldState = Settings.CLEAR_DISPLAY.get();
-            Logger.printInfo(() -> "[Morphe ClearDisplay] remember state " + oldState + " -> " + newState);
+    public static void rememberClearDisplayEvent(Object event) {
+        if (event == null) return;
+        try {
+            Class<?> type = event.getClass();
+            boolean isClean = type.getDeclaredField("LIZ").getBoolean(event);
+            int eventType = type.getDeclaredField("LIZIZ").getInt(event);
+            if (eventType == EVENT_SWITCH_PAGE || eventType == EVENT_NOTIFY_EXIT) {
+                return;
+            }
+            if (BaseSettings.DEBUG.get()) {
+                boolean oldState = Settings.CLEAR_DISPLAY.get();
+                Logger.printInfo(() -> "[Morphe ClearDisplay] remember type=" + eventType +
+                        " state " + oldState + " -> " + isClean);
+            }
+            Settings.CLEAR_DISPLAY.save(isClean);
+        } catch (ReflectiveOperationException ex) {
+            Logger.printException(() -> "[Morphe ClearDisplay] Could not read clear-display event", ex);
         }
-        Settings.CLEAR_DISPLAY.save(newState);
     }
 }
 
