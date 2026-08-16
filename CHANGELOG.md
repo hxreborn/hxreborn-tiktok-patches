@@ -1,3 +1,10 @@
+## [0.11.1](https://github.com/hxreborn/hxreborn-tiktok-patches/compare/v0.11.0...v0.11.1) (2026-08-16)
+
+
+### Bug Fixes
+
+* **feedfilter:** stop hiding posts that carry no paid-partnership label ([39d15ab](https://github.com/hxreborn/hxreborn-tiktok-patches/commit/39d15ab20dd0385e0c16e4c219dd19d9083a0989))
+
 # [0.11.0](https://github.com/hxreborn/hxreborn-tiktok-patches/compare/v0.10.0...v0.11.0) (2026-08-16)
 
 
