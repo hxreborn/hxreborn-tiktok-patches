@@ -74,7 +74,7 @@ public class FeedFilterPreferenceCategory extends ConditionalPreferenceCategory 
         ));
         addPreference(new TogglePreference(
                 context,
-                "Hide friend recommendations", "Hide friend-recommendation posts from feed.",
+                "Hide friend recommendations", "Hide account and bulletin-board suggestion cards inserted between videos in the feed.",
                 Settings.HIDE_FRIEND_RECOMMENDATIONS
         ));
         addPreference(new TogglePreference(

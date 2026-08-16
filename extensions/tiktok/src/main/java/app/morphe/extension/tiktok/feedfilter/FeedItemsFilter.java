@@ -29,7 +29,7 @@ public final class FeedItemsFilter {
         new ShopFilter(),
         new AigcFilter(),
         new PaidPartnershipFilter(),
-        new FriendRecommendationFilter(),
+        new BulletinCardFilter(),
         new VerifiedAccountFilter()
     );
 
