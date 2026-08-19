@@ -23,7 +23,7 @@ private const val FRIEND_RECOMMENDATION_FILTER_CLASS_DESCRIPTOR = "Lapp/morphe/e
 @Suppress("unused")
 val feedFilterPatch = bytecodePatch(
     name = "Feed filter",
-    description = "Hides feed ads, TikTok Shop items, livestreams, stories, photo posts, the playlist bar, the floating event badge, AI-generated posts, paid partnership and promotional content, the account and bulletin-board suggestion cards, posts from verified accounts, and videos outside configured view or like ranges.",
+    description = "Hides feed ads, TikTok Shop items, livestreams, stories, photo posts, the playlist bar, the floating event badge, AI-generated posts, paid partnership and promotional content, the account, bulletin-board and other inserted cards, posts from verified accounts, and videos outside configured view or like ranges.",
     default = true,
 ) {
     dependsOn(
