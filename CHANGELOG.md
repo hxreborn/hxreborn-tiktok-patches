@@ -1,3 +1,10 @@
+## [0.11.2](https://github.com/hxreborn/hxreborn-tiktok-patches/compare/v0.11.1...v0.11.2) (2026-08-19)
+
+
+### Bug Fixes
+
+* **feedfilter:** hide every inserted feed card instead of only bulletin-board ones ([85d3a55](https://github.com/hxreborn/hxreborn-tiktok-patches/commit/85d3a5579a8036ccf4c9bf514787ce97349860c9))
+
 ## [0.11.1](https://github.com/hxreborn/hxreborn-tiktok-patches/compare/v0.11.0...v0.11.1) (2026-08-16)
 
 
