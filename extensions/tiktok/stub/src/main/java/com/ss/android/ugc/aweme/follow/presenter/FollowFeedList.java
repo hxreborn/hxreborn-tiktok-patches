@@ -10,5 +10,9 @@ import java.util.List;
 @SuppressWarnings("unused")
 public class FollowFeedList {
     public List mItems;
+    public int feedType;
+    public int hasMore;
+    public long cursor;
+    public String requestId;
 }
 

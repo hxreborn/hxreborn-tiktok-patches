@@ -10,5 +10,9 @@ import java.util.List;
 @SuppressWarnings("unused")
 public class FeedItemList {
     public List items;
+    public int fetchType;
+    public int hasMore;
+    public long cursor;
+    public String requestId;
 }
 
