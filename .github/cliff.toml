@@ -3,7 +3,7 @@
 
 [remote.github]
 owner = "hxreborn"
-repo = "tiktok-patches-for-morphe"
+repo = "hxreborn-tiktok-patches"
 
 [changelog]
 header = ""

@@ -1,18 +1,12 @@
-## [0.11.4](https://github.com/hxreborn/hxreborn-tiktok-patches/compare/v0.11.2...v0.11.4) (2026-08-19)
+## [0.11.4](https://github.com/hxreborn/hxreborn-tiktok-patches/compare/v0.11.1...v0.11.4) (2026-08-19)
 
 
 ### Bug Fixes
 
 * **build:** complete feed model stubs ([053ce6c](https://github.com/hxreborn/hxreborn-tiktok-patches/commit/053ce6cd064c16c1a06e87e10b76896da7c00a83))
-* **captcha:** stop suppressing risk-control puzzles by default ([bb48b71](https://github.com/hxreborn/hxreborn-tiktok-patches/commit/bb48b71b8aa09d6447528bb7cba26d8685e6e286))
-* **tiktok:** filter cached feed insertions ([d30a6dd](https://github.com/hxreborn/hxreborn-tiktok-patches/commit/d30a6dd37f9eaa1c1faecdf2b30b047707170860))
-
-## [0.11.2](https://github.com/hxreborn/hxreborn-tiktok-patches/compare/v0.11.1...v0.11.2) (2026-08-19)
-
-
-### Bug Fixes
-
-* **feedfilter:** hide every inserted feed card instead of only bulletin-board ones ([85d3a55](https://github.com/hxreborn/hxreborn-tiktok-patches/commit/85d3a5579a8036ccf4c9bf514787ce97349860c9))
+* **TikTok - Captcha:** stop suppressing risk-control puzzles by default ([bb48b71](https://github.com/hxreborn/hxreborn-tiktok-patches/commit/bb48b71b8aa09d6447528bb7cba26d8685e6e286))
+* **TikTok - Feed filter:** filter cached feed insertions ([d30a6dd](https://github.com/hxreborn/hxreborn-tiktok-patches/commit/d30a6dd37f9eaa1c1faecdf2b30b047707170860))
+* **TikTok - Feed filter:** hide every inserted feed card instead of only bulletin-board ones ([85d3a55](https://github.com/hxreborn/hxreborn-tiktok-patches/commit/85d3a5579a8036ccf4c9bf514787ce97349860c9))
 
 ## [0.11.1](https://github.com/hxreborn/hxreborn-tiktok-patches/compare/v0.11.0...v0.11.1) (2026-08-16)
 
