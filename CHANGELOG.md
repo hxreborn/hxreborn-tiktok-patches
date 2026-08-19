@@ -1,3 +1,10 @@
+## [0.11.4](https://github.com/hxreborn/hxreborn-tiktok-patches/compare/v0.11.3...v0.11.4) (2026-08-19)
+
+
+### Bug Fixes
+
+* **captcha:** stop suppressing risk-control puzzles by default ([bb48b71](https://github.com/hxreborn/hxreborn-tiktok-patches/commit/bb48b71b8aa09d6447528bb7cba26d8685e6e286))
+
 ## [0.11.3](https://github.com/hxreborn/hxreborn-tiktok-patches/compare/v0.11.2...v0.11.3) (2026-08-19)
 
 
