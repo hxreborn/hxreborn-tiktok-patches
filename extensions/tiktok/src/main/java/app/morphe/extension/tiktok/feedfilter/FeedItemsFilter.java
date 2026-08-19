@@ -4,6 +4,7 @@ import app.morphe.extension.shared.Logger;
 import app.morphe.extension.shared.settings.BaseSettings;
 import app.morphe.extension.tiktok.settings.Settings;
 import com.ss.android.ugc.aweme.feed.model.Aweme;
+import com.ss.android.ugc.aweme.feed.model.AwemeBizExtKt;
 import com.ss.android.ugc.aweme.feed.model.AwemeStatistics;
 import com.ss.android.ugc.aweme.feed.model.FeedItemList;
 import com.ss.android.ugc.aweme.follow.presenter.FollowFeed;
@@ -19,19 +20,23 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 @SuppressWarnings("unused")
 public final class FeedItemsFilter {
-    private static final List<IFilter> FILTERS = List.of(
-        new AdsFilter(),
+    private static final AdsFilter ADS_FILTER = new AdsFilter();
+    private static final List<IFilter> CONTENT_FILTERS = List.of(
+        ADS_FILTER,
         new LiveFilter(),
         new StoryFilter(),
         new ImageVideoFilter(),
-        new ViewCountFilter(),
-        new LikeCountFilter(),
         new ShopFilter(),
         new AigcFilter(),
         new PaidPartnershipFilter(),
         new CardInsertFilter(),
         new VerifiedAccountFilter()
     );
+    private static final List<IFilter> RANGE_FILTERS = List.of(
+        new ViewCountFilter(),
+        new LikeCountFilter()
+    );
+    private static final List<IFilter> LATE_FOLLOW_FILTERS = List.of(ADS_FILTER);
 
     private static final int MAX_NULL_ITEMS_LOGS = 3;
     private static final int MAX_BATCH_LOGS = 10;
@@ -49,6 +54,8 @@ public final class FeedItemsFilter {
     private static final AtomicInteger followFeedListNullItemsLogCount = new AtomicInteger();
     private static final AtomicInteger batchLogCount = new AtomicInteger();
     private static final AtomicInteger itemLogCount = new AtomicInteger();
+    private static final AtomicInteger filterExceptionLogCount = new AtomicInteger();
+    private static final AtomicInteger listReplacementLogCount = new AtomicInteger();
     private static final AtomicInteger filterCallProbeCount = new AtomicInteger();
     private static final Map<Integer, ProbeSeenList> filterCallProbeSeenLists = new HashMap<>();
     private static final Map<Integer, ProcessedListState> processedListCache = new HashMap<>();
@@ -68,28 +75,112 @@ public final class FeedItemsFilter {
         }
 
         if (verbose && shouldLogBatch()) {
-            debugLogBatch("FeedItemList", feedItemList.items);
+            debugLogBatch(
+                "FeedItemList",
+                feedItemList.items,
+                "fetchType=" + feedItemList.fetchType
+                    + " hasMore=" + feedItemList.hasMore
+                    + " cursor=" + feedItemList.cursor
+                    + " requestId=" + (feedItemList.requestId == null ? "missing" : "present")
+            );
         }
 
         filterFeedList(
-            "FeedItemList",
+            "FeedItemList:response",
             feedItemList,
             feedItemList.items,
             container -> (container instanceof Aweme) ? (Aweme) container : null,
             verbose,
-            true
+            true,
+            FilterPhase.RESPONSE
         );
     }
 
     public static void filter(FollowFeedList followFeedList) {
-        filterFollowFeedList(followFeedList, true);
+        filterFollowFeedList(followFeedList, true, FilterPhase.RESPONSE);
     }
 
-    public static void filterFinal(FollowFeedList followFeedList) {
-        filterFollowFeedList(followFeedList, false);
+    public static void filterLate(FollowFeedList followFeedList) {
+        filterFollowFeedList(followFeedList, true, FilterPhase.LATE_FOLLOW);
     }
 
-    private static void filterFollowFeedList(FollowFeedList followFeedList, boolean allowRecentSkip) {
+    public static void filterLateFinal(FollowFeedList followFeedList) {
+        filterFollowFeedList(followFeedList, false, FilterPhase.LATE_FOLLOW);
+    }
+
+    @SuppressWarnings({"rawtypes", "unchecked"})
+    public static List filterInsertedFeedItems(String source, List items) {
+        if (items == null || items.isEmpty()) return items;
+
+        List<IFilter> activeContentFilters = getActiveFilters(CONTENT_FILTERS);
+        List<IFilter> activeRangeFilters = getActiveFilters(RANGE_FILTERS);
+        if (activeContentFilters.isEmpty() && activeRangeFilters.isEmpty()) return items;
+
+        boolean cacheInsertion = "golden_house".equals(source)
+            || "middle_insert_when_video_lagging".equals(source);
+        ArrayList kept = null;
+        int removed = 0;
+
+        for (int index = 0; index < items.size(); index++) {
+            Object container = items.get(index);
+            if (!(container instanceof Aweme)) {
+                if (kept != null) kept.add(container);
+                continue;
+            }
+
+            Aweme item = (Aweme) container;
+            int cacheSourceType = AwemeBizExtKt.getCacheSourceType(item);
+            if (!cacheInsertion && cacheSourceType < 0) {
+                if (kept != null) kept.add(container);
+                continue;
+            }
+
+            String reason = getFilterReason(activeContentFilters, item);
+            if (reason == null) reason = getFilterReason(activeRangeFilters, item);
+            if (reason == null) {
+                if (kept != null) kept.add(container);
+                continue;
+            }
+
+            if (kept == null) {
+                kept = new ArrayList(items.size());
+                kept.addAll(items.subList(0, index));
+            }
+            removed++;
+            logItem(item, reason, BaseSettings.DEBUG.get());
+        }
+
+        if (kept == null) return items;
+        if (BaseSettings.DEBUG.get()) {
+            int removedCount = removed;
+            int keptCount = kept.size();
+            Logger.printInfo(() -> "[Morphe TikTok FeedFilter] Final insert source=" + source
+                + " removed=" + removedCount + " kept=" + keptCount);
+        }
+        return kept;
+    }
+
+    public static FeedItemList filterCachedFeedList(FeedItemList feedItemList) {
+        if (feedItemList == null || feedItemList.items == null) return null;
+
+        boolean verbose = BaseSettings.DEBUG.get();
+        filterFeedList(
+            "FeedItemList:cold-cache",
+            feedItemList,
+            feedItemList.items,
+            container -> (container instanceof Aweme) ? (Aweme) container : null,
+            verbose,
+            false,
+            FilterPhase.RESPONSE
+        );
+        return feedItemList.items.isEmpty() ? null : feedItemList;
+    }
+
+    private static void filterFollowFeedList(
+        FollowFeedList followFeedList,
+        boolean allowRecentSkip,
+        FilterPhase phase
+    ) {
         boolean verbose = BaseSettings.DEBUG.get();
 
         if (followFeedList == null || followFeedList.mItems == null) {
@@ -100,16 +191,25 @@ public final class FeedItemsFilter {
         }
 
         if (verbose && shouldLogBatch()) {
-            debugLogBatch("FollowFeedList", followFeedList.mItems);
+            debugLogBatch(
+                "FollowFeedList",
+                followFeedList.mItems,
+                "phase=" + phase
+                    + " feedType=" + followFeedList.feedType
+                    + " hasMore=" + followFeedList.hasMore
+                    + " cursor=" + followFeedList.cursor
+                    + " requestId=" + (followFeedList.requestId == null ? "missing" : "present")
+            );
         }
 
         filterFeedList(
-            "FollowFeedList",
+            phase == FilterPhase.RESPONSE ? "FollowFeedList:response" : "FollowFeedList:late",
             followFeedList,
             followFeedList.mItems,
             container -> (container instanceof FollowFeed) ? ((FollowFeed) container).aweme : null,
             verbose,
-            allowRecentSkip
+            allowRecentSkip,
+            phase
         );
     }
 
@@ -119,14 +219,20 @@ public final class FeedItemsFilter {
         List list,
         AwemeExtractor extractor,
         boolean verbose,
-        boolean allowRecentSkip
+        boolean allowRecentSkip,
+        FilterPhase phase
     ) {
         if (list == null) return;
 
-        List<IFilter> activeFilters = getActiveFilters();
-        if (activeFilters.isEmpty()) return;
+        List<IFilter> activeContentFilters = getActiveFilters(
+            phase == FilterPhase.RESPONSE ? CONTENT_FILTERS : LATE_FOLLOW_FILTERS
+        );
+        List<IFilter> activeRangeFilters = phase == FilterPhase.RESPONSE
+            ? getActiveFilters(RANGE_FILTERS)
+            : List.of();
+        if (activeContentFilters.isEmpty() && activeRangeFilters.isEmpty()) return;
 
-        String filterMask = getFilterMask(activeFilters);
+        String filterMask = getFilterMask(activeContentFilters, activeRangeFilters);
         ListFingerprint beforeFingerprint = ListFingerprint.from(list, extractor);
         boolean probeEnabled = verbose && FILTER_CALL_PROBE_ENABLED;
         int callId = probeEnabled ? filterCallProbeCount.incrementAndGet() : 0;
@@ -150,35 +256,58 @@ public final class FeedItemsFilter {
             return;
         }
 
-        int removed = 0;
+        int contentRemoved = 0;
+        int rangeRejected = 0;
         Map<String, Integer> reasonCounts = probeEnabled ? new HashMap<>() : null;
 
         List snapshot = new ArrayList(list);
-        List kept = new ArrayList(snapshot.size());
+        List contentKept = new ArrayList(snapshot.size());
+        List rangeKept = new ArrayList(snapshot.size());
         for (Object container : snapshot) {
             Aweme item = extractor.extract(container);
             if (item == null) {
-                kept.add(container);
+                contentKept.add(container);
+                rangeKept.add(container);
                 continue;
             }
 
-            String reason = getFilterReason(activeFilters, item);
-            logItem(item, reason, verbose);
-
-            if (reason != null) {
-                removed++;
-                if (probeEnabled) {
-                    Integer count = reasonCounts.get(reason);
-                    reasonCounts.put(reason, count == null ? 1 : count + 1);
-                }
-            } else {
-                kept.add(container);
+            String contentReason = getFilterReason(activeContentFilters, item);
+            if (contentReason != null) {
+                contentRemoved++;
+                incrementReason(reasonCounts, contentReason);
+                logItem(item, contentReason, verbose);
+                continue;
             }
+
+            contentKept.add(container);
+            String rangeReason = getFilterReason(activeRangeFilters, item);
+            if (rangeReason != null) {
+                rangeRejected++;
+                incrementReason(reasonCounts, rangeReason);
+                logItem(item, rangeReason, verbose);
+                continue;
+            }
+
+            rangeKept.add(container);
         }
 
+        List kept = rangeKept;
+        int removed = initialSize - kept.size();
+
+        List resultList = list;
         if (removed > 0) {
-            list.clear();
-            list.addAll(kept);
+            try {
+                list.clear();
+                list.addAll(kept);
+            } catch (RuntimeException exception) {
+                resultList = replaceOwnerList(owner, kept);
+                if (listReplacementLogCount.getAndIncrement() < 3) {
+                    Logger.printException(
+                        () -> "[Morphe TikTok FeedFilter] Replaced a non-mutable " + source + " list",
+                        exception
+                    );
+                }
+            }
         }
 
         if (probeEnabled) {
@@ -188,11 +317,12 @@ public final class FeedItemsFilter {
                 ownerId,
                 listId,
                 initialSize,
-                list.size(),
+                resultList.size(),
                 removed,
+                rangeRejected,
                 filterMask,
                 beforeSample,
-                sampleAids(list, extractor),
+                sampleAids(resultList, extractor),
                 reasonCounts,
                 System.nanoTime() - startNs
             );
@@ -202,22 +332,43 @@ public final class FeedItemsFilter {
             recordProbeScan(listId, removed, System.nanoTime() - startNs);
         }
 
-        rememberProcessedList(listId, ListFingerprint.from(list, extractor), filterMask);
+        rememberProcessedList(listId, ListFingerprint.from(resultList, extractor), filterMask);
 
         if (verbose && removed > 0 && shouldLogBatch()) {
             int removedFinal = removed;
+            int contentRemovedFinal = contentRemoved;
+            int rangeRejectedFinal = rangeRejected;
+            int resultSize = resultList.size();
             Logger.printInfo(() -> "[Morphe TikTok FeedFilter] filter(" + source + "): size "
-                + initialSize + " -> " + list.size() + " (removed=" + removedFinal + ")");
+                + initialSize + " -> " + resultSize
+                + " (removed=" + removedFinal
+                + ", contentRemoved=" + contentRemovedFinal
+                + ", rangeRejected=" + rangeRejectedFinal + ")");
         }
     }
 
-    private static boolean shouldFilter(Aweme item) {
-        return getFilterReason(getActiveFilters(), item) != null;
+    private static List replaceOwnerList(Object owner, List kept) {
+        List replacement = new ArrayList(kept);
+        if (owner instanceof FeedItemList) {
+            ((FeedItemList) owner).items = replacement;
+            return replacement;
+        }
+        if (owner instanceof FollowFeedList) {
+            ((FollowFeedList) owner).mItems = replacement;
+            return replacement;
+        }
+        throw new IllegalStateException("Unsupported feed list owner: " + owner.getClass().getName());
     }
 
-    private static List<IFilter> getActiveFilters() {
-        List<IFilter> activeFilters = new ArrayList<>(FILTERS.size());
-        for (IFilter filter : FILTERS) {
+    private static void incrementReason(Map<String, Integer> reasonCounts, String reason) {
+        if (reasonCounts == null) return;
+        Integer count = reasonCounts.get(reason);
+        reasonCounts.put(reason, count == null ? 1 : count + 1);
+    }
+
+    private static List<IFilter> getActiveFilters(List<IFilter> filters) {
+        List<IFilter> activeFilters = new ArrayList<>(filters.size());
+        for (IFilter filter : filters) {
             if (filter.getEnabled()) {
                 activeFilters.add(filter);
             }
@@ -227,8 +378,19 @@ public final class FeedItemsFilter {
 
     private static String getFilterReason(List<IFilter> activeFilters, Aweme item) {
         for (IFilter filter : activeFilters) {
-            if (filter.getFiltered(item)) {
-                return filter.getClass().getSimpleName();
+            try {
+                if (filter.getFiltered(item)) {
+                    return filter.getClass().getSimpleName();
+                }
+            } catch (RuntimeException exception) {
+                int count = filterExceptionLogCount.getAndIncrement();
+                if (count < 3) {
+                    Logger.printException(
+                        () -> "[Morphe TikTok FeedFilter] " + filter.getClass().getSimpleName()
+                            + " failed for aid=" + item.getAid() + "; keeping the item",
+                        exception
+                    );
+                }
             }
         }
         return null;
@@ -243,10 +405,11 @@ public final class FeedItemsFilter {
         }
     }
 
-    private static void debugLogBatch(String source, List list) {
+    private static void debugLogBatch(String source, List list, String metadata) {
         int size = list == null ? -1 : list.size();
         Logger.printInfo(() ->
             "[Morphe TikTok FeedFilter] filter(" + source + "): size=" + size
+                + " " + metadata
                 + " remove_ads=" + Settings.REMOVE_ADS.get()
                 + " hide_shop=" + Settings.HIDE_SHOP.get()
                 + " hide_live=" + Settings.HIDE_LIVE.get()
@@ -458,13 +621,21 @@ public final class FeedItemsFilter {
         Logger.printInfo(() -> summary);
     }
 
-    private static String getFilterMask(List<IFilter> activeFilters) {
+    private static String getFilterMask(
+        List<IFilter> activeContentFilters,
+        List<IFilter> activeRangeFilters
+    ) {
         StringBuilder builder = new StringBuilder();
+        appendFilterMask(builder, activeContentFilters);
+        appendFilterMask(builder, activeRangeFilters);
+        return builder.toString();
+    }
+
+    private static void appendFilterMask(StringBuilder builder, List<IFilter> activeFilters) {
         for (IFilter filter : activeFilters) {
             if (builder.length() > 0) builder.append('|');
             builder.append(filter.getClass().getSimpleName());
         }
-        return builder.toString();
     }
 
     private static String sampleAids(List list, AwemeExtractor extractor) {
@@ -496,6 +667,7 @@ public final class FeedItemsFilter {
         int beforeSize,
         int afterSize,
         int removed,
+        int rangeRejected,
         String filterMask,
         String beforeSample,
         String afterSample,
@@ -504,7 +676,9 @@ public final class FeedItemsFilter {
     ) {
         long elapsedMs = elapsedNs / 1_000_000L;
         ProbeSeenList seen = updateSeenList(listId, beforeSample, afterSample, beforeSize, afterSize);
-        boolean interesting = seen.seenCount > 1 || removed > 0 || elapsedMs >= FILTER_CALL_PROBE_SLOW_MS;
+        boolean interesting = seen.seenCount > 1
+            || removed > 0
+            || elapsedMs >= FILTER_CALL_PROBE_SLOW_MS;
 
         if (!interesting) return;
 
@@ -521,6 +695,7 @@ public final class FeedItemsFilter {
             + " sameBefore=" + beforeSample.equals(seen.previousBeforeSample)
             + " size=" + beforeSize + "->" + afterSize
             + " removed=" + removed
+            + " rangeRejected=" + rangeRejected
             + " reasons=" + counts
             + " filters=\"" + filterMask + "\""
             + " before=\"" + beforeSample + "\""
@@ -574,6 +749,11 @@ public final class FeedItemsFilter {
             if (++added >= 4) break;
         }
         return builder.length() == 0 ? "none" : builder.toString();
+    }
+
+    private enum FilterPhase {
+        RESPONSE,
+        LATE_FOLLOW
     }
 
     @FunctionalInterface

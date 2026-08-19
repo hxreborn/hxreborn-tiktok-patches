@@ -7,12 +7,17 @@ package app.morphe.patches.tiktok.feedfilter
 import app.morphe.patches.shared.compat.AppCompatibilities
 import app.morphe.patcher.extensions.InstructionExtensions.addInstructions
 import app.morphe.patcher.extensions.InstructionExtensions.addInstruction
+import app.morphe.patcher.extensions.InstructionExtensions.addInstructionsWithLabels
+import app.morphe.patcher.extensions.InstructionExtensions.getInstruction
 import app.morphe.patcher.patch.bytecodePatch
+import app.morphe.patcher.util.smali.ExternalLabel
 import app.morphe.patches.tiktok.misc.extension.sharedExtensionPatch
 import app.morphe.patches.tiktok.misc.settings.SettingsStatusLoadFingerprint
 import app.morphe.patches.tiktok.misc.settings.SettingsStatusLoadFingerprint.method
+import app.morphe.util.addInstructionsAtControlFlowLabel
 import com.android.tools.smali.dexlib2.Opcode
 import com.android.tools.smali.dexlib2.iface.instruction.OneRegisterInstruction
+import com.android.tools.smali.dexlib2.iface.reference.FieldReference
 
 private const val EXTENSION_CLASS_DESCRIPTOR = "Lapp/morphe/extension/tiktok/feedfilter/FeedItemsFilter;"
 private const val TAKO_AI_FILTER_CLASS_DESCRIPTOR = "Lapp/morphe/extension/tiktok/feedfilter/TakoAiFilter;"
@@ -39,7 +44,7 @@ val feedFilterPatch = bytecodePatch(
             "invoke-static {}, Lapp/morphe/extension/tiktok/settings/SettingsStatus;->enableFeedFilter()V",
         )
 
-        FeedItemListGetItemsFingerprint.method.let { method ->
+        MainFeedResponseFingerprint.method.let { method ->
             val returnIndices =
                 method.implementation!!.instructions.withIndex()
                     .filter { it.value.opcode == Opcode.RETURN_OBJECT }
@@ -47,13 +52,11 @@ val feedFilterPatch = bytecodePatch(
                     .toList()
 
             returnIndices.asReversed().forEach { returnIndex ->
-                method.addInstructions(
+                val register = (method.implementation!!.instructions[returnIndex] as OneRegisterInstruction).registerA
+
+                method.addInstructionsAtControlFlowLabel(
                     returnIndex,
-                    "invoke-static {p0}, $EXTENSION_CLASS_DESCRIPTOR->filter(Lcom/ss/android/ugc/aweme/feed/model/FeedItemList;)V",
-                )
-                method.addInstructions(
-                    returnIndex + 1,
-                    "nop",
+                    "invoke-static/range { v$register .. v$register }, $EXTENSION_CLASS_DESCRIPTOR->filter(Lcom/ss/android/ugc/aweme/feed/model/FeedItemList;)V",
                 )
             }
         }
@@ -68,14 +71,9 @@ val feedFilterPatch = bytecodePatch(
             returnIndices.asReversed().forEach { returnIndex ->
                 val register = (method.implementation!!.instructions[returnIndex] as OneRegisterInstruction).registerA
 
-                method.addInstructions(
+                method.addInstructionsAtControlFlowLabel(
                     returnIndex,
-                    """
-                        if-eqz v$register, :morphe_skip_filter_$returnIndex
-                        invoke-static/range { v$register .. v$register }, $EXTENSION_CLASS_DESCRIPTOR->filter(Lcom/ss/android/ugc/aweme/follow/presenter/FollowFeedList;)V
-                        :morphe_skip_filter_$returnIndex
-                        nop
-                    """,
+                    "invoke-static/range { v$register .. v$register }, $EXTENSION_CLASS_DESCRIPTOR->filter(Lcom/ss/android/ugc/aweme/follow/presenter/FollowFeedList;)V",
                 )
             }
         }
@@ -86,9 +84,9 @@ val feedFilterPatch = bytecodePatch(
                 .map { it.index }
 
             returnIndices.asReversed().forEach { returnIndex ->
-                method.addInstructions(
+                method.addInstructionsAtControlFlowLabel(
                     returnIndex,
-                    "invoke-static/range {p0 .. p0}, $EXTENSION_CLASS_DESCRIPTOR->filter(Lcom/ss/android/ugc/aweme/follow/presenter/FollowFeedList;)V",
+                    "invoke-static/range {p0 .. p0}, $EXTENSION_CLASS_DESCRIPTOR->filterLate(Lcom/ss/android/ugc/aweme/follow/presenter/FollowFeedList;)V",
                 )
             }
         }
@@ -99,9 +97,54 @@ val feedFilterPatch = bytecodePatch(
                 .map { it.index }
 
             returnIndices.asReversed().forEach { returnIndex ->
-                method.addInstructions(
+                method.addInstructionsAtControlFlowLabel(
                     returnIndex,
-                    "invoke-static/range {p1 .. p1}, $EXTENSION_CLASS_DESCRIPTOR->filterFinal(Lcom/ss/android/ugc/aweme/follow/presenter/FollowFeedList;)V",
+                    "invoke-static/range {p1 .. p1}, $EXTENSION_CLASS_DESCRIPTOR->filterLateFinal(Lcom/ss/android/ugc/aweme/follow/presenter/FollowFeedList;)V",
+                )
+            }
+        }
+
+        InsertedFeedItemsFingerprint.method.addInstructions(
+            0,
+            """
+                invoke-static/range {p2 .. p3}, $EXTENSION_CLASS_DESCRIPTOR->filterInsertedFeedItems(Ljava/lang/String;Ljava/util/List;)Ljava/util/List;
+                move-result-object p3
+            """,
+        )
+
+        ColdStartCachedFeedFingerprint.method.let { method ->
+            val cacheStoreIndices = method.implementation!!.instructions.withIndex()
+                .filter {
+                    it.value.opcode == Opcode.SPUT_OBJECT &&
+                        (it.value as? com.android.tools.smali.dexlib2.iface.instruction.ReferenceInstruction)
+                            ?.reference
+                            ?.let { reference ->
+                                reference is FieldReference &&
+                                    reference.type == "Lcom/ss/android/ugc/aweme/feed/model/FeedItemList;"
+                            } == true
+                }
+                .map { it.index }
+                .toList()
+            check(cacheStoreIndices.size == 4) {
+                "Expected four cold-start cached FeedItemList stores, found ${cacheStoreIndices.size}"
+            }
+
+            cacheStoreIndices.asReversed().forEachIndexed { ordinal, storeIndex ->
+                val listRegister =
+                    (method.implementation!!.instructions[storeIndex] as OneRegisterInstruction).registerA
+                method.addInstructionsWithLabels(
+                    storeIndex,
+                    """
+                        invoke-static/range {v$listRegister .. v$listRegister}, $EXTENSION_CLASS_DESCRIPTOR->filterCachedFeedList(Lcom/ss/android/ugc/aweme/feed/model/FeedItemList;)Lcom/ss/android/ugc/aweme/feed/model/FeedItemList;
+                        move-result-object v$listRegister
+                        if-nez v$listRegister, :morphe_keep_cold_cache_$ordinal
+                        const/4 v$listRegister, 0x0
+                        return v$listRegister
+                    """,
+                    ExternalLabel(
+                        "morphe_keep_cold_cache_$ordinal",
+                        method.getInstruction(storeIndex),
+                    ),
                 )
             }
         }
