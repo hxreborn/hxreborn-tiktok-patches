@@ -29,7 +29,7 @@ public final class FeedItemsFilter {
         new ShopFilter(),
         new AigcFilter(),
         new PaidPartnershipFilter(),
-        new BulletinCardFilter(),
+        new CardInsertFilter(),
         new VerifiedAccountFilter()
     );
 
@@ -286,6 +286,7 @@ public final class FeedItemsFilter {
 
             return "[Morphe TikTok FeedFilter] item"
                 + " aid=" + item.getAid()
+                + " awemeType=" + item.getAwemeType()
                 + " ad=" + item.isAd()
                 + " softAd=" + item.isSoftAd()
                 + " promo=" + item.isWithPromotionalMusic()
