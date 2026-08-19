@@ -44,7 +44,7 @@ stay in your feed, but some do not and get hidden like any other verified accoun
 †Off by default. Enabling it suppresses the risk-control puzzle TikTok shows flagged accounts, so
 follows and likes silently fail instead of prompting you to solve it.
 
-Last synced with upstream at [`f580ae8`](https://github.com/icysymmetra/tiktok-patches-for-morphe/commit/f580ae8). Release numbers are this fork's own and do not track upstream's.
+Last synced with upstream at [`266002c`](https://github.com/icysymmetra/tiktok-patches-for-morphe/commit/266002c). Release numbers are this fork's own and do not track upstream's.
 
 <br>
 

@@ -7,23 +7,31 @@ package app.morphe.patches.tiktok.feedfilter
 import app.morphe.patcher.Fingerprint
 import app.morphe.util.getReference
 import com.android.tools.smali.dexlib2.AccessFlags
+import com.android.tools.smali.dexlib2.iface.reference.FieldReference
 import com.android.tools.smali.dexlib2.iface.reference.MethodReference
 
-internal object FeedItemListGetItemsFingerprint : Fingerprint(
+internal object MainFeedResponseFingerprint : Fingerprint(
+    definingClass = "Lcom/ss/android/ugc/aweme/feed/FeedApiService;",
+    name = "fetchFeedList",
     accessFlags = listOf(AccessFlags.PUBLIC),
-    returnType = "Ljava/util/List;",
+    returnType = "Lcom/ss/android/ugc/aweme/feed/model/FeedItemList;",
     custom = { method, classDef ->
-        classDef.endsWith("/FeedItemList;") &&
-            method.name == "getItems" &&
-            method.parameterTypes.isEmpty()
+        classDef.type == "Lcom/ss/android/ugc/aweme/feed/FeedApiService;" &&
+            method.parameterTypes.size == 1
     },
 )
 
 internal object FollowFeedFingerprint : Fingerprint(
     accessFlags = listOf(AccessFlags.PUBLIC, AccessFlags.STATIC),
     returnType = "Lcom/ss/android/ugc/aweme/follow/presenter/FollowFeedList;",
+    strings = listOf("feed"),
     custom = { method, _ ->
-        method.parameterTypes.size == 2
+        method.parameterTypes.size == 2 && method.implementation?.instructions?.any {
+            it.getReference<MethodReference>()?.let { reference ->
+                reference.definingClass == "Lcom/ss/android/ugc/aweme/follow/presenter/FollowFeedList;" &&
+                    reference.name == "getItems"
+            } == true
+        } == true
     },
 )
 
@@ -45,6 +53,44 @@ internal object SpecActTouchpointAttachFingerprint : Fingerprint(
     definingClass = "/specact/SpecActServiceImpl;",
     returnType = "V",
     parameters = listOf("Landroid/view/ViewGroup;", "Landroidx/fragment/app/Fragment;"),
+)
+
+internal object InsertedFeedItemsFingerprint : Fingerprint(
+    definingClass = "Lcom/ss/android/ugc/aweme/feed/panel/BaseListFragmentPanel;",
+    name = "yM2",
+    accessFlags = listOf(AccessFlags.PUBLIC, AccessFlags.FINAL),
+    returnType = "V",
+    parameters = listOf(
+        "I",
+        "Ljava/lang/String;",
+        "Ljava/util/List;",
+    ),
+    custom = { method, _ ->
+        method.implementation?.instructions?.any {
+            it.getReference<MethodReference>()?.let { reference ->
+                reference.definingClass == "LX/0SN6;" &&
+                    reference.name == "LIZ" &&
+                    reference.returnType == "LX/0SN6;"
+            } == true
+        } == true
+    },
+)
+
+internal object ColdStartCachedFeedFingerprint : Fingerprint(
+    accessFlags = listOf(AccessFlags.PUBLIC, AccessFlags.STATIC),
+    returnType = "Z",
+    parameters = emptyList(),
+    strings = listOf(
+        "processGoldenVideoHitCache hitCache , time cost ",
+        "processOfflineVideoHitCache error",
+    ),
+    custom = { method, _ ->
+        method.implementation?.instructions?.count {
+            it.opcode == com.android.tools.smali.dexlib2.Opcode.SPUT_OBJECT &&
+                it.getReference<FieldReference>()?.type ==
+                "Lcom/ss/android/ugc/aweme/feed/model/FeedItemList;"
+        } == 4
+    },
 )
 
 internal object TakoAiFeedButtonSetVisibleFingerprint : Fingerprint(
