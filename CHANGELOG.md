@@ -1,3 +1,11 @@
+## [0.11.3](https://github.com/hxreborn/hxreborn-tiktok-patches/compare/v0.11.2...v0.11.3) (2026-08-19)
+
+
+### Bug Fixes
+
+* **build:** complete feed model stubs ([053ce6c](https://github.com/hxreborn/hxreborn-tiktok-patches/commit/053ce6cd064c16c1a06e87e10b76896da7c00a83))
+* **tiktok:** filter cached feed insertions ([d30a6dd](https://github.com/hxreborn/hxreborn-tiktok-patches/commit/d30a6dd37f9eaa1c1faecdf2b30b047707170860))
+
 ## [0.11.2](https://github.com/hxreborn/hxreborn-tiktok-patches/compare/v0.11.1...v0.11.2) (2026-08-19)
 
 
