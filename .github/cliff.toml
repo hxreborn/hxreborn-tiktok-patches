@@ -61,6 +61,8 @@ commit_preprocessors = [
 ]
 # Mirrors semantic-release's angular preset: only feat, fix, perf and revert reach the notes.
 commit_parsers = [
+  # Upstream types its dev-to-main merges as fix, which would otherwise land in our notes
+  { message = "^(feat|fix|perf|revert)(\\(.*\\))?!?: [Mm]erge ", skip = true },
   { message = "^feat", group = "<!-- 00 -->Features" },
   { message = "^fix", group = "<!-- 01 -->Bug Fixes" },
   { message = "^perf", group = "<!-- 02 -->Performance Improvements" },
