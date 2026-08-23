@@ -1,3 +1,26 @@
+# [1.0.0](https://github.com/hxreborn/hxreborn-tiktok-patches/compare/v0.11.4...v1.0.0) (2026-08-23)
+
+
+### Bug Fixes
+
+* **TikTok - Feed filter:** silence bulletin card music that keeps playing over the feed ([8d87fcb](https://github.com/hxreborn/hxreborn-tiktok-patches/commit/8d87fcbb5066b5b1854b01859b687d0940e2622a))
+* **TikTok - Feed filter:** unlock scrolling past countdown-locked short-drama ads ([057db32](https://github.com/hxreborn/hxreborn-tiktok-patches/commit/057db324c8a8cd93a04fa379cfb1baaa8dd3b433))
+* **tiktok:** consume download filename mappings ([864fc15](https://github.com/hxreborn/hxreborn-tiktok-patches/commit/864fc1526d51f819daea8e0730716d62a4c6b662))
+* **tiktok:** harden bytecode hook resolution ([95e0a3f](https://github.com/hxreborn/hxreborn-tiktok-patches/commit/95e0a3f8d6c45e97eb44c3066bd201e2d9ab1843))
+* **tiktok:** preserve swipe-lock playback speed ([dfbe2a5](https://github.com/hxreborn/hxreborn-tiktok-patches/commit/dfbe2a55aaced183f97a457b494893c31cebf596))
+
+
+### Features
+
+* **TikTok - Patches:** retire the zerover joke and ship 1.0.0 ([68d06f3](https://github.com/hxreborn/hxreborn-tiktok-patches/commit/68d06f3fd8976b12a5f70bd55d759ae2a17fbd72))
+* **tiktok:** add repost and cached feed controls ([446ee90](https://github.com/hxreborn/hxreborn-tiktok-patches/commit/446ee90123b118642fe3c50f5da9221d984667c2))
+* **tiktok:** expand offline video limits ([35eff0e](https://github.com/hxreborn/hxreborn-tiktok-patches/commit/35eff0e4f84ea69925bbddc71eb04c6d0bf5e66d))
+
+
+### BREAKING CHANGES
+
+* **TikTok - Patches:** retire the zerover joke and ship 1.0.0
+
 ## [0.11.4](https://github.com/hxreborn/hxreborn-tiktok-patches/compare/v0.11.1...v0.11.4) (2026-08-19)
 
 
