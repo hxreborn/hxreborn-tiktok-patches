@@ -49,6 +49,12 @@ internal object PlaylistBottomBarAvailableFingerprint : Fingerprint(
     parameters = listOf("Lcom/ss/android/ugc/aweme/feed/model/VideoItemParams;"),
 )
 
+internal object DramaBlockingAdFingerprint : Fingerprint(
+    definingClass = "Lcom/ss/android/ugc/aweme/impl/DramaBlockingAdServiceImpl;",
+    returnType = "Z",
+    parameters = listOf("Lcom/ss/android/ugc/aweme/feed/model/Aweme;"),
+)
+
 internal object SpecActTouchpointAttachFingerprint : Fingerprint(
     definingClass = "/specact/SpecActServiceImpl;",
     returnType = "V",
