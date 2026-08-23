@@ -15,6 +15,7 @@ import app.morphe.patches.tiktok.misc.extension.sharedExtensionPatch
 import app.morphe.patches.tiktok.misc.settings.SettingsStatusLoadFingerprint
 import app.morphe.patches.tiktok.misc.settings.SettingsStatusLoadFingerprint.method
 import app.morphe.util.addInstructionsAtControlFlowLabel
+import app.morphe.util.getReference
 import app.morphe.util.indexOfFirstInstructionOrThrow
 import com.android.tools.smali.dexlib2.Opcode
 import com.android.tools.smali.dexlib2.iface.instruction.OneRegisterInstruction
@@ -26,6 +27,7 @@ private const val PLAYLIST_BAR_FILTER_CLASS_DESCRIPTOR = "Lapp/morphe/extension/
 private const val EVENT_BADGE_FILTER_CLASS_DESCRIPTOR = "Lapp/morphe/extension/tiktok/feedfilter/EventBadgeFilter;"
 private const val FRIEND_RECOMMENDATION_FILTER_CLASS_DESCRIPTOR = "Lapp/morphe/extension/tiktok/feedfilter/FriendRecommendationFilter;"
 private const val DRAMA_BLOCKING_AD_FILTER_CLASS_DESCRIPTOR = "Lapp/morphe/extension/tiktok/feedfilter/DramaBlockingAdFilter;"
+private const val CARD_INSERT_FILTER_CLASS_DESCRIPTOR = "Lapp/morphe/extension/tiktok/feedfilter/CardInsertFilter;"
 
 @Suppress("unused")
 val feedFilterPatch = bytecodePatch(
@@ -194,6 +196,32 @@ val feedFilterPatch = bytecodePatch(
                 nop
             """,
         )
+
+        // Bulletin music outlives the feed player and its mute
+        BulletinMusicPlayFingerprint.methodOrNull?.let { method ->
+            val musicIndex = method.implementation!!.instructions.indexOfFirst {
+                it.opcode == Opcode.IGET_OBJECT &&
+                    it.getReference<FieldReference>()?.type == "Lcom/ss/android/ugc/aweme/music/model/Music;"
+            }
+            check(musicIndex >= 0) { "Could not find the bulletin music field read" }
+
+            val musicRegister = (method.getInstruction(musicIndex) as OneRegisterInstruction).registerA
+            val freeRegister = if (musicRegister == 0) 1 else 0
+
+            method.addInstructionsWithLabels(
+                musicIndex + 1,
+                """
+                    invoke-static {}, $CARD_INSERT_FILTER_CLASS_DESCRIPTOR->shouldBlockMusic()Z
+                    move-result v$freeRegister
+                    if-eqz v$freeRegister, :morphe_play_bulletin_music
+                    const/4 v$musicRegister, 0x0
+                """,
+                ExternalLabel(
+                    "morphe_play_bulletin_music",
+                    method.getInstruction(musicIndex + 1),
+                ),
+            )
+        }
 
         DramaBlockingAdFingerprint.methodOrNull?.apply {
             val returnIndex = indexOfFirstInstructionOrThrow {
