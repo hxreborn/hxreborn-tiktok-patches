@@ -461,6 +461,10 @@ public class TikTokPreferenceFragment extends AbstractPreferenceFragment {
         if (SettingsStatus.disableTelemetryEnabled && Settings.DISABLE_ANALYTICS.get()) {
             count++;
         }
+        if (SettingsStatus.disableLongPressRepostEnabled
+                && Settings.DISABLE_LONG_PRESS_REPOST.get()) {
+            count++;
+        }
         return count;
     }
 

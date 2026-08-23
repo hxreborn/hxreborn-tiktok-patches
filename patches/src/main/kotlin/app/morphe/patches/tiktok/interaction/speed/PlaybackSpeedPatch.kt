@@ -7,13 +7,14 @@ package app.morphe.patches.tiktok.interaction.speed
 import app.morphe.patches.shared.compat.AppCompatibilities
 import app.morphe.patcher.extensions.InstructionExtensions.addInstruction
 import app.morphe.patcher.extensions.InstructionExtensions.addInstructions
-import app.morphe.patcher.extensions.InstructionExtensions.getInstruction
+import app.morphe.patcher.patch.PatchException
 import app.morphe.patcher.patch.bytecodePatch
 import app.morphe.patches.tiktok.misc.extension.sharedExtensionPatch
 import app.morphe.patches.tiktok.shared.OnRenderFirstFrameFingerprint
 import app.morphe.util.getReference
-import app.morphe.util.indexOfFirstInstructionOrThrow
+import com.android.tools.smali.dexlib2.Opcode
 import com.android.tools.smali.dexlib2.iface.instruction.FiveRegisterInstruction
+import com.android.tools.smali.dexlib2.iface.instruction.RegisterRangeInstruction
 import com.android.tools.smali.dexlib2.iface.reference.MethodReference
 
 @Suppress("unused")
@@ -27,24 +28,82 @@ val playbackSpeedPatch = bytecodePatch(
     compatibleWith(*AppCompatibilities.tiktok4623())
 
     execute {
-        PlaybackSpeedMenuSelectionFingerprint.method.apply {
-            val applySpeedIndex = indexOfFirstInstructionOrThrow {
-                getReference<MethodReference>()?.let { reference ->
-                    reference.returnType == "V" &&
-                        reference.parameterTypes == listOf(
-                            "F",
-                            "Lcom/ss/android/ugc/aweme/feed/model/Aweme;",
-                            "Ljava/lang/String;",
-                            "Ljava/lang/String;",
-                        )
+        PlaybackSpeedSelectionBoundaryFingerprint.method.addInstruction(
+            0,
+            "invoke-static {p0, p3}, " +
+                "Lapp/morphe/extension/tiktok/speed/PlaybackSpeedPatch;->rememberPlaybackSpeed(FLjava/lang/String;)V",
+        )
+
+        val controllerSetSpeed = PlayerControllerSetSpeedFingerprint.method
+        val playerManagerSetSpeed = controllerSetSpeed.implementation!!.instructions
+            .firstNotNullOfOrNull { instruction ->
+                instruction.getReference<MethodReference>()?.takeIf { reference ->
+                    instruction.opcode == Opcode.INVOKE_INTERFACE &&
+                        reference.name == "setSpeed" &&
+                        reference.parameterTypes == listOf("F") &&
+                        reference.returnType == "V"
+                }
+            } ?: throw PatchException(
+            "Playback speed: player-manager speed boundary was not resolved.",
+        )
+
+        val playerControllerClass = mutableClassDefBy(controllerSetSpeed.definingClass)
+        val transitionResetCandidates = playerControllerClass.methods.filter { method ->
+            method.parameterTypes == listOf(
+                "Lcom/ss/android/ugc/aweme/feed/model/Aweme;",
+                "Z",
+            ) && method.returnType == "V" && method.implementation?.instructions?.count { instruction ->
+                instruction.getReference<MethodReference>() == playerManagerSetSpeed
+            } == 3
+        }
+        val transitionReset = transitionResetCandidates.singleOrNull() ?: throw PatchException(
+            "Playback speed: expected one three-branch feed transition reset, " +
+                "found ${transitionResetCandidates.size}.",
+        )
+
+        val transitionCallers = playerControllerClass.methods.filter { method ->
+            val instructions = method.implementation?.instructions ?: return@filter false
+            val callsTransitionReset = instructions.any { instruction ->
+                instruction.getReference<MethodReference>()?.let { reference ->
+                    reference.definingClass == transitionReset.definingClass &&
+                        reference.name == transitionReset.name &&
+                        reference.parameterTypes == transitionReset.parameterTypes &&
+                        reference.returnType == transitionReset.returnType
                 } == true
             }
-            val speedRegister = getInstruction<FiveRegisterInstruction>(applySpeedIndex).registerC
-            addInstruction(
-                applySpeedIndex,
-                "invoke-static {v$speedRegister}, " +
-                    "Lapp/morphe/extension/tiktok/speed/PlaybackSpeedPatch;->rememberPlaybackSpeed(F)V",
+            callsTransitionReset && instructions.any { instruction ->
+                instruction.getReference<MethodReference>() == playerManagerSetSpeed
+            }
+        }
+        if (transitionCallers.isEmpty()) {
+            throw PatchException(
+                "Playback speed: no feed transition caller with a direct speed write was found.",
             )
+        }
+
+        (listOf(transitionReset) + transitionCallers).forEach { method ->
+            val directCalls = method.implementation!!.instructions.withIndex().mapNotNull { (index, instruction) ->
+                if (instruction.getReference<MethodReference>() != playerManagerSetSpeed) {
+                    return@mapNotNull null
+                }
+                val speedRegister = when (instruction) {
+                    is FiveRegisterInstruction -> instruction.registerD
+                    is RegisterRangeInstruction -> instruction.startRegister + 1
+                    else -> throw PatchException(
+                        "Playback speed: unsupported feed transition speed invocation shape.",
+                    )
+                }
+                index to speedRegister
+            }
+            directCalls.asReversed().forEach { (index, speedRegister) ->
+                method.addInstructions(
+                    index,
+                    """
+                        invoke-static {v$speedRegister}, Lapp/morphe/extension/tiktok/speed/PlaybackSpeedPatch;->preserveTransitionSpeed(F)F
+                        move-result v$speedRegister
+                    """,
+                )
+            }
         }
 
         OnRenderFirstFrameFingerprint.method.addInstructions(
@@ -55,8 +114,5 @@ val playbackSpeedPatch = bytecodePatch(
                 invoke-virtual {p0, v0}, Lcom/ss/android/ugc/aweme/feed/controller/PlayerController;->setSpeed(F)V
             """,
         )
-
-        // Keep the extension speed entry point available to TikTok callers.
     }
 }
-

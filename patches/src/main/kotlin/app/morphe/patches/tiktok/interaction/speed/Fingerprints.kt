@@ -7,17 +7,26 @@ package app.morphe.patches.tiktok.interaction.speed
 import app.morphe.patcher.Fingerprint
 import com.android.tools.smali.dexlib2.AccessFlags
 
-internal object PlaybackSpeedMenuSelectionFingerprint : Fingerprint(
+internal object PlaybackSpeedSelectionBoundaryFingerprint : Fingerprint(
     returnType = "V",
     parameters = listOf(
-        "Landroid/view/View;",
-        "Lcom/ss/android/ugc/aweme/share/base/model/BaseSharePackage;",
+        "F",
+        "Lcom/ss/android/ugc/aweme/feed/model/Aweme;",
+        "Ljava/lang/String;",
+        "Ljava/lang/String;",
     ),
     strings = listOf(
-        "enter_from",
-        "panel_source",
+        "swipe_up_lock_persist",
         "click_share_button",
+        "long_press",
     ),
+)
+
+internal object PlayerControllerSetSpeedFingerprint : Fingerprint(
+    definingClass = "/feed/controller/PlayerController;",
+    name = "setSpeed",
+    returnType = "V",
+    parameters = listOf("F"),
 )
 
 internal object SetSpeedFingerprint : Fingerprint(

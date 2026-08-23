@@ -32,6 +32,7 @@ val rememberClearDisplayPatch = bytecodePatch(
                     "Lapp/morphe/extension/tiktok/cleardisplay/RememberClearDisplayPatch;->rememberClearDisplayEvent(Ljava/lang/Object;)V",
             )
 
+            val clearDisplayEventClass = eventClass
             OnRenderFirstFrameBodyFingerprint.method.addInstructions(
                 0,
                 """
@@ -44,9 +45,9 @@ val rememberClearDisplayPatch = bytecodePatch(
                     const-string v3, ""
                     const-string v4, "long_press"
 
-                    new-instance v0, $eventClass
-                    invoke-direct {v0, v1, v2, v3, v4}, $eventClass-><init>(ZILjava/lang/String;Ljava/lang/String;)V
-                    invoke-virtual {v0}, $eventClass->post()Lcom/ss/android/ugc/governance/eventbus/IEvent;
+                    new-instance v0, $clearDisplayEventClass
+                    invoke-direct {v0, v1, v2, v3, v4}, $clearDisplayEventClass-><init>(ZILjava/lang/String;Ljava/lang/String;)V
+                    invoke-virtual {v0}, $clearDisplayEventClass->post()Lcom/ss/android/ugc/governance/eventbus/IEvent;
 
                     :clear_display_disabled
                     nop
