@@ -42,7 +42,8 @@
           "mergePattern": "^(?:fix|feat|perf|revert)(?:\\(.*\\))?!?: [Mm]erge (.*)$",
           "mergeCorrespondence": [
             "upstreamMerge"
-          ]
+          ],
+          "breakingHeaderPattern": "^(\\w*)(?:\\((.*)\\))?!: (.*)$"
         }
       }
     ],
@@ -53,7 +54,8 @@
           "mergePattern": "^(?:fix|feat|perf|revert)(?:\\(.*\\))?!?: [Mm]erge (.*)$",
           "mergeCorrespondence": [
             "upstreamMerge"
-          ]
+          ],
+          "breakingHeaderPattern": "^(\\w*)(?:\\((.*)\\))?!: (.*)$"
         }
       }
     ],
