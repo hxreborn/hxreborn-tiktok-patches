@@ -92,6 +92,12 @@ public class FeedFilterPreferenceCategory extends ConditionalPreferenceCategory 
                 "Min/Max likes", "The minimum or maximum likes of a video to show.",
                 Settings.MIN_MAX_LIKES
         ));
+        addPreference(new TogglePreference(
+                context,
+                "Filter cached/offline videos",
+                "Also apply these filters to TikTok's cached and offline fallback videos.",
+                Settings.FILTER_CACHED_OFFLINE_VIDEOS
+        ));
     }
 }
 

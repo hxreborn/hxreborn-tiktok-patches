@@ -23,3 +23,13 @@ internal object LongPressQuickShareGateFingerprint : Fingerprint(
             method.name == "LIZ"
     },
 )
+
+internal object LongPressRepostGateFingerprint : Fingerprint(
+    definingClass = "Lcom/ss/android/ugc/aweme/feed/assem/digg/VideoDiggAssem;",
+    returnType = "Z",
+    parameters = listOf("Landroid/view/View;"),
+    strings = listOf(
+        "Long press detected on digg button for aweme: ",
+        "long_press_like_panel",
+    ),
+)

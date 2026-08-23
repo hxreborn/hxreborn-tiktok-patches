@@ -88,6 +88,14 @@ public class ExtensionPreferenceCategory extends ConditionalPreferenceCategory {
                     Settings.DISABLE_LONG_PRESS_QUICK_SHARE
             ));
         }
+        if (SettingsStatus.disableLongPressRepostEnabled) {
+            addPreference(new TogglePreference(
+                    context,
+                    "Disable long-press repost",
+                    "Keep holding Like from opening TikTok's repost action.",
+                    Settings.DISABLE_LONG_PRESS_REPOST
+            ));
+        }
         if (SettingsStatus.nonPersonalizedSearchEnabled) {
             addPreference(new TogglePreference(
                     context,

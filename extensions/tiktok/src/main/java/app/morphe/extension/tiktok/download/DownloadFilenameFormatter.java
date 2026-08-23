@@ -85,6 +85,14 @@ public final class DownloadFilenameFormatter {
     }
 
     public static String resolveDestinationName(String originalName) {
+        return resolveDestinationName(originalName, false);
+    }
+
+    public static String consumeDestinationName(String originalName) {
+        return resolveDestinationName(originalName, true);
+    }
+
+    private static String resolveDestinationName(String originalName, boolean consume) {
         if (originalName == null || originalName.trim().isEmpty()) return originalName;
         synchronized (PENDING_NAMES) {
             PendingName pending = PENDING_NAMES.get(originalName);
@@ -92,6 +100,9 @@ public final class DownloadFilenameFormatter {
             if (System.currentTimeMillis() - pending.createdAt > PENDING_NAME_TTL_MS) {
                 PENDING_NAMES.remove(originalName);
                 return originalName;
+            }
+            if (consume) {
+                PENDING_NAMES.remove(originalName);
             }
             return pending.name;
         }

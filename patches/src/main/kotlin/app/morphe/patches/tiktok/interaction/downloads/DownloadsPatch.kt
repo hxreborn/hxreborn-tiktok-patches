@@ -197,7 +197,7 @@ val downloadsPatch = bytecodePatch(
             addInstructions(
                 0,
                 """
-                    invoke-static/range {p1 .. p1}, $FILENAME_FORMATTER_CLASS_DESCRIPTOR->resolveDestinationName(Ljava/lang/String;)Ljava/lang/String;
+                    invoke-static/range {p1 .. p1}, $FILENAME_FORMATTER_CLASS_DESCRIPTOR->consumeDestinationName(Ljava/lang/String;)Ljava/lang/String;
                     move-result-object p1
                 """,
             )
@@ -227,7 +227,7 @@ val downloadsPatch = bytecodePatch(
             addInstructions(
                 0,
                 """
-                    invoke-static/range {p1 .. p1}, $FILENAME_FORMATTER_CLASS_DESCRIPTOR->resolveDestinationName(Ljava/lang/String;)Ljava/lang/String;
+                    invoke-static/range {p1 .. p1}, $FILENAME_FORMATTER_CLASS_DESCRIPTOR->consumeDestinationName(Ljava/lang/String;)Ljava/lang/String;
                     move-result-object p1
                 """,
             )
@@ -339,7 +339,7 @@ val downloadsPatch = bytecodePatch(
             addInstructions(
                 0,
                 """
-                    invoke-static/range {p2 .. p2}, $FILENAME_FORMATTER_CLASS_DESCRIPTOR->resolveDestinationName(Ljava/lang/String;)Ljava/lang/String;
+                    invoke-static/range {p2 .. p2}, $FILENAME_FORMATTER_CLASS_DESCRIPTOR->consumeDestinationName(Ljava/lang/String;)Ljava/lang/String;
                     move-result-object p2
                 """,
             )

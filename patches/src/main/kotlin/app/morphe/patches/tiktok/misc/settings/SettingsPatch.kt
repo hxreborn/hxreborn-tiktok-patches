@@ -15,6 +15,7 @@ import app.morphe.patcher.util.proxy.mutableTypes.MutableMethod
 import app.morphe.patcher.util.smali.ExternalLabel
 import app.morphe.patches.tiktok.misc.extension.sharedExtensionPatch
 import app.morphe.util.findMutableMethodOf
+import app.morphe.util.findFreeRegister
 import app.morphe.util.getReference
 import app.morphe.util.indexOfFirstInstructionOrThrow
 import com.android.tools.smali.dexlib2.iface.ClassDef
@@ -376,9 +377,7 @@ val settingsPatch = bytecodePatch(
                 opcode == Opcode.SGET_OBJECT && getReference<FieldReference>()?.type == "LX/08EY;"
             }
             val iconRegister = constructor.getInstruction<OneRegisterInstruction>(iconLoadIndex).registerA
-            val localRegisterCount = constructor.implementation!!.registerCount - constructor.parameters.size - 1
-            val tempRegister = (0 until localRegisterCount).firstOrNull { it != iconRegister }
-                ?: throw PatchException("Settings: no local register is available for the Metra icon.")
+            val tempRegister = constructor.findFreeRegister(iconLoadIndex + 1, iconRegister)
 
             constructor.addInstructions(
                 iconLoadIndex + 1,
