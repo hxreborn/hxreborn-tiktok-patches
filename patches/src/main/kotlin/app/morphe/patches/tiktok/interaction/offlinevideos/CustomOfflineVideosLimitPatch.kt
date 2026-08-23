@@ -19,7 +19,7 @@ private const val CUSTOM_OFFLINE_VIDEOS_HELPER =
 @Suppress("unused")
 val customOfflineVideosLimitPatch = bytecodePatch(
     name = "Custom offline videos limit",
-    description = "Adds a custom entry to TikTok's offline videos menu with a configurable limit of up to 500 videos.",
+    description = "Adds a custom entry to TikTok's offline videos menu with a configurable limit from 1 to 1000 videos.",
     default = true,
 ) {
     compatibleWith(*AppCompatibilities.tiktok4623())

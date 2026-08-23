@@ -109,7 +109,7 @@ val feedFilterPatch = bytecodePatch(
         InsertedFeedItemsFingerprint.method.addInstructions(
             0,
             """
-                invoke-static/range {p2 .. p3}, $EXTENSION_CLASS_DESCRIPTOR->filterInsertedFeedItems(Ljava/lang/String;Ljava/util/List;)Ljava/util/List;
+                invoke-static/range {p0 .. p3}, $EXTENSION_CLASS_DESCRIPTOR->filterInsertedFeedItems(Lcom/ss/android/ugc/aweme/feed/panel/BaseListFragmentPanel;ILjava/lang/String;Ljava/util/List;)Ljava/util/List;
                 move-result-object p3
             """,
         )

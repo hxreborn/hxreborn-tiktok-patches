@@ -35,6 +35,11 @@ public class Settings extends BaseSettings {
     public static final BooleanSetting HIDE_INBOX_STORIES = new BooleanSetting("hide_inbox_stories", TRUE, true);
     public static final StringSetting MIN_MAX_VIEWS = new StringSetting("min_max_views", "0-" + Long.MAX_VALUE, true);
     public static final StringSetting MIN_MAX_LIKES = new StringSetting("min_max_likes", "0-" + Long.MAX_VALUE, true);
+    public static final BooleanSetting FILTER_CACHED_OFFLINE_VIDEOS = new BooleanSetting(
+            "filter_cached_offline_videos",
+            TRUE,
+            true
+    );
     public static final BooleanSetting FEED_NAVIGATION = new BooleanSetting("feed_navigation", FALSE, true);
     public static final StringSetting FEED_NAVIGATION_TABS = new StringSetting(
             "feed_navigation_tabs",
@@ -129,6 +134,8 @@ public class Settings extends BaseSettings {
     public static final BooleanSetting DISABLE_ANALYTICS = new BooleanSetting("disable_analytics", FALSE, true);
     public static final BooleanSetting DISABLE_LONG_PRESS_QUICK_SHARE =
             new BooleanSetting("disable_long_press_quick_share", FALSE);
+    public static final BooleanSetting DISABLE_LONG_PRESS_REPOST =
+            new BooleanSetting("disable_long_press_repost", FALSE);
     public static final BooleanSetting ENABLE_NON_PERSONALIZED_SEARCH =
             new BooleanSetting("enable_non_personalized_search", FALSE, true);
     public static final BooleanSetting ENABLE_LIVE_SEARCH =

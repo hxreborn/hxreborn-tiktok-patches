@@ -15,6 +15,7 @@ import app.morphe.extension.tiktok.settings.preference.InputTextPreference;
 import app.morphe.extension.tiktok.settings.preference.NumberInputPreference;
 import app.morphe.extension.tiktok.settings.preference.TogglePreference;
 import app.morphe.extension.tiktok.download.DownloadDestination;
+import app.morphe.extension.tiktok.offline.CustomOfflineVideosLimitPatch;
 
 @SuppressWarnings("deprecation")
 public class DownloadsPreferenceCategory extends ConditionalPreferenceCategory {
@@ -81,10 +82,10 @@ public class DownloadsPreferenceCategory extends ConditionalPreferenceCategory {
         addPreference(new NumberInputPreference(
                 context,
                 "Offline videos limit",
-                "Choose 201-500 videos. Restart TikTok after saving.",
+                "Choose 1-1000 videos. Values outside this range use the nearest valid limit. Restart TikTok after saving.",
                 Settings.CUSTOM_OFFLINE_VIDEO_LIMIT,
-                201,
-                500
+                CustomOfflineVideosLimitPatch.MIN_LIMIT,
+                CustomOfflineVideosLimitPatch.MAX_LIMIT
         ));
 
     }

@@ -37,6 +37,7 @@ Everything from [icysymmetra's upstream](https://github.com/icysymmetra/tiktok-p
 - Hide the Inbox stories row
 - Expand the Activity and New followers lists instead of hiding them behind View all
 - Hide the BdTuring risk-control CAPTCHA dialog†
+- Unlock scrolling past countdown-locked short-drama ads
 
 \*TikTok decides which accounts count as institutions. Major news outlets usually carry that tag and
 stay in your feed, but some do not and get hidden like any other verified account.
@@ -44,7 +45,7 @@ stay in your feed, but some do not and get hidden like any other verified accoun
 †Off by default. Enabling it suppresses the risk-control puzzle TikTok shows flagged accounts, so
 follows and likes silently fail instead of prompting you to solve it.
 
-Last synced with upstream at [`266002c`](https://github.com/icysymmetra/tiktok-patches-for-morphe/commit/266002c). Release numbers are this fork's own and do not track upstream's.
+Last synced with upstream at [`818a505`](https://github.com/icysymmetra/tiktok-patches-for-morphe/commit/818a505). Release numbers are this fork's own and do not track upstream's.
 
 <br>
 

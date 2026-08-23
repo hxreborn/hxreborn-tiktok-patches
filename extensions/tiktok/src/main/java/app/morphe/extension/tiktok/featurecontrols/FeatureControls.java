@@ -113,6 +113,10 @@ public final class FeatureControls {
         return Settings.DISABLE_LONG_PRESS_QUICK_SHARE.get() ? 0 : originalMode;
     }
 
+    public static boolean disableLongPressRepost() {
+        return Settings.DISABLE_LONG_PRESS_REPOST.get();
+    }
+
     public static boolean enableNonPersonalizedSearch(boolean original) {
         return Settings.ENABLE_NON_PERSONALIZED_SEARCH.get() || original;
     }

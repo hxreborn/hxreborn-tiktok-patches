@@ -7,6 +7,7 @@ import com.ss.android.ugc.aweme.feed.model.Aweme;
 import com.ss.android.ugc.aweme.feed.model.AwemeBizExtKt;
 import com.ss.android.ugc.aweme.feed.model.AwemeStatistics;
 import com.ss.android.ugc.aweme.feed.model.FeedItemList;
+import com.ss.android.ugc.aweme.feed.panel.BaseListFragmentPanel;
 import com.ss.android.ugc.aweme.follow.presenter.FollowFeed;
 import com.ss.android.ugc.aweme.follow.presenter.FollowFeedList;
 
@@ -37,6 +38,12 @@ public final class FeedItemsFilter {
         new LikeCountFilter()
     );
     private static final List<IFilter> LATE_FOLLOW_FILTERS = List.of(ADS_FILTER);
+
+    private static final int CACHE_SOURCE_COLD_CACHE = 0;
+    private static final int CACHE_SOURCE_FEED_UNCONSUMED = 1;
+    private static final int CACHE_SOURCE_GOLDEN_HOUSE = 2;
+    private static final int CACHE_SOURCE_OFFLINE_MODE = 3;
+    private static final int CACHE_SOURCE_MERGE_CACHE = 4;
 
     private static final int MAX_NULL_ITEMS_LOGS = 3;
     private static final int MAX_BATCH_LOGS = 10;
@@ -109,8 +116,15 @@ public final class FeedItemsFilter {
     }
 
     @SuppressWarnings({"rawtypes", "unchecked"})
-    public static List filterInsertedFeedItems(String source, List items) {
+    public static List filterInsertedFeedItems(
+        BaseListFragmentPanel panel,
+        int insertionPosition,
+        String source,
+        List items
+    ) {
         if (items == null || items.isEmpty()) return items;
+        if (!Settings.FILTER_CACHED_OFFLINE_VIDEOS.get()) return items;
+        if (panel == null || !"homepage_hot".equals(panel.getEventType())) return items;
 
         List<IFilter> activeContentFilters = getActiveFilters(CONTENT_FILTERS);
         List<IFilter> activeRangeFilters = getActiveFilters(RANGE_FILTERS);
@@ -130,7 +144,7 @@ public final class FeedItemsFilter {
 
             Aweme item = (Aweme) container;
             int cacheSourceType = AwemeBizExtKt.getCacheSourceType(item);
-            if (!cacheInsertion && cacheSourceType < 0) {
+            if (!cacheInsertion && !isKnownFeedCacheSource(cacheSourceType)) {
                 if (kept != null) kept.add(container);
                 continue;
             }
@@ -162,6 +176,7 @@ public final class FeedItemsFilter {
 
     public static FeedItemList filterCachedFeedList(FeedItemList feedItemList) {
         if (feedItemList == null || feedItemList.items == null) return null;
+        if (!Settings.FILTER_CACHED_OFFLINE_VIDEOS.get()) return feedItemList;
 
         boolean verbose = BaseSettings.DEBUG.get();
         filterFeedList(
@@ -174,6 +189,19 @@ public final class FeedItemsFilter {
             FilterPhase.RESPONSE
         );
         return feedItemList.items.isEmpty() ? null : feedItemList;
+    }
+
+    private static boolean isKnownFeedCacheSource(int cacheSourceType) {
+        switch (cacheSourceType) {
+            case CACHE_SOURCE_COLD_CACHE:
+            case CACHE_SOURCE_FEED_UNCONSUMED:
+            case CACHE_SOURCE_GOLDEN_HOUSE:
+            case CACHE_SOURCE_OFFLINE_MODE:
+            case CACHE_SOURCE_MERGE_CACHE:
+                return true;
+            default:
+                return false;
+        }
     }
 
     private static void filterFollowFeedList(
