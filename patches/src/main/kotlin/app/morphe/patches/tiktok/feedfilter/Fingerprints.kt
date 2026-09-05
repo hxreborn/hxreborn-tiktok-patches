@@ -139,12 +139,15 @@ internal object RecUserCardInsertFingerprint : Fingerprint(
     strings = listOf("friend_recommend_card"),
 )
 
-internal object BulletinMusicPlayFingerprint : Fingerprint(
-    returnType = "Lkotlin/Pair;",
-    custom = { method, _ ->
-        method.implementation?.instructions?.any {
-            it.getReference<MethodReference>()?.definingClass ==
-                "Lcom/ss/android/ugc/aweme/inbox/bulletin/music/LifecycleMusicPlayer;"
-        } == true
-    },
+internal object FeedLynxCardLoadFingerprint : Fingerprint(
+    accessFlags = listOf(AccessFlags.PUBLIC, AccessFlags.STATIC),
+    returnType = "Z",
+    parameters = listOf(
+        "Landroid/content/Context;",
+        "Ljava/lang/String;",
+        "Lcom/ss/android/ugc/aweme/feed/model/Aweme;",
+        "Ljava/lang/String;",
+        "L",
+    ),
+    strings = listOf("feedDynamicComponentLoadSuccess"),
 )

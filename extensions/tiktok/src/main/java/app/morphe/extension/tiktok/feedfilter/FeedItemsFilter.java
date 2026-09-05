@@ -123,7 +123,9 @@ public final class FeedItemsFilter {
         List items
     ) {
         if (items == null || items.isEmpty()) return items;
-        if (!Settings.FILTER_CACHED_OFFLINE_VIDEOS.get()) return items;
+        boolean hideCards = CardInsertFilter.shouldHide();
+        boolean filterCache = Settings.FILTER_CACHED_OFFLINE_VIDEOS.get();
+        if (!hideCards && !filterCache) return items;
         if (panel == null || !"homepage_hot".equals(panel.getEventType())) return items;
 
         List<IFilter> activeContentFilters = getActiveFilters(CONTENT_FILTERS);
@@ -143,14 +145,14 @@ public final class FeedItemsFilter {
             }
 
             Aweme item = (Aweme) container;
-            int cacheSourceType = AwemeBizExtKt.getCacheSourceType(item);
-            if (!cacheInsertion && !isKnownFeedCacheSource(cacheSourceType)) {
-                if (kept != null) kept.add(container);
-                continue;
+            String reason = null;
+            if (hideCards && item.getAwemeType() == CardInsertFilter.AWEME_TYPE_INSERT_CARD) {
+                reason = CardInsertFilter.class.getSimpleName();
+            } else if (filterCache
+                && (cacheInsertion || isKnownFeedCacheSource(AwemeBizExtKt.getCacheSourceType(item)))) {
+                reason = getFilterReason(activeContentFilters, item);
+                if (reason == null) reason = getFilterReason(activeRangeFilters, item);
             }
-
-            String reason = getFilterReason(activeContentFilters, item);
-            if (reason == null) reason = getFilterReason(activeRangeFilters, item);
             if (reason == null) {
                 if (kept != null) kept.add(container);
                 continue;
