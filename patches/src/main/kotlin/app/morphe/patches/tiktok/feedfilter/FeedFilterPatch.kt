@@ -15,7 +15,6 @@ import app.morphe.patches.tiktok.misc.extension.sharedExtensionPatch
 import app.morphe.patches.tiktok.misc.settings.SettingsStatusLoadFingerprint
 import app.morphe.patches.tiktok.misc.settings.SettingsStatusLoadFingerprint.method
 import app.morphe.util.addInstructionsAtControlFlowLabel
-import app.morphe.util.getReference
 import app.morphe.util.indexOfFirstInstructionOrThrow
 import com.android.tools.smali.dexlib2.Opcode
 import com.android.tools.smali.dexlib2.iface.instruction.OneRegisterInstruction
@@ -197,31 +196,19 @@ val feedFilterPatch = bytecodePatch(
             """,
         )
 
-        // Bulletin music outlives the feed player and its mute
-        BulletinMusicPlayFingerprint.methodOrNull?.let { method ->
-            val musicIndex = method.implementation!!.instructions.indexOfFirst {
-                it.opcode == Opcode.IGET_OBJECT &&
-                    it.getReference<FieldReference>()?.type == "Lcom/ss/android/ugc/aweme/music/model/Music;"
-            }
-            check(musicIndex >= 0) { "Could not find the bulletin music field read" }
-
-            val musicRegister = (method.getInstruction(musicIndex) as OneRegisterInstruction).registerA
-            val freeRegister = if (musicRegister == 0) 1 else 0
-
-            method.addInstructionsWithLabels(
-                musicIndex + 1,
-                """
-                    invoke-static {}, $CARD_INSERT_FILTER_CLASS_DESCRIPTOR->shouldBlockMusic()Z
-                    move-result v$freeRegister
-                    if-eqz v$freeRegister, :morphe_play_bulletin_music
-                    const/4 v$musicRegister, 0x0
-                """,
-                ExternalLabel(
-                    "morphe_play_bulletin_music",
-                    method.getInstruction(musicIndex + 1),
-                ),
-            )
-        }
+        // Card Lynx views preload before any list filter runs
+        FeedLynxCardLoadFingerprint.method.addInstructions(
+            0,
+            """
+                invoke-static {}, $CARD_INSERT_FILTER_CLASS_DESCRIPTOR->shouldHide()Z
+                move-result v0
+                if-eqz v0, :morphe_load_feed_card
+                const/4 v0, 0x0
+                return v0
+                :morphe_load_feed_card
+                nop
+            """,
+        )
 
         DramaBlockingAdFingerprint.methodOrNull?.apply {
             val returnIndex = indexOfFirstInstructionOrThrow {

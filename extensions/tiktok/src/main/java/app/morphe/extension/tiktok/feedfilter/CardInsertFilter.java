@@ -4,16 +4,15 @@
  */
 package app.morphe.extension.tiktok.feedfilter;
 
-import app.morphe.extension.shared.Logger;
 import app.morphe.extension.tiktok.settings.Settings;
 import com.ss.android.ugc.aweme.feed.model.Aweme;
 
 public class CardInsertFilter implements IFilter {
-    private static final int AWEME_TYPE_INSERT_CARD = 105;
+    static final int AWEME_TYPE_INSERT_CARD = 105;
 
     @Override
     public boolean getEnabled() {
-        return Settings.HIDE_FRIEND_RECOMMENDATIONS.get();
+        return shouldHide();
     }
 
     @Override
@@ -21,9 +20,7 @@ public class CardInsertFilter implements IFilter {
         return item.getAwemeType() == AWEME_TYPE_INSERT_CARD;
     }
 
-    public static boolean shouldBlockMusic() {
-        boolean block = Settings.HIDE_FRIEND_RECOMMENDATIONS.get();
-        Logger.printInfo(() -> "[Morphe TikTok FeedFilter] bulletin music requested: block=" + block);
-        return block;
+    public static boolean shouldHide() {
+        return Settings.HIDE_FRIEND_RECOMMENDATIONS.get();
     }
 }
