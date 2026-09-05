@@ -3,13 +3,12 @@
 
 ### Bug Fixes
 
-* remove ineffective regional fallback ([714830c](https://github.com/hxreborn/hxreborn-tiktok-patches/commit/714830caeeaa5be1691609efefdae4d50ff179c6))
 * **TikTok - Feed filter:** hide real-time inserted cards and stop their Lynx view preloading ([a060791](https://github.com/hxreborn/hxreborn-tiktok-patches/commit/a060791312ab07a75f4ea42c7644d95be36ac896))
 
 
 ### Features
 
-* add configurable regional restriction fallback ([9781ef2](https://github.com/hxreborn/hxreborn-tiktok-patches/commit/9781ef2c18b1372764f590260e37d3df54fd6794))
+* **TikTok - Region spoof:** rename SIM spoof to Region spoof and add a du preset for the United Arab Emirates ([9781ef2](https://github.com/hxreborn/hxreborn-tiktok-patches/commit/9781ef2c18b1372764f590260e37d3df54fd6794), [714830c](https://github.com/hxreborn/hxreborn-tiktok-patches/commit/714830caeeaa5be1691609efefdae4d50ff179c6))
 
 # [1.0.0](https://github.com/hxreborn/hxreborn-tiktok-patches/compare/v0.11.4...v1.0.0) (2026-08-23)
 
