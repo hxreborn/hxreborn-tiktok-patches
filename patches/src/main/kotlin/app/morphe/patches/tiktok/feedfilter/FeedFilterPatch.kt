@@ -15,10 +15,13 @@ import app.morphe.patches.tiktok.misc.extension.sharedExtensionPatch
 import app.morphe.patches.tiktok.misc.settings.SettingsStatusLoadFingerprint
 import app.morphe.patches.tiktok.misc.settings.SettingsStatusLoadFingerprint.method
 import app.morphe.util.addInstructionsAtControlFlowLabel
+import app.morphe.util.findFreeRegister
+import app.morphe.util.getReference
 import app.morphe.util.indexOfFirstInstructionOrThrow
 import com.android.tools.smali.dexlib2.Opcode
 import com.android.tools.smali.dexlib2.iface.instruction.OneRegisterInstruction
 import com.android.tools.smali.dexlib2.iface.reference.FieldReference
+import com.android.tools.smali.dexlib2.iface.reference.MethodReference
 
 private const val EXTENSION_CLASS_DESCRIPTOR = "Lapp/morphe/extension/tiktok/feedfilter/FeedItemsFilter;"
 private const val TAKO_AI_FILTER_CLASS_DESCRIPTOR = "Lapp/morphe/extension/tiktok/feedfilter/TakoAiFilter;"
@@ -196,19 +199,88 @@ val feedFilterPatch = bytecodePatch(
             """,
         )
 
-        // Card Lynx views preload before any list filter runs
-        FeedLynxCardLoadFingerprint.method.addInstructions(
+        // Release the card Spark view before load so no Lynx audio starts
+        FeedLynxCardBuildFingerprint.method.apply {
+            val viewType = returnType
+            val factoryIndex = indexOfFirstInstructionOrThrow {
+                opcode == Opcode.INVOKE_VIRTUAL &&
+                    getReference<MethodReference>()?.returnType == viewType
+            }
+            val viewRegister = (getInstruction(factoryIndex + 1) as OneRegisterInstruction).registerA
+            val insertIndex = factoryIndex + 2
+            val freeRegister = findFreeRegister(insertIndex, viewRegister)
+
+            addInstructionsWithLabels(
+                insertIndex,
+                """
+                    invoke-static {}, $CARD_INSERT_FILTER_CLASS_DESCRIPTOR->shouldHide()Z
+                    move-result v$freeRegister
+                    if-eqz v$freeRegister, :morphe_build_feed_card
+                    invoke-virtual {v$viewRegister}, $viewType->release()V
+                    return-object v$viewRegister
+                """,
+                ExternalLabel("morphe_build_feed_card", getInstruction(insertIndex)),
+            )
+        }
+
+        // Block a card's Lynx audio at the x-audio-tt chokepoint
+        LynxAudioSetSrcFingerprint.methodOrNull?.addInstructions(
             0,
             """
-                invoke-static {}, $CARD_INSERT_FILTER_CLASS_DESCRIPTOR->shouldHide()Z
+                invoke-static {p1}, $CARD_INSERT_FILTER_CLASS_DESCRIPTOR->blockLynxAudio(Ljava/lang/String;)Z
                 move-result v0
-                if-eqz v0, :morphe_load_feed_card
-                const/4 v0, 0x0
-                return v0
-                :morphe_load_feed_card
+                if-eqz v0, :morphe_allow_lynx_src
+                return-void
+                :morphe_allow_lynx_src
                 nop
             """,
         )
+
+        LynxAudioPlayFingerprint.methodOrNull?.addInstructions(
+            0,
+            """
+                invoke-static {}, $CARD_INSERT_FILTER_CLASS_DESCRIPTOR->blockLynxAudio()Z
+                move-result v0
+                if-eqz v0, :morphe_allow_lynx_play
+                return-void
+                :morphe_allow_lynx_play
+                nop
+            """,
+        )
+
+        LynxAudioPrepareFingerprint.methodOrNull?.addInstructions(
+            0,
+            """
+                invoke-static {}, $CARD_INSERT_FILTER_CLASS_DESCRIPTOR->blockLynxAudio()Z
+                move-result v0
+                if-eqz v0, :morphe_allow_lynx_prepare
+                return-void
+                :morphe_allow_lynx_prepare
+                nop
+            """,
+        )
+
+        // Never build the bulletin card's persistent native player
+        BulletinMusicPlayFingerprint.methodOrNull?.let { method ->
+            val musicIndex = method.implementation!!.instructions.indexOfFirst {
+                it.opcode == Opcode.IGET_OBJECT &&
+                    it.getReference<FieldReference>()?.type == "Lcom/ss/android/ugc/aweme/music/model/Music;"
+            }
+            if (musicIndex >= 0) {
+                val musicRegister = (method.getInstruction(musicIndex) as OneRegisterInstruction).registerA
+                val freeRegister = method.findFreeRegister(musicIndex + 1, musicRegister)
+                method.addInstructionsWithLabels(
+                    musicIndex + 1,
+                    """
+                        invoke-static {}, $CARD_INSERT_FILTER_CLASS_DESCRIPTOR->shouldHide()Z
+                        move-result v$freeRegister
+                        if-eqz v$freeRegister, :morphe_play_bulletin_music
+                        const/4 v$musicRegister, 0x0
+                    """,
+                    ExternalLabel("morphe_play_bulletin_music", method.getInstruction(musicIndex + 1)),
+                )
+            }
+        }
 
         DramaBlockingAdFingerprint.methodOrNull?.apply {
             val returnIndex = indexOfFirstInstructionOrThrow {

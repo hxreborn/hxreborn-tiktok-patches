@@ -139,15 +139,38 @@ internal object RecUserCardInsertFingerprint : Fingerprint(
     strings = listOf("friend_recommend_card"),
 )
 
-internal object FeedLynxCardLoadFingerprint : Fingerprint(
+internal object FeedLynxCardBuildFingerprint : Fingerprint(
     accessFlags = listOf(AccessFlags.PUBLIC, AccessFlags.STATIC),
-    returnType = "Z",
-    parameters = listOf(
-        "Landroid/content/Context;",
-        "Ljava/lang/String;",
-        "Lcom/ss/android/ugc/aweme/feed/model/Aweme;",
-        "Ljava/lang/String;",
-        "L",
-    ),
-    strings = listOf("feedDynamicComponentLoadSuccess"),
+    strings = listOf("lynx_card_init_time"),
+)
+
+internal object BulletinMusicPlayFingerprint : Fingerprint(
+    returnType = "Lkotlin/Pair;",
+    custom = { method, _ ->
+        method.implementation?.instructions?.any {
+            it.getReference<MethodReference>()?.definingClass ==
+                "Lcom/ss/android/ugc/aweme/inbox/bulletin/music/LifecycleMusicPlayer;"
+        } == true
+    },
+)
+
+internal object LynxAudioSetSrcFingerprint : Fingerprint(
+    definingClass = "Lcom/bytedance/ies/xelement/audiott/LynxAudioTTView;",
+    name = "setSrc",
+    returnType = "V",
+    parameters = listOf("Ljava/lang/String;"),
+)
+
+internal object LynxAudioPlayFingerprint : Fingerprint(
+    definingClass = "Lcom/bytedance/ies/xelement/audiott/LynxAudioTTView;",
+    name = "play",
+    returnType = "V",
+    parameters = listOf("Lcom/lynx/react/bridge/Callback;"),
+)
+
+internal object LynxAudioPrepareFingerprint : Fingerprint(
+    definingClass = "Lcom/bytedance/ies/xelement/audiott/LynxAudioTTView;",
+    name = "prepare",
+    returnType = "V",
+    parameters = listOf("Lcom/lynx/react/bridge/Callback;"),
 )
