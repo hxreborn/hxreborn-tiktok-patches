@@ -55,7 +55,7 @@ public class TikTokPreferenceFragment extends AbstractPreferenceFragment {
         INTERFACE("Interface", "Popups, inbox lists, and publish dates."),
         COMMENTS("Comments and translation", "Auto translate, quick reactions, and copy options."),
         DOWNLOADS("Downloads", "Paths, filenames, watermark, and offline videos."),
-        REGION("Bypass regional restriction", "SIM info, country, and operator."),
+        REGION("Region spoof", "Change the region TikTok reads."),
         BEHAVIOR("App behavior", "Sharing, playback, and gestures."),
         DIAGNOSTICS("Diagnostics", "Logging, crash capture, and report export.");
 
