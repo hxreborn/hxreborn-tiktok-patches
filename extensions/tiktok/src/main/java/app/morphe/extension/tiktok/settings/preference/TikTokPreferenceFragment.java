@@ -254,7 +254,6 @@ public class TikTokPreferenceFragment extends AbstractPreferenceFragment {
                     Settings.HIDE_EVENT_BADGE.get(),
                     Settings.HIDE_AI_GENERATED.get(),
                     Settings.HIDE_PAID_PARTNERSHIP.get(),
-                    Settings.HIDE_FRIEND_RECOMMENDATIONS.get(),
                     Settings.HIDE_VERIFIED_ACCOUNTS.get()
             ));
         }

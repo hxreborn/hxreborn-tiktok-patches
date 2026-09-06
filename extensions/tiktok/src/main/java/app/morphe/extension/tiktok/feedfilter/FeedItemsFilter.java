@@ -30,7 +30,6 @@ public final class FeedItemsFilter {
         new ShopFilter(),
         new AigcFilter(),
         new PaidPartnershipFilter(),
-        new CardInsertFilter(),
         new VerifiedAccountFilter()
     );
     private static final List<IFilter> RANGE_FILTERS = List.of(
@@ -123,9 +122,7 @@ public final class FeedItemsFilter {
         List items
     ) {
         if (items == null || items.isEmpty()) return items;
-        boolean hideCards = CardInsertFilter.shouldHide();
-        boolean filterCache = Settings.FILTER_CACHED_OFFLINE_VIDEOS.get();
-        if (!hideCards && !filterCache) return items;
+        if (!Settings.FILTER_CACHED_OFFLINE_VIDEOS.get()) return items;
         if (panel == null || !"homepage_hot".equals(panel.getEventType())) return items;
 
         List<IFilter> activeContentFilters = getActiveFilters(CONTENT_FILTERS);
@@ -146,10 +143,7 @@ public final class FeedItemsFilter {
 
             Aweme item = (Aweme) container;
             String reason = null;
-            if (hideCards && item.getAwemeType() == CardInsertFilter.AWEME_TYPE_INSERT_CARD) {
-                reason = CardInsertFilter.class.getSimpleName();
-            } else if (filterCache
-                && (cacheInsertion || isKnownFeedCacheSource(AwemeBizExtKt.getCacheSourceType(item)))) {
+            if (cacheInsertion || isKnownFeedCacheSource(AwemeBizExtKt.getCacheSourceType(item))) {
                 reason = getFilterReason(activeContentFilters, item);
                 if (reason == null) reason = getFilterReason(activeRangeFilters, item);
             }
@@ -447,7 +441,6 @@ public final class FeedItemsFilter {
                 + " hide_image=" + Settings.HIDE_IMAGE.get()
                 + " hide_ai_generated=" + Settings.HIDE_AI_GENERATED.get()
                 + " hide_paid_partnership=" + Settings.HIDE_PAID_PARTNERSHIP.get()
-                + " hide_friend_recommendations=" + Settings.HIDE_FRIEND_RECOMMENDATIONS.get()
                 + " hide_verified_accounts=" + Settings.HIDE_VERIFIED_ACCOUNTS.get()
                 + " min_max_views=\"" + Settings.MIN_MAX_VIEWS.get() + "\""
                 + " min_max_likes=\"" + Settings.MIN_MAX_LIKES.get() + "\""

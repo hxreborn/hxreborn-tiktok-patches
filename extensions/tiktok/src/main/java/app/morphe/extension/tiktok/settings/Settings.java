@@ -27,7 +27,6 @@ public class Settings extends BaseSettings {
     public static final BooleanSetting HIDE_EVENT_BADGE = new BooleanSetting("hide_event_badge", FALSE, true);
     public static final BooleanSetting HIDE_AI_GENERATED = new BooleanSetting("hide_ai_generated", FALSE, true);
     public static final BooleanSetting HIDE_PAID_PARTNERSHIP = new BooleanSetting("hide_paid_partnership", FALSE, true);
-    public static final BooleanSetting HIDE_FRIEND_RECOMMENDATIONS = new BooleanSetting("hide_friend_recommendations", FALSE, true);
     public static final BooleanSetting HIDE_VERIFIED_ACCOUNTS = new BooleanSetting("hide_verified_accounts", FALSE, true);
     public static final BooleanSetting HIDE_CAPTCHA_POPUPS = new BooleanSetting("hide_captcha_popups", FALSE, true);
     public static final BooleanSetting HIDE_SUGGESTED_ACCOUNTS = new BooleanSetting("hide_suggested_accounts", TRUE, true);

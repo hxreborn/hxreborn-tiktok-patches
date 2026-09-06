@@ -74,11 +74,6 @@ public class FeedFilterPreferenceCategory extends ConditionalPreferenceCategory 
         ));
         addPreference(new TogglePreference(
                 context,
-                "Hide friend recommendations", "Hide account, bulletin-board and other cards inserted between videos in the feed.",
-                Settings.HIDE_FRIEND_RECOMMENDATIONS
-        ));
-        addPreference(new TogglePreference(
-                context,
                 "Hide verified accounts", "Hide posts from accounts with a verified badge, except news and other institutions.",
                 Settings.HIDE_VERIFIED_ACCOUNTS
         ));

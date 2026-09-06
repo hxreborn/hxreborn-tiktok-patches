@@ -132,22 +132,3 @@ internal object TakoAiFeedButtonBindFingerprint : Fingerprint(
     returnType = "V",
     parameters = listOf("Landroid/view/View;"),
 )
-
-internal object RecUserCardInsertFingerprint : Fingerprint(
-    returnType = "Lkotlin/Pair;",
-    parameters = listOf("I", "Ljava/util/List;", "Ljava/lang/String;", "Lkotlin/jvm/functions/Function0;"),
-    strings = listOf("friend_recommend_card"),
-)
-
-internal object FeedLynxCardLoadFingerprint : Fingerprint(
-    accessFlags = listOf(AccessFlags.PUBLIC, AccessFlags.STATIC),
-    returnType = "Z",
-    parameters = listOf(
-        "Landroid/content/Context;",
-        "Ljava/lang/String;",
-        "Lcom/ss/android/ugc/aweme/feed/model/Aweme;",
-        "Ljava/lang/String;",
-        "L",
-    ),
-    strings = listOf("feedDynamicComponentLoadSuccess"),
-)

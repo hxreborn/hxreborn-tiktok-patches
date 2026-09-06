@@ -28,7 +28,6 @@ Everything from [icysymmetra's upstream](https://github.com/icysymmetra/tiktok-p
 
 - Hide AI-generated posts
 - Hide paid partnership and promotional content posts
-- Hide in-feed account and bulletin-board suggestion cards
 - Hide posts from verified accounts\*
 - Disable telemetry, ByteDance/AppsFlyer/Firebase
 - Hide the in-feed playlist bar
