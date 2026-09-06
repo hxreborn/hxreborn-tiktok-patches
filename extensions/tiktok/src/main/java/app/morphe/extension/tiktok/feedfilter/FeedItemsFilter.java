@@ -30,7 +30,6 @@ public final class FeedItemsFilter {
         new ShopFilter(),
         new AigcFilter(),
         new PaidPartnershipFilter(),
-        new CardInsertFilter(),
         new VerifiedAccountFilter()
     );
     private static final List<IFilter> RANGE_FILTERS = List.of(
@@ -115,6 +114,50 @@ public final class FeedItemsFilter {
         filterFollowFeedList(followFeedList, false, FilterPhase.LATE_FOLLOW);
     }
 
+    public static List filterProfileAds(List items) {
+        return filterAdOnlyAwemeList("ProfileAwemeList", items);
+    }
+
+    public static List filterLateInsertedAds(String source, List items) {
+        String insertionSource = source == null ? "unknown" : source;
+        return filterAdOnlyAwemeList("FeedInsertion:" + insertionSource, items);
+    }
+
+    @SuppressWarnings({"rawtypes", "unchecked"})
+    private static List filterAdOnlyAwemeList(String source, List items) {
+        if (items == null || items.isEmpty() || !ADS_FILTER.getEnabled()) return items;
+
+        boolean verbose = BaseSettings.DEBUG.get();
+        ArrayList kept = null;
+        int removed = 0;
+        for (int index = 0; index < items.size(); index++) {
+            Object container = items.get(index);
+            Aweme item = container instanceof Aweme ? (Aweme) container : null;
+            String reason = item == null ? null : getFilterReason(LATE_FOLLOW_FILTERS, item);
+            if (reason == null) {
+                if (kept != null) kept.add(container);
+                continue;
+            }
+
+            if (kept == null) {
+                kept = new ArrayList(items.size());
+                kept.addAll(items.subList(0, index));
+            }
+            removed++;
+            logItem(item, reason, verbose);
+        }
+
+        if (kept == null) return items;
+        if (verbose && shouldLogBatch()) {
+            int initialSize = items.size();
+            int resultSize = kept.size();
+            int removedFinal = removed;
+            Logger.printInfo(() -> "[Morphe TikTok FeedFilter] filter(" + source + "): size "
+                + initialSize + " -> " + resultSize + " (removed=" + removedFinal + ")");
+        }
+        return kept;
+    }
+
     @SuppressWarnings({"rawtypes", "unchecked"})
     public static List filterInsertedFeedItems(
         BaseListFragmentPanel panel,
@@ -123,9 +166,6 @@ public final class FeedItemsFilter {
         List items
     ) {
         if (items == null || items.isEmpty()) return items;
-        boolean hideCards = CardInsertFilter.shouldHide();
-        boolean filterCache = Settings.FILTER_CACHED_OFFLINE_VIDEOS.get();
-        if (!hideCards && !filterCache) return items;
         if (panel == null || !"homepage_hot".equals(panel.getEventType())) return items;
 
         List<IFilter> activeContentFilters = getActiveFilters(CONTENT_FILTERS);
@@ -145,14 +185,19 @@ public final class FeedItemsFilter {
             }
 
             Aweme item = (Aweme) container;
-            String reason = null;
-            if (hideCards && item.getAwemeType() == CardInsertFilter.AWEME_TYPE_INSERT_CARD) {
-                reason = CardInsertFilter.class.getSimpleName();
-            } else if (filterCache
-                && (cacheInsertion || isKnownFeedCacheSource(AwemeBizExtKt.getCacheSourceType(item)))) {
-                reason = getFilterReason(activeContentFilters, item);
-                if (reason == null) reason = getFilterReason(activeRangeFilters, item);
+            int cacheSourceType = AwemeBizExtKt.getCacheSourceType(item);
+            if (!cacheInsertion && !isKnownFeedCacheSource(cacheSourceType)) {
+                if (kept != null) kept.add(container);
+                continue;
             }
+            if (cacheSourceType == CACHE_SOURCE_OFFLINE_MODE &&
+                    !Settings.FILTER_OFFLINE_FALLBACK_VIDEOS.get()) {
+                if (kept != null) kept.add(container);
+                continue;
+            }
+
+            String reason = getFilterReason(activeContentFilters, item);
+            if (reason == null) reason = getFilterReason(activeRangeFilters, item);
             if (reason == null) {
                 if (kept != null) kept.add(container);
                 continue;
@@ -178,11 +223,46 @@ public final class FeedItemsFilter {
 
     public static FeedItemList filterCachedFeedList(FeedItemList feedItemList) {
         if (feedItemList == null || feedItemList.items == null) return null;
-        if (!Settings.FILTER_CACHED_OFFLINE_VIDEOS.get()) return feedItemList;
+        filterCachedFeedItems("FeedItemList:cold-cache", feedItemList);
+        return feedItemList.items.isEmpty() ? null : feedItemList;
+    }
 
+    public static FeedItemList filterOfflineFeedList(FeedItemList feedItemList) {
+        if (feedItemList == null || feedItemList.items == null) return null;
+        if (!Settings.FILTER_OFFLINE_FALLBACK_VIDEOS.get()) return feedItemList;
+        filterCachedFeedItems("FeedItemList:offline-fallback", feedItemList);
+        return feedItemList.items.isEmpty() ? null : feedItemList;
+    }
+
+    public static boolean shouldKeepCachedAweme(Aweme item) {
+        if (item == null) return true;
+
+        int cacheSourceType = AwemeBizExtKt.getCacheSourceType(item);
+        if (cacheSourceType == CACHE_SOURCE_OFFLINE_MODE &&
+                !Settings.FILTER_OFFLINE_FALLBACK_VIDEOS.get()) {
+            return true;
+        }
+
+        List<IFilter> activeContentFilters = getActiveFilters(CONTENT_FILTERS);
+        List<IFilter> activeRangeFilters = getActiveFilters(RANGE_FILTERS);
+        String reason = getFilterReason(activeContentFilters, item);
+        if (reason == null) reason = getFilterReason(activeRangeFilters, item);
+        if (reason == null) return true;
+
+        logItem(item, reason, BaseSettings.DEBUG.get());
+        if (BaseSettings.DEBUG.get()) {
+            String rejectionReason = reason;
+            Logger.printInfo(() -> "[Morphe TikTok FeedFilter] Cached item aid="
+                + item.getAid() + " sourceType=" + cacheSourceType
+                + " rejected by " + rejectionReason);
+        }
+        return false;
+    }
+
+    private static void filterCachedFeedItems(String source, FeedItemList feedItemList) {
         boolean verbose = BaseSettings.DEBUG.get();
         filterFeedList(
-            "FeedItemList:cold-cache",
+            source,
             feedItemList,
             feedItemList.items,
             container -> (container instanceof Aweme) ? (Aweme) container : null,
@@ -190,7 +270,6 @@ public final class FeedItemsFilter {
             false,
             FilterPhase.RESPONSE
         );
-        return feedItemList.items.isEmpty() ? null : feedItemList;
     }
 
     private static boolean isKnownFeedCacheSource(int cacheSourceType) {
@@ -447,7 +526,6 @@ public final class FeedItemsFilter {
                 + " hide_image=" + Settings.HIDE_IMAGE.get()
                 + " hide_ai_generated=" + Settings.HIDE_AI_GENERATED.get()
                 + " hide_paid_partnership=" + Settings.HIDE_PAID_PARTNERSHIP.get()
-                + " hide_friend_recommendations=" + Settings.HIDE_FRIEND_RECOMMENDATIONS.get()
                 + " hide_verified_accounts=" + Settings.HIDE_VERIFIED_ACCOUNTS.get()
                 + " min_max_views=\"" + Settings.MIN_MAX_VIEWS.get() + "\""
                 + " min_max_likes=\"" + Settings.MIN_MAX_LIKES.get() + "\""

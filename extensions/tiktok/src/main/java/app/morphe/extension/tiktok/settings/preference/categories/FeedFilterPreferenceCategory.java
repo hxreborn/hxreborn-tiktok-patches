@@ -74,11 +74,6 @@ public class FeedFilterPreferenceCategory extends ConditionalPreferenceCategory 
         ));
         addPreference(new TogglePreference(
                 context,
-                "Hide friend recommendations", "Hide account, bulletin-board and other cards inserted between videos in the feed.",
-                Settings.HIDE_FRIEND_RECOMMENDATIONS
-        ));
-        addPreference(new TogglePreference(
-                context,
                 "Hide verified accounts", "Hide posts from accounts with a verified badge, except news and other institutions.",
                 Settings.HIDE_VERIFIED_ACCOUNTS
         ));
@@ -94,9 +89,9 @@ public class FeedFilterPreferenceCategory extends ConditionalPreferenceCategory 
         ));
         addPreference(new TogglePreference(
                 context,
-                "Filter cached/offline videos",
-                "Also apply these filters to TikTok's cached and offline fallback videos.",
-                Settings.FILTER_CACHED_OFFLINE_VIDEOS
+                "Filter offline fallback videos",
+                "Also apply these filters to downloaded videos TikTok uses when the feed cannot load enough new items.",
+                Settings.FILTER_OFFLINE_FALLBACK_VIDEOS
         ));
     }
 }

@@ -28,7 +28,6 @@ Everything from [icysymmetra's upstream](https://github.com/icysymmetra/tiktok-p
 
 - Hide AI-generated posts
 - Hide paid partnership and promotional content posts
-- Hide in-feed account and bulletin-board suggestion cards
 - Hide posts from verified accounts\*
 - Disable telemetry, ByteDance/AppsFlyer/Firebase
 - Hide the in-feed playlist bar
@@ -45,7 +44,7 @@ stay in your feed, but some do not and get hidden like any other verified accoun
 †Off by default. Enabling it suppresses the risk-control puzzle TikTok shows flagged accounts, so
 follows and likes silently fail instead of prompting you to solve it.
 
-Last synced with upstream at [`5f4ec35`](https://github.com/icysymmetra/tiktok-patches-for-morphe/commit/5f4ec35). Release numbers are this fork's own and do not track upstream's.
+Last synced with upstream at [`9c14fd1`](https://github.com/icysymmetra/tiktok-patches-for-morphe/commit/9c14fd1). Release numbers are this fork's own and do not track upstream's.
 
 <br>
 
