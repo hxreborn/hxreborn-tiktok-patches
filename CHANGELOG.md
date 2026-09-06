@@ -1,3 +1,24 @@
+# [1.2.0](https://github.com/hxreborn/hxreborn-tiktok-patches/compare/v1.1.0...v1.2.0) (2026-09-06)
+
+
+### Bug Fixes
+
+* **tiktok:** close feed filter delivery gaps ([e58fb96](https://github.com/hxreborn/hxreborn-tiktok-patches/commit/e58fb96a1724df3c2e81693b5fab87676453f314))
+* **tiktok:** harden reviewed foldable integration ([55f5776](https://github.com/hxreborn/hxreborn-tiktok-patches/commit/55f57763da90cee3727e36888e63a41b061da6c6))
+* **tiktok:** refresh discovered share items in settings ([656d791](https://github.com/hxreborn/hxreborn-tiktok-patches/commit/656d791dfcfaabb327377fa62fc5a897969c6f26))
+
+
+### Features
+
+* add share sheet modifications ([cf3ede5](https://github.com/hxreborn/hxreborn-tiktok-patches/commit/cf3ede56a5eb49fe1a5c17594c54425a5ee1cf6c))
+* Add Split-View Comment Section for Foldable/Wide Devices ([c0571bc](https://github.com/hxreborn/hxreborn-tiktok-patches/commit/c0571bcc1df32b4db108b1de68adaa387125b5fb))
+* **tiktok:** add feed interface controls ([0c79175](https://github.com/hxreborn/hxreborn-tiktok-patches/commit/0c79175312c45e74af99d6d986564a79742affbe))
+
+
+### Reverts
+
+* **TikTok - Feed filter:** temporarily drop the friend recommendation card filter ([27783de](https://github.com/hxreborn/hxreborn-tiktok-patches/commit/27783dee5138a82ce22ea6bcdadf7b8d52bb8ae3))
+
 # [1.1.0](https://github.com/hxreborn/hxreborn-tiktok-patches/compare/v1.0.0...v1.1.0) (2026-09-05)
 
 
