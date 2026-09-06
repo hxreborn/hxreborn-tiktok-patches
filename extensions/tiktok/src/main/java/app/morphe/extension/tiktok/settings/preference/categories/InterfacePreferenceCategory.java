@@ -24,6 +24,10 @@ public final class InterfacePreferenceCategory extends ConditionalPreferenceCate
                 || SettingsStatus.hideSuggestedAccountsEnabled
                 || SettingsStatus.expandActivityListEnabled
                 || SettingsStatus.hideInboxStoriesEnabled
+                || SettingsStatus.hideFeedFollowButtonEnabled
+                || SettingsStatus.hideFeedSaveButtonEnabled
+                || SettingsStatus.hideFeedLiveButtonEnabled
+                || SettingsStatus.hideFeedSearchButtonEnabled
                 || SettingsStatus.alwaysShowPublishDateEnabled;
     }
 
@@ -59,6 +63,38 @@ public final class InterfacePreferenceCategory extends ConditionalPreferenceCate
                     "Hide inbox stories",
                     "Hide the Stories row at the top of the Inbox page. Requires restart.",
                     Settings.HIDE_INBOX_STORIES
+            ));
+        }
+        if (SettingsStatus.hideFeedFollowButtonEnabled) {
+            addPreference(new TogglePreference(
+                    context,
+                    "Hide feed follow button",
+                    "Hide the + follow button below creator avatars in video feeds. Requires restart.",
+                    Settings.HIDE_FEED_FOLLOW_BUTTON
+            ));
+        }
+        if (SettingsStatus.hideFeedSaveButtonEnabled) {
+            addPreference(new TogglePreference(
+                    context,
+                    "Hide feed save button",
+                    "Hide the save/favourites button from the video feed interaction rail. Requires restart.",
+                    Settings.HIDE_FEED_SAVE_BUTTON
+            ));
+        }
+        if (SettingsStatus.hideFeedLiveButtonEnabled) {
+            addPreference(new TogglePreference(
+                    context,
+                    "Hide feed LIVE button",
+                    "Hide the LIVE button at the top left of video feeds. Requires restart.",
+                    Settings.HIDE_FEED_LIVE_BUTTON
+            ));
+        }
+        if (SettingsStatus.hideFeedSearchButtonEnabled) {
+            addPreference(new TogglePreference(
+                    context,
+                    "Hide feed search button",
+                    "Hide the search button at the top right of video feeds. Requires restart.",
+                    Settings.HIDE_FEED_SEARCH_BUTTON
             ));
         }
         if (SettingsStatus.alwaysShowPublishDateEnabled) {
