@@ -62,6 +62,8 @@ Outputs `patches/build/libs/patches-<version>.mpp`.
 
 Built on [icysymmetra/tiktok-patches-for-morphe](https://github.com/icysymmetra/tiktok-patches-for-morphe) and everyone upstream of it. See [NOTICE](NOTICE) for full attribution. Not affiliated with TikTok, ByteDance, or Morphe.
 
+icysymmetra maintains the upstream patches this fork tracks. Support their work on [Ko-fi](https://ko-fi.com/P5P5YOUU7).
+
 <br>
 
 ## License

@@ -343,6 +343,8 @@ public class TikTokPreferenceFragment extends AbstractPreferenceFragment {
                     BaseSettings.CAPTURE_JAVA_CRASHES.get()
             ));
         }
+
+        screen.addPreference(new MorpheTikTokAboutPreference(context));
     }
 
     private void addMenu(
