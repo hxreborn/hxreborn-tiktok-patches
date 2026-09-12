@@ -27,6 +27,7 @@ public class FeedFilterPreferenceCategory extends ConditionalPreferenceCategory 
 
     @Override
     public void addPreferences(Context context) {
+        addPreference(group(context, "Content types"));
         addPreference(new TogglePreference(
                 context,
                 "Remove feed ads", "Remove ads from feed.",
@@ -77,6 +78,8 @@ public class FeedFilterPreferenceCategory extends ConditionalPreferenceCategory 
                 "Hide verified accounts", "Hide posts from accounts with a verified badge, except news and other institutions.",
                 Settings.HIDE_VERIFIED_ACCOUNTS
         ));
+
+        addPreference(group(context, "Popularity limits"));
         addPreference(new RangeValuePreference(
                 context,
                 "Min/Max views", "The minimum or maximum views of a video to show.",
@@ -87,6 +90,8 @@ public class FeedFilterPreferenceCategory extends ConditionalPreferenceCategory 
                 "Min/Max likes", "The minimum or maximum likes of a video to show.",
                 Settings.MIN_MAX_LIKES
         ));
+
+        addPreference(group(context, "Offline fallback"));
         addPreference(new TogglePreference(
                 context,
                 "Filter offline fallback videos",
@@ -95,4 +100,3 @@ public class FeedFilterPreferenceCategory extends ConditionalPreferenceCategory 
         ));
     }
 }
-

@@ -6,34 +6,6 @@ package app.morphe.patches.tiktok.inbox
 
 import app.morphe.patcher.Fingerprint
 
-internal object ActivityRecommendUserWidgetEnableFingerprint : Fingerprint(
-    definingClass = "/NotificationRecommendUserWidgetV2Injector;",
-    name = "enable",
-    returnType = "Z",
-    parameters = emptyList(),
-)
-
-internal object NewFollowersRecommendUserWidgetEnableFingerprint : Fingerprint(
-    definingClass = "/FollowerUserCardWidgetV2Injector;",
-    name = "enable",
-    returnType = "Z",
-    parameters = emptyList(),
-)
-
-internal object NewFollowersRecommendUserSkeletonEnableFingerprint : Fingerprint(
-    definingClass = "/FollowerUserCardLoadingWidgetV2Injector;",
-    name = "enable",
-    returnType = "Z",
-    parameters = emptyList(),
-)
-
-internal object InboxRecommendUserWidgetEnableFingerprint : Fingerprint(
-    definingClass = "/RecommendUserWidgetV2Injector;",
-    name = "enable",
-    returnType = "Z",
-    parameters = emptyList(),
-)
-
 internal object InboxSkylightWidgetEnableFingerprint : Fingerprint(
     definingClass = "/InboxSkylightWidgetV2Injector;",
     name = "enable",

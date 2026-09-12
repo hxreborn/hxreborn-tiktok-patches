@@ -294,11 +294,13 @@ public class TikTokPreferenceFragment extends AbstractPreferenceFragment {
         if (SettingsStatus.commentTranslationEnabled
                 || SettingsStatus.hideCommentQuickReactionsEnabled
                 || SettingsStatus.copyCommentsWithoutUsernameEnabled
+                || SettingsStatus.commentSortControlsEnabled
                 || SettingsStatus.foldableSplitViewEnabled) {
             addMenu(screen, Section.COMMENTS, SettingsMenuPreference.Icon.COMMENTS, countEnabled(
                     SettingsStatus.commentTranslationEnabled && Settings.COMMENT_BATCH_TRANSLATION.get(),
                     SettingsStatus.hideCommentQuickReactionsEnabled && Settings.HIDE_COMMENT_QUICK_REACTIONS.get(),
                     SettingsStatus.copyCommentsWithoutUsernameEnabled && Settings.COPY_COMMENTS_WITHOUT_USERNAME.get(),
+                    SettingsStatus.commentSortControlsEnabled && Settings.COMMENT_SORT_FORCE_SHOW.get(),
                     SettingsStatus.foldableSplitViewEnabled && Settings.FOLDABLE_SPLIT_VIEW.get()
             ));
         }
@@ -488,6 +490,9 @@ public class TikTokPreferenceFragment extends AbstractPreferenceFragment {
         }
         if (SettingsStatus.disableLongPressRepostEnabled
                 && Settings.DISABLE_LONG_PRESS_REPOST.get()) {
+            count++;
+        }
+        if (SettingsStatus.autoScrollEnabled && Settings.FORCE_SHOW_AUTO_SCROLL.get()) {
             count++;
         }
         return count;

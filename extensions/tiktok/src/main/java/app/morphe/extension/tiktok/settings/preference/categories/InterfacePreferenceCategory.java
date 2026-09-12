@@ -21,7 +21,6 @@ public final class InterfacePreferenceCategory extends ConditionalPreferenceCate
     @Override
     public boolean getSettingsStatus() {
         return SettingsStatus.captchaPopupSuppressionEnabled
-                || SettingsStatus.hideSuggestedAccountsEnabled
                 || SettingsStatus.expandActivityListEnabled
                 || SettingsStatus.hideInboxStoriesEnabled
                 || SettingsStatus.hideFeedFollowButtonEnabled
@@ -33,22 +32,6 @@ public final class InterfacePreferenceCategory extends ConditionalPreferenceCate
 
     @Override
     public void addPreferences(Context context) {
-        if (SettingsStatus.captchaPopupSuppressionEnabled) {
-            addPreference(new TogglePreference(
-                    context,
-                    "Hide CAPTCHA popups",
-                    "Hide browsing and LIVE puzzle dialogs. Login and account verification remain available.",
-                    Settings.HIDE_CAPTCHA_POPUPS
-            ));
-        }
-        if (SettingsStatus.hideSuggestedAccountsEnabled) {
-            addPreference(new TogglePreference(
-                    context,
-                    "Hide suggested accounts",
-                    "Hide the Suggested accounts list on the Activity, New followers and Inbox pages. Requires restart.",
-                    Settings.HIDE_SUGGESTED_ACCOUNTS
-            ));
-        }
         if (SettingsStatus.expandActivityListEnabled) {
             addPreference(new TogglePreference(
                     context,
@@ -64,6 +47,12 @@ public final class InterfacePreferenceCategory extends ConditionalPreferenceCate
                     "Hide the Stories row at the top of the Inbox page. Requires restart.",
                     Settings.HIDE_INBOX_STORIES
             ));
+        }
+        if (SettingsStatus.hideFeedFollowButtonEnabled
+                || SettingsStatus.hideFeedSaveButtonEnabled
+                || SettingsStatus.hideFeedLiveButtonEnabled
+                || SettingsStatus.hideFeedSearchButtonEnabled) {
+            addPreference(group(context, "Feed controls"));
         }
         if (SettingsStatus.hideFeedFollowButtonEnabled) {
             addPreference(new TogglePreference(
@@ -97,7 +86,21 @@ public final class InterfacePreferenceCategory extends ConditionalPreferenceCate
                     Settings.HIDE_FEED_SEARCH_BUTTON
             ));
         }
+
+        if (SettingsStatus.captchaPopupSuppressionEnabled) {
+            addPreference(group(context, "Promotions and dialogs"));
+        }
+        if (SettingsStatus.captchaPopupSuppressionEnabled) {
+            addPreference(new TogglePreference(
+                    context,
+                    "Hide CAPTCHA popups",
+                    "Hide browsing and LIVE puzzle dialogs. Login and account verification remain available.",
+                    Settings.HIDE_CAPTCHA_POPUPS
+            ));
+        }
+
         if (SettingsStatus.alwaysShowPublishDateEnabled) {
+            addPreference(group(context, "Video information"));
             addPreference(new TogglePreference(
                     context,
                     "Always show publish date",

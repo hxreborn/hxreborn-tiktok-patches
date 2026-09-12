@@ -27,6 +27,7 @@ public class ExtensionPreferenceCategory extends ConditionalPreferenceCategory {
 
     @Override
     public void addPreferences(Context context) {
+        addPreference(group(context, "Links and sharing"));
         addPreference(new TogglePreference(
                 context,
                 "Sanitize sharing links",
@@ -41,7 +42,17 @@ public class ExtensionPreferenceCategory extends ConditionalPreferenceCategory {
                     Settings.OPEN_EXTERNAL_LINKS
             ));
         }
+        if (SettingsStatus.autoScrollEnabled) {
+            addPreference(new TogglePreference(
+                    context,
+                    "Force show Auto scroll",
+                    "Expose TikTok's native Auto scroll action on eligible For You videos when account rollout "
+                            + "gates hide it. TikTok still decides whether the current video and screen support it.",
+                    Settings.FORCE_SHOW_AUTO_SCROLL
+            ));
+        }
 
+        addPreference(group(context, "Playback"));
         addPreference(new TogglePreference(
                 context,
                 "Show seekbar",
@@ -72,6 +83,12 @@ public class ExtensionPreferenceCategory extends ConditionalPreferenceCategory {
                     Settings.RESUME_VIDEO_AFTER_SCROLL
             ));
         }
+
+        if (SettingsStatus.longPressSpeedLockEnabled
+                || SettingsStatus.disableLongPressQuickShareEnabled
+                || SettingsStatus.disableLongPressRepostEnabled) {
+            addPreference(group(context, "Gestures"));
+        }
         if (SettingsStatus.longPressSpeedLockEnabled) {
             addPreference(new TogglePreference(
                     context,
@@ -94,6 +111,20 @@ public class ExtensionPreferenceCategory extends ConditionalPreferenceCategory {
                     "Disable long-press repost",
                     "Keep holding Like from opening TikTok's repost action.",
                     Settings.DISABLE_LONG_PRESS_REPOST
+            ));
+        }
+
+        if (SettingsStatus.hideSuggestedAccountsEnabled
+                || SettingsStatus.nonPersonalizedSearchEnabled
+                || SettingsStatus.liveSearchEnabled) {
+            addPreference(group(context, "Discovery and search"));
+        }
+        if (SettingsStatus.hideSuggestedAccountsEnabled) {
+            addPreference(new TogglePreference(
+                    context,
+                    "Hide suggested accounts",
+                    "Remove suggested accounts from profile and inbox.",
+                    Settings.HIDE_SUGGESTED_ACCOUNTS
             ));
         }
         if (SettingsStatus.nonPersonalizedSearchEnabled) {
@@ -123,4 +154,3 @@ public class ExtensionPreferenceCategory extends ConditionalPreferenceCategory {
         }
     }
 }
-
