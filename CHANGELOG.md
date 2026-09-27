@@ -1,3 +1,10 @@
+# [1.3.0](https://github.com/hxreborn/hxreborn-tiktok-patches/compare/v1.2.0...v1.3.0) (2026-09-07)
+
+
+### Features
+
+* **TikTok - Settings:** add a support row linking to icysymmetra's Ko-fi ([257fad6](https://github.com/hxreborn/hxreborn-tiktok-patches/commit/257fad68f6100a41af6556334ddff35e61b8ce02))
+
 # [1.2.0](https://github.com/hxreborn/hxreborn-tiktok-patches/compare/v1.1.0...v1.2.0) (2026-09-06)
 
 
