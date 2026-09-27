@@ -10,10 +10,6 @@ public final class InboxControls {
     private InboxControls() {
     }
 
-    public static boolean shouldShowSuggestedAccounts() {
-        return !Settings.HIDE_SUGGESTED_ACCOUNTS.get();
-    }
-
     public static boolean shouldCollapseActivityList() {
         return !Settings.EXPAND_ACTIVITY_LIST.get();
     }

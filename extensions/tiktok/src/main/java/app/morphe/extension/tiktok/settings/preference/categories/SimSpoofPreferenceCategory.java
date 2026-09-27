@@ -28,6 +28,7 @@ public class SimSpoofPreferenceCategory extends ConditionalPreferenceCategory {
 
     @Override
     public void addPreferences(Context context) {
+        addPreference(group(context, "Region selection"));
         addPreference(new TogglePreference(
                 context,
                 "Use custom region",
@@ -82,9 +83,10 @@ public class SimSpoofPreferenceCategory extends ConditionalPreferenceCategory {
         });
 
         addPreference(simPresetPreference);
+
+        addPreference(group(context, "Manual operator values"));
         addPreference(countryIsoPreference);
         addPreference(mccMncPreference);
         addPreference(operatorNamePreference);
     }
 }
-

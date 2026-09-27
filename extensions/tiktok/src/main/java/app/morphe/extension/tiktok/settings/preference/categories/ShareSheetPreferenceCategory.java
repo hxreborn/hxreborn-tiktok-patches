@@ -28,6 +28,7 @@ public class ShareSheetPreferenceCategory extends ConditionalPreferenceCategory 
 
     @Override
     public void addPreferences(Context context) {
+        addPreference(group(context, "Quick share"));
         addPreference(new TogglePreference(
                 context,
                 "Show \"Send to\"",
@@ -35,6 +36,7 @@ public class ShareSheetPreferenceCategory extends ConditionalPreferenceCategory 
                 Settings.SHARE_SHEET_SEND_TO
         ));
 
+        addPreference(group(context, "Sharing apps"));
         addPreference(new TogglePreference(
                 context,
                 "Show \"Share via\"",
@@ -54,6 +56,7 @@ public class ShareSheetPreferenceCategory extends ConditionalPreferenceCategory 
                 ShareSheetPreferenceCategory::observedChannelKeys
         ));
 
+        addPreference(group(context, "Video actions"));
         addPreference(new TogglePreference(
                 context,
                 "Show \"Video Actions\"",

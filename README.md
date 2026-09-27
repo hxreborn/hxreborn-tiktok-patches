@@ -32,7 +32,6 @@ Everything from [icysymmetra's upstream](https://github.com/icysymmetra/tiktok-p
 - Disable telemetry, ByteDance/AppsFlyer/Firebase
 - Hide the in-feed playlist bar
 - Hide the floating promotional event badge, e.g. FIFA World Cup
-- Hide suggested accounts on the Activity, New followers, and Inbox pages
 - Hide the Inbox stories row
 - Expand the Activity and New followers lists instead of hiding them behind View all
 - Hide the BdTuring risk-control CAPTCHA dialog†
@@ -44,7 +43,7 @@ stay in your feed, but some do not and get hidden like any other verified accoun
 †Off by default. Enabling it suppresses the risk-control puzzle TikTok shows flagged accounts, so
 follows and likes silently fail instead of prompting you to solve it.
 
-Last synced with upstream at [`9c14fd1`](https://github.com/icysymmetra/tiktok-patches-for-morphe/commit/9c14fd1). Release numbers are this fork's own and do not track upstream's.
+Last synced with upstream at [`5515dfd`](https://github.com/icysymmetra/tiktok-patches-for-morphe/commit/5515dfd). Release numbers are this fork's own and do not track upstream's.
 
 <br>
 
@@ -61,6 +60,11 @@ Outputs `patches/build/libs/patches-<version>.mpp`.
 ## Credits
 
 Built on [icysymmetra/tiktok-patches-for-morphe](https://github.com/icysymmetra/tiktok-patches-for-morphe) and everyone upstream of it. See [NOTICE](NOTICE) for full attribution. Not affiliated with TikTok, ByteDance, or Morphe.
+
+- Thanks to [@lyyako](https://github.com/lyyako) for the original contributions behind the simplified sanitize sharing links hook, show seekbar patch, anti-recording patch, `Open external links directly`, and `Always show publish date`.
+- Thanks to [@oscski](https://github.com/oscski) for the original contribution behind `Disable long-press repost`.
+- Thanks to [@HazyArc14](https://github.com/HazyArc14) for the original contributions behind `Share sheet modification` and `Foldable split comment view`.
+- Thanks to [@tymmesyde](https://github.com/tymmesyde) for the original contribution behind `Hide suggested accounts`.
 
 icysymmetra maintains the upstream patches this fork tracks. Support their work on [Ko-fi](https://ko-fi.com/P5P5YOUU7).
 

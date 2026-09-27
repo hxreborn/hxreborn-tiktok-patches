@@ -20,18 +20,37 @@ public class CommentsPreferenceCategory extends ConditionalPreferenceCategory {
         return SettingsStatus.commentTranslationEnabled
                 || SettingsStatus.hideCommentQuickReactionsEnabled
                 || SettingsStatus.copyCommentsWithoutUsernameEnabled
+                || SettingsStatus.commentSortControlsEnabled
                 || SettingsStatus.foldableSplitViewEnabled;
     }
 
     @Override
     public void addPreferences(Context context) {
+        if (SettingsStatus.commentSortControlsEnabled) {
+            addPreference(group(context, "Comment sorting"));
+            addPreference(new TogglePreference(
+                    context,
+                    "Force show comment sorting",
+                    "Expose TikTok's native full sort menu instead of leaving it to rollout gates. "
+                            + "This includes TikTok's ranked hot order and time sort. Media and Creator "
+                            + "only appear when TikTok reports matching comments.",
+                    Settings.COMMENT_SORT_FORCE_SHOW
+            ));
+        }
+
         if (SettingsStatus.commentTranslationEnabled) {
+            addPreference(group(context, "Translation"));
             addPreference(new TogglePreference(
                     context,
                     "Auto translate comments",
                     "Automatically translates loaded comment batches using TikTok's translation system.",
                     Settings.COMMENT_BATCH_TRANSLATION
             ));
+        }
+
+        if (SettingsStatus.hideCommentQuickReactionsEnabled
+                || SettingsStatus.copyCommentsWithoutUsernameEnabled) {
+            addPreference(group(context, "Comment actions"));
         }
         if (SettingsStatus.hideCommentQuickReactionsEnabled) {
             addPreference(new TogglePreference(
@@ -49,7 +68,9 @@ public class CommentsPreferenceCategory extends ConditionalPreferenceCategory {
                     Settings.COPY_COMMENTS_WITHOUT_USERNAME
             ));
         }
+
         if (SettingsStatus.foldableSplitViewEnabled) {
+            addPreference(group(context, "Large-screen layout"));
             addPreference(new TogglePreference(
                     context,
                     "Force split video/comment view",

@@ -125,6 +125,10 @@ public final class FeatureControls {
         return !Settings.HIDE_FEED_SEARCH_BUTTON.get() && originalEnabled;
     }
 
+    public static boolean hideSuggestedAccounts() {
+        return Settings.HIDE_SUGGESTED_ACCOUNTS.get();
+    }
+
     public static int overrideLongPressQuickShare(int originalMode) {
         return Settings.DISABLE_LONG_PRESS_QUICK_SHARE.get() ? 0 : originalMode;
     }

@@ -97,6 +97,7 @@ public class Settings extends BaseSettings {
     public static final StringSetting DOWNLOAD_VIDEO_PATH = new StringSetting("download_video_path", "Movies/TikTok");
     public static final StringSetting DOWNLOAD_PHOTO_PATH = new StringSetting("download_photo_path", "Pictures/TikTok");
     public static final StringSetting DOWNLOAD_STICKER_PATH = new StringSetting("download_sticker_path", "DCIM/TikTok/Stickers");
+    public static final StringSetting DOWNLOAD_VIDEO_QUALITY = new StringSetting("download_video_quality", "high");
     private static final BooleanSetting DOWNLOAD_PATHS_MIGRATED = new BooleanSetting(
             "download_paths_migrated",
             FALSE,
@@ -138,6 +139,11 @@ public class Settings extends BaseSettings {
     public static final BooleanSetting ALWAYS_SHOW_PUBLISH_DATE = new BooleanSetting("always_show_publish_date", TRUE, true);
     public static final BooleanSetting CLEAR_DISPLAY = new BooleanSetting("clear_display", FALSE);
     public static final BooleanSetting FOLDABLE_SPLIT_VIEW = new BooleanSetting("foldable_split_view", FALSE, true);
+    public static final BooleanSetting COMMENT_SORT_FORCE_SHOW = new BooleanSetting(
+            "comment_sort_force_show",
+            FALSE,
+            true
+    );
     public static final IntegerSetting FOLDABLE_SPLIT_VIEW_MIN_WIDTH_DP = new IntegerSetting(
             "foldable_split_view_min_width_dp",
             600,
@@ -161,6 +167,12 @@ public class Settings extends BaseSettings {
     public static final StringSetting SIMSPOOF_MCCMNC = new StringSetting("simspoof_mccmnc", "310260");
     public static final StringSetting SIMSPOOF_OP_NAME = new StringSetting("simspoof_op_name", "T-Mobile");
     public static final BooleanSetting SHARE_SHEET_SEND_TO = new BooleanSetting("share_sheet_send_to", TRUE, true);
+    // Keep the original key so existing installations retain the user's choice.
+    public static final BooleanSetting FORCE_SHOW_AUTO_SCROLL = new BooleanSetting(
+            "share_sheet_force_auto_scroll",
+            FALSE,
+            true
+    );
     public static final BooleanSetting SHARE_SHEET_CHANNELS = new BooleanSetting("share_sheet_channels", TRUE, true);
     public static final StringSetting SHARE_SHEET_CHANNELS_ENABLED = new StringSetting(
             "share_sheet_channels_enabled",
