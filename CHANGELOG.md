@@ -1,3 +1,19 @@
+# [1.4.0](https://github.com/hxreborn/hxreborn-tiktok-patches/compare/v1.3.0...v1.4.0) (2026-09-27)
+
+
+### Bug Fixes
+
+* cover secure window flag writes ([79abbbf](https://github.com/hxreborn/hxreborn-tiktok-patches/commit/79abbbfc23c3ea21cc9350f3d206dfd2af125b88))
+* **tiktok:** split auto scroll into separate patch ([683979b](https://github.com/hxreborn/hxreborn-tiktok-patches/commit/683979b1ff98d5fc707a4ae401a8365306ec47b7))
+
+
+### Features
+
+* add share sheet modifications ([3e92957](https://github.com/hxreborn/hxreborn-tiktok-patches/commit/3e92957509558f5b3c89817c6cb1e69fd27a2980))
+* Add Split-View Comment Section for Foldable/Wide Devices ([2fc6eb1](https://github.com/hxreborn/hxreborn-tiktok-patches/commit/2fc6eb148d5b8cb717192643c505ca30cad02d33))
+* **tiktok:** add native comment sort controls ([e1fb74c](https://github.com/hxreborn/hxreborn-tiktok-patches/commit/e1fb74c740f862d702b2d03a2968960ca5d9d954))
+* **tiktok:** add reviewed local feature patches ([0e4a6e1](https://github.com/hxreborn/hxreborn-tiktok-patches/commit/0e4a6e1d9b4687f41328d3112ef8c341de4a081a))
+
 # [1.3.0](https://github.com/hxreborn/hxreborn-tiktok-patches/compare/v1.2.0...v1.3.0) (2026-09-07)
 
 
